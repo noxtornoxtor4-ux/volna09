@@ -1,22 +1,22 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { FileText, LayoutDashboard, MessageSquareWarning, Wallet } from '@lucide/svelte';
+	import { ChartLine, ClipboardCheck, Repeat } from '@lucide/svelte';
 	import Logo from '#lib/components/Logo.svelte';
+	import { progress } from '#lib/exam/progress.svelte.ts';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
 
 	const links = [
-		{ href: '/app', label: 'Freelancer OS', icon: LayoutDashboard },
-		{ href: '/app/scope', label: 'Scope Defender', icon: MessageSquareWarning },
-		{ href: '/app/escrow', label: 'Эскроу', icon: Wallet },
-		{ href: '/app/contracts', label: 'Договоры', icon: FileText }
+		{ href: '/app', label: 'Прогресс', icon: ChartLine },
+		{ href: '/app/test', label: 'Пробный тест', icon: ClipboardCheck },
+		{ href: '/app/practice', label: 'Тренажёр', icon: Repeat }
 	];
 </script>
 
 <div class="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
 	<aside
-		class="sticky top-0 z-40 flex items-center gap-4 border-b border-white/6 bg-ink-950/90 px-4 py-3 backdrop-blur lg:h-screen lg:flex-col lg:items-stretch lg:border-r lg:border-b-0 lg:px-4 lg:py-6 print:hidden"
+		class="sticky top-0 z-40 flex items-center gap-4 border-b border-white/6 bg-ink-950/90 px-4 py-3 backdrop-blur lg:h-screen lg:flex-col lg:items-stretch lg:border-r lg:border-b-0 lg:px-4 lg:py-6"
 	>
 		<div class="hidden lg:block lg:px-2"><Logo /></div>
 		<nav class="flex flex-1 gap-1 overflow-x-auto lg:mt-8 lg:flex-col">
@@ -33,16 +33,24 @@
 				</a>
 			{/each}
 		</nav>
-		<div class="hidden rounded-xl bg-white/4 p-3 lg:flex lg:items-center lg:gap-3">
-			<div
-				class="grid size-9 place-items-center rounded-full bg-linear-to-br from-brand-500 to-accent-500 font-semibold text-ink-950"
+		<div class="hidden rounded-xl bg-white/4 p-3 lg:block">
+			<div class="flex items-center gap-3">
+				<div
+					class="grid size-9 place-items-center rounded-full bg-linear-to-br from-brand-500 to-accent-500 font-semibold text-ink-950"
+				>
+					А
+				</div>
+				<div class="text-sm">
+					<div class="font-semibold text-white">Айгерим</div>
+					<div class="text-xs text-slate-500">11 класс · цель: грант</div>
+				</div>
+			</div>
+			<button
+				class="mt-3 text-xs text-slate-500 hover:text-slate-300"
+				onclick={() => progress.reset()}
 			>
-				А
-			</div>
-			<div class="text-sm">
-				<div class="font-semibold text-white">Алекс Фрилансер</div>
-				<div class="text-xs text-slate-500">Pro · демо-аккаунт</div>
-			</div>
+				Сбросить демо-прогресс
+			</button>
 		</div>
 	</aside>
 	<main class="px-4 py-8 lg:px-10">

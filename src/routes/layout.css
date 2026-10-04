@@ -10,13 +10,13 @@
 	--color-ink-700: #1d2636;
 	--color-ink-600: #2a3548;
 
-	--color-brand-300: #8ff5c8;
-	--color-brand-400: #4eeaa6;
-	--color-brand-500: #1fd189;
-	--color-brand-600: #12a96d;
+	--color-brand-300: #c7cbff;
+	--color-brand-400: #9ca3ff;
+	--color-brand-500: #7c84ff;
+	--color-brand-600: #5b62e8;
 
-	--color-accent-400: #a78bfa;
-	--color-accent-500: #8b5cf6;
+	--color-accent-400: #fcd34d;
+	--color-accent-500: #f59e0b;
 
 	--animate-float: float 6s ease-in-out infinite;
 	--animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
@@ -33,10 +33,10 @@
 
 	@keyframes pulse-ring {
 		0% {
-			box-shadow: 0 0 0 0 rgb(31 209 137 / 0.45);
+			box-shadow: 0 0 0 0 rgb(124 132 255 / 0.45);
 		}
 		100% {
-			box-shadow: 0 0 0 14px rgb(31 209 137 / 0);
+			box-shadow: 0 0 0 14px rgb(124 132 255 / 0);
 		}
 	}
 }
@@ -62,8 +62,8 @@
 
 @utility glow {
 	box-shadow:
-		0 0 0 1px rgb(31 209 137 / 0.25),
-		0 20px 60px -20px rgb(31 209 137 / 0.45);
+		0 0 0 1px rgb(124 132 255 / 0.3),
+		0 20px 60px -20px rgb(124 132 255 / 0.45);
 }
 
 @utility text-gradient {

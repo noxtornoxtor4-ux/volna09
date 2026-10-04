@@ -1,52 +1,29 @@
 <script lang="ts">
-	import { Clock, PiggyBank, ShieldCheck } from '@lucide/svelte';
+	import { Clock, PiggyBank, Wallet } from '@lucide/svelte';
+
+	const PRO_PRICE = 490;
 
 	const fields = [
-		{ key: 'rate', label: 'Ваша ставка', unit: '₽/ч', min: 300, max: 6000, step: 100 },
-		{ key: 'projects', label: 'Проектов в месяц', unit: '', min: 1, max: 20, step: 1 },
-		{
-			key: 'scopeHours',
-			label: 'Бесплатных правок на проект',
-			unit: 'ч',
-			min: 0,
-			max: 30,
-			step: 1
-		},
-		{ key: 'docsHours', label: 'Договоры и инвойсы в месяц', unit: 'ч', min: 0, max: 20, step: 1 },
-		{ key: 'income', label: 'Доход в месяц', unit: '₽', min: 20000, max: 1000000, step: 10000 },
-		{
-			key: 'unpaidPercent',
-			label: 'Задерживают или не платят',
-			unit: '%',
-			min: 0,
-			max: 40,
-			step: 1
-		}
+		{ key: 'lessonPrice', label: 'Стоимость занятия', unit: 'сом', min: 300, max: 2500, step: 50 },
+		{ key: 'lessonsPerWeek', label: 'Занятий в неделю', unit: '', min: 1, max: 6, step: 1 },
+		{ key: 'subjects', label: 'Предметов', unit: '', min: 1, max: 4, step: 1 },
+		{ key: 'months', label: 'Месяцев до экзамена', unit: '', min: 1, max: 12, step: 1 },
+		{ key: 'commute', label: 'Дорога на одно занятие', unit: 'мин', min: 0, max: 90, step: 5 }
 	] as const;
 
-	let v = $state({
-		rate: 1500,
-		projects: 4,
-		scopeHours: 6,
-		docsHours: 5,
-		income: 150000,
-		unpaidPercent: 8
-	});
-	const { rate, projects, scopeHours, docsHours, income, unpaidPercent } = $derived(v);
+	let v = $state({ lessonPrice: 800, lessonsPerWeek: 2, subjects: 2, months: 8, commute: 30 });
 
-	// Доли, которые закрывает платформа: 80% правок вне ТЗ превращаются в оплачиваемые допы,
-	// 90% времени на документы экономит генератор, 90% невыплат предотвращает эскроу.
-	const hoursSaved = $derived(Math.round(projects * scopeHours * 0.8 + docsHours * 0.9));
-	const scopeMoney = $derived(projects * scopeHours * 0.8 * rate);
-	const docsMoney = $derived(docsHours * 0.9 * rate);
-	const protectedMoney = $derived((income * unpaidPercent * 0.9) / 100);
-	const monthly = $derived(scopeMoney + docsMoney + protectedMoney);
-	const yearly = $derived(monthly * 12);
-	const roi = $derived(Math.round(monthly / 790));
+	// В месяце считаем 4,3 недели
+	const lessonsPerMonth = $derived(v.lessonsPerWeek * v.subjects * 4.3);
+	const tutorMonthly = $derived(lessonsPerMonth * v.lessonPrice);
+	const tutorTotal = $derived(tutorMonthly * v.months);
+	const boostTotal = $derived(PRO_PRICE * v.months);
+	const saved = $derived(Math.max(tutorTotal - boostTotal, 0));
+	const hoursSaved = $derived(Math.round((lessonsPerMonth * v.months * v.commute * 2) / 60));
+	const times = $derived(Math.round(tutorMonthly / PRO_PRICE));
 
-	const rub = (value: number) =>
-		new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(value) + ' ₽';
-	const fmt = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
+	const fmt = (value: number) =>
+		new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(value);
 </script>
 
 <div class="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
@@ -67,40 +44,41 @@
 				/>
 			</label>
 		{/each}
+		<div class="rounded-xl bg-white/4 p-4 text-sm text-slate-400 sm:col-span-2">
+			Репетиторы обойдутся в <b class="text-white">{fmt(tutorMonthly)} сом</b> в месяц, а TestBoost
+			Pro — в
+			<b class="text-white">{PRO_PRICE} сом</b>, то есть в {times} раз дешевле.
+		</div>
 	</div>
 
 	<div class="relative overflow-hidden card p-6 glow">
 		<div
-			class="pointer-events-none absolute -top-20 -right-20 size-60 rounded-full bg-brand-500/20 blur-3xl"
+			class="pointer-events-none absolute -top-20 -right-20 size-60 rounded-full bg-accent-400/15 blur-3xl"
 		></div>
-		<p class="text-sm text-slate-400">FreelanceShield вернёт вам</p>
-		<p class="mt-1 font-display text-4xl font-extrabold text-white sm:text-5xl">{rub(yearly)}</p>
-		<p class="text-sm text-slate-400">в год · {rub(monthly)} в месяц</p>
+		<p class="text-sm text-slate-400">До экзамена вы сэкономите</p>
+		<p class="mt-1 font-display text-4xl font-extrabold text-white sm:text-5xl">{fmt(saved)} сом</p>
+		<p class="text-sm text-slate-400">за {v.months} мес. подготовки</p>
 
 		<div class="mt-6 space-y-3">
 			<div class="flex items-center justify-between rounded-xl bg-white/4 px-4 py-3">
-				<span class="flex items-center gap-2 text-sm text-slate-300">
-					<Clock class="size-4 text-brand-400" /> Свободное время
-				</span>
-				<span class="font-semibold text-white">{hoursSaved} ч/мес</span>
+				<span class="flex items-center gap-2 text-sm text-slate-300"
+					><Wallet class="size-4 text-rose-300" /> Репетиторы</span
+				>
+				<span class="font-semibold text-white">{fmt(tutorTotal)} сом</span>
 			</div>
 			<div class="flex items-center justify-between rounded-xl bg-white/4 px-4 py-3">
-				<span class="flex items-center gap-2 text-sm text-slate-300">
-					<PiggyBank class="size-4 text-brand-400" /> Оплаченные допы
-				</span>
-				<span class="font-semibold text-white">{rub(scopeMoney)}</span>
+				<span class="flex items-center gap-2 text-sm text-slate-300"
+					><PiggyBank class="size-4 text-brand-400" /> TestBoost Pro</span
+				>
+				<span class="font-semibold text-white">{fmt(boostTotal)} сом</span>
 			</div>
 			<div class="flex items-center justify-between rounded-xl bg-white/4 px-4 py-3">
-				<span class="flex items-center gap-2 text-sm text-slate-300">
-					<ShieldCheck class="size-4 text-brand-400" /> Спасено от невыплат
-				</span>
-				<span class="font-semibold text-white">{rub(protectedMoney)}</span>
+				<span class="flex items-center gap-2 text-sm text-slate-300"
+					><Clock class="size-4 text-brand-400" /> Без дороги</span
+				>
+				<span class="font-semibold text-white">{fmt(hoursSaved)} ч</span>
 			</div>
 		</div>
-
-		<p class="mt-6 text-sm text-slate-400">
-			Тариф Pro окупается в <b class="text-brand-300">{fmt(roi)}×</b>
-		</p>
-		<a href="/app" class="mt-4 btn w-full btn-primary">Начать экономить</a>
+		<a href="/app/test" class="mt-6 btn w-full btn-primary">Начать бесплатно</a>
 	</div>
 </div>

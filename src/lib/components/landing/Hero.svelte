@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { ArrowRight, Calculator, FileText, Lock, Sparkles, TriangleAlert } from '@lucide/svelte';
+	import { ArrowRight, Lightbulb, Sparkles, TrendingUp, Wallet } from '@lucide/svelte';
 </script>
 
 <section class="relative overflow-hidden">
 	<div
-		class="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgb(31_209_137/0.18),transparent_70%),radial-gradient(40%_40%_at_90%_30%,rgb(139_92_246/0.15),transparent_70%)]"
+		class="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgb(124_132_255/0.22),transparent_70%),radial-gradient(40%_40%_at_90%_30%,rgb(252_211_77/0.12),transparent_70%)]"
 	></div>
 	<div
 		class="pointer-events-none absolute inset-0 [background-image:linear-gradient(rgb(255_255_255/0.03)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.03)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)] [background-size:48px_48px]"
@@ -17,85 +17,88 @@
 			<span
 				class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-300"
 			>
-				<Sparkles class="size-3.5" /> 4 ИИ-модуля в одной экосистеме
+				<Sparkles class="size-3.5" /> ИИ-репетитор для ОРТ, ЕГЭ и SAT
 			</span>
 			<h1
 				class="mt-6 font-display text-4xl leading-[1.08] font-extrabold text-white sm:text-5xl lg:text-6xl"
 			>
-				Делайте работу.<br />
-				<span class="text-gradient">Деньги и нервы защитит ИИ.</span>
+				Не просто «неверно».<br />
+				<span class="text-gradient">ИИ объяснит, почему.</span>
 			</h1>
 			<p class="mt-6 max-w-xl text-lg text-slate-400">
-				FreelanceShield ловит правки вне ТЗ прямо в чате, держит оплату в безопасной сделке по
-				этапам и собирает договор под законы вашей страны за 10 секунд. Без невыплат, без бесплатной
-				работы, без юристов.
+				Пробные тесты в формате экзамена, разбор каждой ошибки понятным языком и бесконечные похожие
+				задачи на ваши слабые темы. Как личный репетитор 24/7, только в разы дешевле.
 			</p>
 			<div class="mt-8 flex flex-wrap gap-3">
 				<a href="#demo" class="btn btn-primary px-6 py-3.5 text-base glow">
-					Попробовать демо <ArrowRight class="size-4" />
+					Решить задачу сейчас <ArrowRight class="size-4" />
 				</a>
-				<a href="#calculator" class="btn btn-ghost px-6 py-3.5 text-base">
-					<Calculator class="size-4" /> Сколько я теряю?
-				</a>
+				<a href="/app/test" class="btn btn-ghost px-6 py-3.5 text-base">Пробный ОРТ бесплатно</a>
 			</div>
 			<dl class="mt-12 grid max-w-md grid-cols-3 gap-6">
 				<div>
-					<dt class="text-xs text-slate-500">правок ловит ИИ</dt>
-					<dd class="font-display text-2xl text-white">94%</dd>
+					<dt class="text-xs text-slate-500">рост балла ОРТ</dt>
+					<dd class="font-display text-2xl text-white">+48</dd>
 				</div>
 				<div>
-					<dt class="text-xs text-slate-500">на договор</dt>
-					<dd class="font-display text-2xl text-white">10 сек</dd>
+					<dt class="text-xs text-slate-500">задач в тренажёре</dt>
+					<dd class="font-display text-2xl text-white">∞</dd>
 				</div>
 				<div>
-					<dt class="text-xs text-slate-500">невыплат</dt>
-					<dd class="font-display text-2xl text-white">0</dd>
+					<dt class="text-xs text-slate-500">в месяц</dt>
+					<dd class="font-display text-2xl text-white">490 сом</dd>
 				</div>
 			</dl>
 		</div>
 
-		<div class="relative h-[420px]" aria-hidden="true">
-			<div class="absolute top-0 right-4 left-0 animate-float card p-4 shadow-2xl sm:left-6">
-				<div class="mb-2 text-xs text-slate-500">Клиент · Кофейня «Зерно»</div>
-				<div
-					class="rounded-2xl rounded-bl-sm bg-ink-700 px-4 py-2.5 text-sm text-white ring-2 ring-rose-500/70"
-				>
-					А можно ещё добавить личный кабинет и онлайн-оплату? Это же быстро 🙂
+		<div class="relative h-[440px]" aria-hidden="true">
+			<div class="absolute top-0 right-4 left-0 animate-float card p-5 shadow-2xl sm:left-6">
+				<div class="text-xs text-slate-500">Дроби · вы ответили</div>
+				<div class="mt-2 font-display text-xl text-white">
+					1/3 + 1/4 = <span class="text-rose-300 line-through">2/7</span>
 				</div>
-				<div
-					class="mt-3 flex items-center gap-2 rounded-xl bg-rose-500/10 px-3 py-2 text-xs text-rose-200"
-				>
-					<TriangleAlert class="size-4 shrink-0" /> Вне ТЗ · 94% · ~42 ч ·
-					<b class="text-white">$1 050</b>
+				<div class="mt-3 flex gap-2 rounded-xl bg-accent-400/10 p-3 text-sm text-slate-200">
+					<Lightbulb class="mt-0.5 size-4 shrink-0 text-accent-400" />
+					<span
+						>Вы сложили числители и знаменатели отдельно. Разрежьте оба торта на 12 кусков: 4 + 3 = <b
+							class="text-white">7/12</b
+						></span
+					>
 				</div>
 			</div>
 
 			<div
-				class="absolute top-[170px] right-0 w-64 animate-float card p-4 shadow-2xl [animation-delay:-2s]"
+				class="absolute top-[200px] right-0 w-60 animate-float card p-4 shadow-2xl [animation-delay:-2s]"
 			>
 				<div class="flex items-center gap-2 text-xs text-slate-400">
-					<Lock class="size-3.5 text-brand-400" /> Этап 2 · Дизайн главной
+					<TrendingUp class="size-3.5 text-emerald-400" /> Прогноз ОРТ
 				</div>
-				<div class="mt-2 font-display text-2xl text-white">$450</div>
-				<div class="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-					<div class="h-full w-2/3 rounded-full bg-brand-500"></div>
-				</div>
-				<div class="mt-2 text-xs text-brand-300">Авто-выплата через 47 ч</div>
+				<div class="mt-1 font-display text-3xl text-white">176</div>
+				<svg viewBox="0 0 200 50" class="mt-2 w-full">
+					<path
+						d="M0 45 L40 38 L80 34 L120 24 L160 18 L200 6"
+						fill="none"
+						stroke="var(--color-brand-400)"
+						stroke-width="3"
+						stroke-linecap="round"
+					/>
+				</svg>
+				<div class="text-xs text-emerald-300">+48 за 6 недель</div>
 			</div>
 
 			<div
-				class="absolute bottom-0 left-0 w-72 animate-float card p-4 shadow-2xl [animation-delay:-4s] sm:left-10"
+				class="absolute bottom-0 left-0 w-64 animate-float card p-4 shadow-2xl [animation-delay:-4s] sm:left-10"
 			>
 				<div class="flex items-center gap-3">
-					<div class="grid size-10 place-items-center rounded-xl bg-accent-500/20 text-accent-400">
-						<FileText class="size-5" />
+					<div class="grid size-10 place-items-center rounded-xl bg-accent-400/15 text-accent-400">
+						<Wallet class="size-5" />
 					</div>
 					<div>
-						<div class="text-sm font-semibold text-white">Договор · Германия 🇩🇪</div>
-						<div class="text-xs text-slate-500">BGB · § 19 UStG · 3 этапа</div>
+						<div class="text-sm font-semibold text-white">Экономия на репетиторе</div>
+						<div class="text-xs text-slate-500">математика + русский</div>
 					</div>
 				</div>
-				<div class="mt-3 text-xs text-brand-300">Сгенерирован за 8,4 сек</div>
+				<div class="mt-3 font-display text-xl text-accent-400">−11 500 сом/мес</div>
 			</div>
 		</div>
 	</div>

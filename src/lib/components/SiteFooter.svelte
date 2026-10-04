@@ -8,17 +8,18 @@
 	>
 		<div class="space-y-2">
 			<Logo />
-			<p>Защищаем деньги, время и нервы фрилансеров и заказчиков.</p>
+			<p>Готовим к ОРТ, ЕГЭ и SAT без стресса и дорогих репетиторов.</p>
 		</div>
 		<nav class="flex flex-wrap gap-5">
-			<a href="/app" class="hover:text-white">Кабинет</a>
-			<a href="/app/contracts" class="hover:text-white">Договоры</a>
-			<a href="/app/escrow" class="hover:text-white">Эскроу</a>
+			<a href="/app" class="hover:text-white">Прогресс</a>
+			<a href="/app/test" class="hover:text-white">Пробный тест</a>
+			<a href="/app/practice" class="hover:text-white">Тренажёр</a>
 			<a href="/pitch" class="hover:text-white">Для жюри</a>
 		</nav>
 	</div>
 	<p class="mx-auto mt-6 max-w-6xl px-4 text-xs text-slate-600">
-		Хакатон-MVP. Статистика, отзывы и сделки на сайте — демонстрационные данные. Шаблоны договоров
-		не являются юридической консультацией.
+		Хакатон-MVP. Отзывы, статистика и история прогресса — демонстрационные данные. Задания
+		составлены в формате экзаменов и не являются официальными материалами ЦООМО, ФИПИ или College
+		Board.
 	</p>
 </footer>

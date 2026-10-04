@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-	<title>Для жюри — FreelanceShield AI</title>
+	<title>Для жюри — TestBoost AI</title>
 </svelte:head>
 
 <section class="mx-auto max-w-5xl px-4 pt-16 pb-10">
@@ -38,8 +38,8 @@
 		<Timer class="size-6 text-brand-400" /> MVP за 48 часов
 	</h2>
 	<p class="mt-3 text-slate-400">
-		Принцип: <b class="text-white">одна сквозная история</b>. ТЗ → договор → эскроу → чат с Defender
-		→ выплата → дашборд. Всё, что не попадает в эту историю, вырезаем.
+		Принцип: <b class="text-white">одна сквозная история ученика</b>. Пробный тест → разбор ошибок с
+		ИИ → тренажёр слабой темы → рост на графике. Всё, что не попадает в эту историю, вырезаем.
 	</p>
 	<div class="mt-8 grid gap-4 md:grid-cols-4">
 		{#each mvpPlan as phase (phase.phase)}
@@ -99,9 +99,9 @@
 		{/each}
 	</div>
 	<div class="mt-6 flex flex-wrap gap-3">
-		<a href="/app/scope" class="btn btn-primary">Открыть Defender</a>
-		<a href="/app/escrow" class="btn btn-ghost">Открыть эскроу</a>
-		<a href="/app/contracts" class="btn btn-ghost">Открыть генератор</a>
+		<a href="/app/test" class="btn btn-primary">Пробный тест</a>
+		<a href="/app/practice" class="btn btn-ghost">Тренажёр</a>
+		<a href="/app" class="btn btn-ghost">График прогресса</a>
 	</div>
 </section>
 

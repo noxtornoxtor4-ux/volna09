@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>{title} — FreelanceShield AI</title>
+	<title>{title} — TestBoost AI</title>
 </svelte:head>
 
 <header class="mb-8 flex flex-wrap items-end justify-between gap-4 print:hidden">

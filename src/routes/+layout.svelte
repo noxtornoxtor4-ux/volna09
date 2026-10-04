@@ -8,10 +8,10 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>FreelanceShield AI — защита фрилансеров и заказчиков</title>
+	<title>TestBoost AI — подготовка к ОРТ, ЕГЭ и SAT с ИИ</title>
 	<meta
 		name="description"
-		content="ИИ ловит правки вне ТЗ, эскроу по этапам выплачивает сам, договор под любую страну за 10 секунд."
+		content="Пробные тесты ОРТ, ЕГЭ и SAT, ИИ объясняет каждую ошибку и подбирает похожие задачи на слабые темы."
 	/>
 </svelte:head>
 
