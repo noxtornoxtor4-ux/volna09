@@ -1,0 +1,97 @@
+@import 'tailwindcss';
+
+@theme {
+	--font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Unbounded', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+	--color-ink-950: #07090f;
+	--color-ink-900: #0c1019;
+	--color-ink-800: #131a27;
+	--color-ink-700: #1d2636;
+	--color-ink-600: #2a3548;
+
+	--color-brand-300: #8ff5c8;
+	--color-brand-400: #4eeaa6;
+	--color-brand-500: #1fd189;
+	--color-brand-600: #12a96d;
+
+	--color-accent-400: #a78bfa;
+	--color-accent-500: #8b5cf6;
+
+	--animate-float: float 6s ease-in-out infinite;
+	--animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
+
+	@keyframes float {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-10px);
+		}
+	}
+
+	@keyframes pulse-ring {
+		0% {
+			box-shadow: 0 0 0 0 rgb(31 209 137 / 0.45);
+		}
+		100% {
+			box-shadow: 0 0 0 14px rgb(31 209 137 / 0);
+		}
+	}
+}
+
+@layer base {
+	html {
+		scroll-behavior: smooth;
+		color-scheme: dark;
+	}
+
+	body {
+		@apply bg-ink-950 font-sans text-slate-200 antialiased;
+	}
+
+	::selection {
+		@apply bg-brand-500/30 text-white;
+	}
+}
+
+@utility card {
+	@apply rounded-2xl border border-white/8 bg-ink-900/70 backdrop-blur;
+}
+
+@utility glow {
+	box-shadow:
+		0 0 0 1px rgb(31 209 137 / 0.25),
+		0 20px 60px -20px rgb(31 209 137 / 0.45);
+}
+
+@utility text-gradient {
+	@apply bg-linear-to-r from-brand-300 via-brand-400 to-accent-400 bg-clip-text text-transparent;
+}
+
+@utility btn {
+	@apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+	@apply bg-brand-500 text-ink-950 hover:bg-brand-400;
+}
+
+@utility btn-ghost {
+	@apply border border-white/10 bg-white/5 text-white hover:bg-white/10;
+}
+
+@utility input {
+	@apply w-full rounded-xl border border-white/10 bg-ink-800 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none;
+}
+
+@utility label {
+	@apply mb-1.5 block text-xs font-medium tracking-wide text-slate-400 uppercase;
+}
+
+@media print {
+	body {
+		@apply bg-white text-black;
+	}
+}
