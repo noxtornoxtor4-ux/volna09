@@ -10,7 +10,6 @@
 		Hourglass,
 		Plus,
 		Rocket,
-		Sparkles,
 		Users,
 		X
 	} from '@lucide/svelte';
@@ -110,8 +109,7 @@
 					>{app.aiTips[0].emoji}</span
 				>
 				<span class="min-w-0 flex-1 text-sm">
-					<span class="flex items-center gap-1 text-xs font-bold text-accent-text"
-						><Sparkles class="size-3.5" /> ИИ-помощник</span
+					<span class="flex items-center gap-1 text-xs font-bold text-accent-text">ИИ-помощник</span
 					>
 					<span class="line-clamp-2">{app.aiTips[0].text}</span>
 				</span>

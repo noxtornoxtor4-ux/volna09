@@ -16,7 +16,6 @@
 		MessageCircleQuestion,
 		Rocket,
 		Share2,
-		Sparkles,
 		Users
 	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
@@ -95,7 +94,7 @@
 					{#if app.isPromoted(o)}
 						<span
 							class="inline-flex items-center gap-1 rounded-full bg-ink/80 px-3 py-1.5 text-xs font-bold text-bg"
-							><Sparkles class="size-3" /> Продвигается</span
+							>Продвигается</span
 						>
 					{/if}
 				</div>

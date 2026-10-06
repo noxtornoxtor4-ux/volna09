@@ -8,7 +8,6 @@
 		Hourglass,
 		MapPin,
 		MessageCircleQuestion,
-		Sparkles,
 		Users
 	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
@@ -64,7 +63,7 @@
 			<span
 				class="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-bold text-bg backdrop-blur"
 			>
-				<Sparkles class="size-3" /> Продвигается
+				Продвигается
 			</span>
 		{/if}
 		{#if o.deadline}

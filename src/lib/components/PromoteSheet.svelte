@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Rocket, Sparkles } from '@lucide/svelte';
+	import { Rocket } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { formatDate } from '#lib/format.ts';
 	import Modal from './Modal.svelte';
@@ -49,7 +49,7 @@
 			{/each}
 		</div>
 		<p class="mt-3 flex items-center gap-1.5 text-xs text-muted">
-			<Sparkles class="size-3.5" /> Показ волонтёрам, у которых совпадают интересы с темами мероприятия.
+			Показ волонтёрам, у которых совпадают интересы с темами мероприятия.
 		</p>
 		<button class="mt-5 btn w-full btn-primary py-3" onclick={promote}
 			><Rocket class="size-4" /> Продвигать {plans

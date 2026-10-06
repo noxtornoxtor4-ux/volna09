@@ -1,15 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
-	import {
-		ArrowRight,
-		Building,
-		ChevronLeft,
-		HandHeart,
-		Mail,
-		Smartphone,
-		Sparkles
-	} from '@lucide/svelte';
+	import { ArrowRight, Building, ChevronLeft, HandHeart, Mail, Smartphone } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Logo from '#lib/components/Logo.svelte';
 	import type { Role, Session } from '#lib/types.ts';
@@ -252,7 +244,7 @@
 						disabled={!emailValid || !nameOk}
 						onclick={() => (linkSent = true)}
 					>
-						<Sparkles class="size-4" /> Прислать ссылку для входа
+						Прислать ссылку для входа
 					</button>
 				</form>
 			{:else}

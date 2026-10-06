@@ -1,14 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import {
-		ChevronLeft,
-		ChevronRight,
-		Megaphone,
-		MessageCircle,
-		Send,
-		Sparkles
-	} from '@lucide/svelte';
+	import { ChevronLeft, ChevronRight, Megaphone, MessageCircle, Send } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import { ME, day, toneClass } from '#lib/data.ts';
@@ -51,9 +44,7 @@
 				<div
 					class="pointer-events-none absolute -top-12 -right-12 size-40 rounded-full bg-accent/50 blur-2xl"
 				></div>
-				<h2 class="relative flex items-center gap-2 font-extrabold">
-					<Sparkles class="size-5 text-accent-text" /> ИИ-помощник
-				</h2>
+				<h2 class="relative flex items-center gap-2 font-extrabold">ИИ-помощник</h2>
 				<ul class="relative mt-3 space-y-2">
 					{#each app.aiTips as tip (tip.id)}
 						<li class="flex items-start gap-3 rounded-3xl bg-surface p-3">
@@ -174,7 +165,6 @@
 			<ul class="space-y-2">
 				{#if o.date >= day(0)}
 					<li class="flex gap-3 rounded-3xl bg-accent-soft p-4 text-sm">
-						<Sparkles class="size-5 shrink-0 text-accent-text" />
 						<span
 							>ИИ-напоминание придёт {relativeDay(o.date) === 'завтра'
 								? 'сегодня вечером'

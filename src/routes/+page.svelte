@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Bell, Search, Sparkles } from '@lucide/svelte';
+	import { Bell, Search } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import StoriesBar from '#lib/components/StoriesBar.svelte';
@@ -57,18 +57,14 @@
 			>{tip.emoji}</span
 		>
 		<span class="min-w-0 flex-1 text-sm">
-			<span class="flex items-center gap-1 text-xs font-bold text-accent-text"
-				><Sparkles class="size-3.5" /> ИИ-помощник</span
-			>
+			<span class="flex items-center gap-1 text-xs font-bold text-accent-text">ИИ-помощник</span>
 			<span class="line-clamp-2">{tip.text}</span>
 		</span>
 	</a>
 {/if}
 
 <section class="mb-6">
-	<h2 class="mb-3 flex items-center gap-2 text-lg font-extrabold">
-		<Sparkles class="size-5 text-accent-text" /> Для вас
-	</h2>
+	<h2 class="mb-3 flex items-center gap-2 text-lg font-extrabold">Для вас</h2>
 	<StoriesBar />
 </section>
 
