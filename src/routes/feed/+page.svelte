@@ -1,143 +1,99 @@
 <script lang="ts">
-	import { Image, Send, Video, X } from '@lucide/svelte';
+	import { Film, Image, LayoutGrid, Plus, Smartphone, Star, Type } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import PostCard from '#lib/components/PostCard.svelte';
-	import PostMedia from '#lib/components/PostMedia.svelte';
-	import { ME, organizations } from '#lib/data.ts';
-	import type { Media } from '#lib/types.ts';
+	import PostComposer from '#lib/components/PostComposer.svelte';
+	import type { Post } from '#lib/types.ts';
 
-	type Tab = 'all' | 'video' | 'reviews';
+	type Section = 'recommended' | 'experience';
+	type Format = 'all' | 'short' | 'photo' | 'video' | 'text';
 
-	const MAX_PHOTO_BYTES = 1_500_000;
+	let section = $state<Section>('recommended');
+	let format = $state<Format>('all');
+	let composing = $state(false);
+	let composeKind = $state<Post['kind']>('post');
 
-	let tab = $state<Tab>('all');
-	let text = $state('');
-	let media = $state<Media | undefined>();
-	let opportunityId = $state('');
-	let orgId = $state('');
-
-	const tabs: { id: Tab; label: string }[] = [
-		{ id: 'all', label: 'Всё' },
-		{ id: 'video', label: 'Видео' },
-		{ id: 'reviews', label: 'Отзывы об организациях' }
+	const formats = [
+		{ id: 'all' as Format, label: 'Всё', icon: LayoutGrid },
+		{ id: 'short' as Format, label: 'Короткие видео', icon: Smartphone },
+		{ id: 'photo' as Format, label: 'Фото', icon: Image },
+		{ id: 'video' as Format, label: 'Видео', icon: Film },
+		{ id: 'text' as Format, label: 'Текст', icon: Type }
 	];
 
 	const posts = $derived(
-		app.posts.filter((p) =>
-			tab === 'video'
-				? p.media?.type === 'video'
-				: tab === 'reviews'
-					? !!p.orgId && p.authorId !== p.orgId
-					: true
-		)
+		section === 'experience'
+			? app.posts.filter((p) => p.kind === 'review')
+			: app.posts.filter((p) =>
+					format === 'all' ? true : format === 'text' ? !p.media : p.media?.type === format
+				)
 	);
 
-	function attach(e: Event, type: Media['type']) {
-		const input = e.currentTarget as HTMLInputElement;
-		const file = input.files?.[0];
-		input.value = '';
-		if (!file) return;
-		if (type === 'video') {
-			// Видео не кладём в localStorage: живёт до перезагрузки страницы
-			media = { type, tone: 'blue', emoji: '🎬', src: URL.createObjectURL(file) };
-			return;
-		}
-		if (file.size > MAX_PHOTO_BYTES) {
-			app.notify('Фото больше 1,5 МБ: выберите файл поменьше');
-			return;
-		}
-		const reader = new FileReader();
-		reader.onload = () => (media = { type, tone: 'blue', emoji: '📷', src: String(reader.result) });
-		reader.readAsDataURL(file);
-	}
-
-	function publish(e: SubmitEvent) {
-		e.preventDefault();
-		if (!text.trim()) return;
-		const opportunity = opportunityId ? app.opportunity(opportunityId) : undefined;
-		app.addPost({
-			text: text.trim(),
-			media,
-			opportunityId: opportunityId || undefined,
-			orgId: orgId || opportunity?.orgId || undefined
-		});
-		text = '';
-		media = undefined;
-		opportunityId = '';
-		orgId = '';
+	function compose(kind: Post['kind']) {
+		composeKind = kind;
+		composing = true;
 	}
 </script>
 
-<svelte:head><title>Лента опыта — Волна</title></svelte:head>
+<svelte:head><title>Лента — Волна</title></svelte:head>
 
 <div class="mx-auto max-w-xl">
-	<h1 class="mb-5 text-2xl font-extrabold tracking-tight sm:text-3xl">Лента опыта</h1>
-
-	<form class="mb-5 card p-4" onsubmit={publish}>
-		<div class="flex gap-3">
-			<Avatar id={ME} />
-			<textarea
-				class="min-h-20 flex-1 resize-none bg-transparent py-2 text-[15px] outline-none placeholder:text-muted"
-				placeholder="Как прошло ваше волонтёрство? Расскажите историю или оставьте отзыв"
-				bind:value={text}></textarea>
-		</div>
-
-		{#if media}
-			<div class="relative mt-3">
-				<PostMedia {media} />
-				<button
-					type="button"
-					class="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-black/50 text-white"
-					onclick={() => (media = undefined)}
-					aria-label="Убрать вложение"
-				>
-					<X class="size-4" />
-				</button>
-			</div>
-		{/if}
-
-		<div class="mt-3 grid gap-2 sm:grid-cols-2">
-			<select class="input py-2.5" bind:value={opportunityId} aria-label="Отметить проект">
-				<option value="">🏷️ Отметить проект</option>
-				{#each app.opportunities as o (o.id)}
-					<option value={o.id}>{o.emoji} {o.title}</option>
-				{/each}
-			</select>
-			<select class="input py-2.5" bind:value={orgId} aria-label="Отметить организацию">
-				<option value="">🏢 Отметить организацию</option>
-				{#each organizations as org (org.id)}
-					<option value={org.id}>{org.emoji} {org.name}</option>
-				{/each}
-			</select>
-		</div>
-
-		<div class="mt-3 flex items-center gap-2 border-t border-line pt-3">
-			<label class="btn cursor-pointer btn-ghost py-2" title="Фото">
-				<Image class="size-4" /> Фото
-				<input type="file" accept="image/*" class="sr-only" onchange={(e) => attach(e, 'photo')} />
-			</label>
-			<label class="btn cursor-pointer btn-ghost py-2" title="Вертикальное видео">
-				<Video class="size-4" /> Видео
-				<input type="file" accept="video/*" class="sr-only" onchange={(e) => attach(e, 'video')} />
-			</label>
-			<button class="ml-auto btn btn-primary py-2" disabled={!text.trim()}
-				><Send class="size-4" /> Опубликовать</button
-			>
-		</div>
-	</form>
-
-	<div class="-mx-4 mb-5 no-scrollbar flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-		{#each tabs as t (t.id)}
-			<button
-				class="chip {tab === t.id ? 'border-accent bg-accent-soft text-accent-text' : ''}"
-				onclick={() => (tab = t.id)}
-				aria-pressed={tab === t.id}
-			>
-				{t.label}
-			</button>
-		{/each}
+	<div class="mb-5 flex items-center justify-between gap-3">
+		<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Лента</h1>
+		<button
+			class="btn btn-primary"
+			onclick={() => compose(section === 'experience' ? 'review' : 'post')}
+		>
+			<Plus class="size-4" /> Создать
+		</button>
 	</div>
+
+	<div class="mb-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-bold">
+		<button
+			class="rounded-xl py-2.5 transition {section === 'recommended'
+				? 'bg-surface shadow-sm'
+				: 'text-muted'}"
+			onclick={() => (section = 'recommended')}
+		>
+			Рекомендации
+		</button>
+		<button
+			class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 transition {section ===
+			'experience'
+				? 'bg-surface shadow-sm'
+				: 'text-muted'}"
+			onclick={() => (section = 'experience')}
+		>
+			<Star class="size-4" /> Опыт и отзывы
+		</button>
+	</div>
+
+	{#if section === 'recommended'}
+		<div class="-mx-4 mb-5 no-scrollbar flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+			{#each formats as f (f.id)}
+				<button
+					class="chip {format === f.id ? 'border-accent bg-accent text-accent-ink' : ''}"
+					onclick={() => (format = f.id)}
+					aria-pressed={format === f.id}
+				>
+					<f.icon class="size-4" />
+					{f.label}
+				</button>
+			{/each}
+		</div>
+	{:else}
+		<button
+			class="mb-5 flex w-full items-center gap-3 card p-3 text-left transition hover:border-accent"
+			onclick={() => compose('review')}
+		>
+			<Avatar id={app.actorId} />
+			<span class="flex-1 text-sm text-muted"
+				>Расскажите, как прошло волонтёрство: текст, фото или видео…</span
+			>
+			<span class="btn btn-soft py-2">Отзыв</span>
+		</button>
+	{/if}
 
 	<div class="space-y-4">
 		{#each posts as post (post.id)}
@@ -147,3 +103,5 @@
 		{/each}
 	</div>
 </div>
+
+<PostComposer bind:open={composing} bind:kind={composeKind} />

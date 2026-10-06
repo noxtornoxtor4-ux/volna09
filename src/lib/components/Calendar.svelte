@@ -1,5 +1,5 @@
 <script module lang="ts">
-	export type Mark = 'done' | 'pending' | 'plan';
+	export type Mark = 'event' | 'pending' | 'done' | 'photo';
 </script>
 
 <script lang="ts">
@@ -17,10 +17,17 @@
 
 	const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 	const markClass: Record<Mark, string> = {
-		done: 'bg-pastel-green-ink',
+		event: 'bg-pastel-blue-ink',
 		pending: 'bg-pastel-yellow-ink',
-		plan: 'bg-pastel-blue-ink'
+		done: 'bg-pastel-green-ink',
+		photo: 'bg-pastel-peach-ink'
 	};
+	const legend: [Mark, string][] = [
+		['event', 'участие подтверждено'],
+		['pending', 'заявка на рассмотрении'],
+		['done', 'часы подтверждены'],
+		['photo', 'есть фото']
+	];
 
 	const title = $derived(cursor.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }));
 	const cells = $derived.by(() => {
@@ -42,17 +49,17 @@
 </script>
 
 <div>
-	<div class="mb-3 flex items-center justify-between">
+	<div class="mb-4 flex items-center justify-between">
 		<button
-			class="btn size-9 rounded-full btn-ghost p-0"
+			class="btn size-10 rounded-full btn-ghost p-0"
 			onclick={() => shift(-1)}
-			aria-label="Предыдущий месяц"><ChevronLeft class="size-4" /></button
+			aria-label="Предыдущий месяц"><ChevronLeft class="size-5" /></button
 		>
-		<span class="font-bold capitalize">{title}</span>
+		<span class="text-lg font-extrabold capitalize">{title}</span>
 		<button
-			class="btn size-9 rounded-full btn-ghost p-0"
+			class="btn size-10 rounded-full btn-ghost p-0"
 			onclick={() => shift(1)}
-			aria-label="Следующий месяц"><ChevronRight class="size-4" /></button
+			aria-label="Следующий месяц"><ChevronRight class="size-5" /></button
 		>
 	</div>
 	<div class="grid grid-cols-7 gap-1 text-center">
@@ -62,13 +69,16 @@
 		{#each cells as date, i (date ?? `empty-${i}`)}
 			{#if date}
 				{@const dayMarks = [...new Set(marks[date] ?? [])]}
+				{@const highlighted = dayMarks.includes('event')}
 				<button
-					class="relative flex aspect-square flex-col items-center justify-center rounded-xl text-sm font-semibold transition {selected ===
+					class="relative flex aspect-square flex-col items-center justify-center rounded-2xl text-sm font-bold transition {selected ===
 					date
-						? 'bg-accent text-accent-ink'
-						: date === today
-							? 'bg-accent-soft text-accent-text'
-							: 'hover:bg-surface-2'} {date < today && !dayMarks.length && selected !== date
+						? 'bg-accent text-accent-ink shadow-md'
+						: highlighted
+							? 'bg-pastel-blue text-pastel-blue-ink'
+							: date === today
+								? 'bg-accent-soft text-accent-text'
+								: 'hover:bg-surface-2'} {date < today && !dayMarks.length && selected !== date
 						? 'text-muted'
 						: ''}"
 					onclick={() => (selected = date)}
@@ -91,15 +101,11 @@
 			{/if}
 		{/each}
 	</div>
-	<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-		<span class="flex items-center gap-1.5"
-			><span class="size-2 rounded-full bg-pastel-green-ink"></span>подтверждено</span
-		>
-		<span class="flex items-center gap-1.5"
-			><span class="size-2 rounded-full bg-pastel-yellow-ink"></span>на проверке</span
-		>
-		<span class="flex items-center gap-1.5"
-			><span class="size-2 rounded-full bg-pastel-blue-ink"></span>запланировано</span
-		>
+	<div class="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted">
+		{#each legend as [mark, label] (mark)}
+			<span class="flex items-center gap-1.5"
+				><span class="size-2 rounded-full {markClass[mark]}"></span>{label}</span
+			>
+		{/each}
 	</div>
 </div>

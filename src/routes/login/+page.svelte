@@ -1,13 +1,22 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
-	import { ArrowRight, ChevronLeft, Mail, Smartphone, Sparkles } from '@lucide/svelte';
+	import {
+		ArrowRight,
+		Building,
+		ChevronLeft,
+		HandHeart,
+		Mail,
+		Smartphone,
+		Sparkles
+	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Logo from '#lib/components/Logo.svelte';
-	import type { Session } from '#lib/types.ts';
+	import type { Role, Session } from '#lib/types.ts';
 
 	let mode = $state<'login' | 'signup'>('login');
 	let method = $state<Session['method']>('phone');
+	let role = $state<Role>('volunteer');
 	let name = $state('');
 
 	let phone = $state('');
@@ -25,9 +34,9 @@
 	const emailValid = $derived(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
 	const nameOk = $derived(mode === 'login' || name.trim().length > 1);
 
-	function finish(session: Session) {
-		app.login(session, mode === 'signup' ? name.trim() : undefined);
-		goto('/', { replaceState: true });
+	function finish(session: Omit<Session, 'role'>) {
+		app.login({ ...session, role }, mode === 'signup' ? name.trim() : undefined);
+		goto(role === 'org' ? '/cabinet' : '/', { replaceState: true });
 	}
 
 	function sendCode(e?: SubmitEvent) {
@@ -53,9 +62,13 @@
 		if (emailValid && password.length >= 6 && nameOk) finish({ method: 'email', contact: email });
 	}
 
-	function demo() {
-		app.login({ method: 'email', contact: 'demo@volna.kg' });
-		goto('/', { replaceState: true });
+	function demo(demoRole: Role) {
+		app.login({
+			method: 'email',
+			contact: demoRole === 'org' ? 'eco@volna.kg' : 'demo@volna.kg',
+			role: demoRole
+		});
+		goto(demoRole === 'org' ? '/cabinet' : '/', { replaceState: true });
 	}
 
 	onDestroy(() => clearInterval(timer));
@@ -101,7 +114,23 @@
 				{mode === 'login' ? 'Войдите, чтобы продолжить.' : 'Пара шагов — и можно подавать заявки.'}
 			</p>
 
-			<div class="mt-6 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
+			<div class="mt-6 grid grid-cols-2 gap-2">
+				{#each [{ id: 'volunteer' as Role, label: 'Я волонтёр', icon: HandHeart }, { id: 'org' as Role, label: 'Я организация', icon: Building }] as r (r.id)}
+					<button
+						class="flex flex-col items-center gap-1.5 rounded-3xl border-2 p-3 text-sm font-bold transition {role ===
+						r.id
+							? 'border-accent bg-accent-soft text-accent-text'
+							: 'border-line text-muted hover:border-accent/50'}"
+						onclick={() => (role = r.id)}
+						aria-pressed={role === r.id}
+					>
+						<r.icon class="size-6" />
+						{r.label}
+					</button>
+				{/each}
+			</div>
+
+			<div class="mt-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
 				<button
 					class="flex items-center justify-center gap-2 rounded-xl py-2.5 {method === 'phone'
 						? 'bg-surface shadow-sm'
@@ -122,8 +151,13 @@
 
 			{#if mode === 'signup' && !(method === 'phone' && codeSent) && !linkSent}
 				<label class="mt-5 block">
-					<span class="label">Как тебя зовут?</span>
-					<input class="input" autocomplete="name" placeholder="Имя и фамилия" bind:value={name} />
+					<span class="label">{role === 'org' ? 'Название организации' : 'Как тебя зовут?'}</span>
+					<input
+						class="input"
+						autocomplete="name"
+						placeholder={role === 'org' ? 'Например: Эко-клуб' : 'Имя и фамилия'}
+						bind:value={name}
+					/>
 				</label>
 			{/if}
 
@@ -254,7 +288,15 @@
 			</p>
 
 			<div class="mt-8 border-t border-line pt-6">
-				<button class="btn w-full btn-soft" onclick={demo}>Посмотреть демо без регистрации</button>
+				<p class="mb-2 text-center text-xs font-semibold text-muted">Демо без регистрации</p>
+				<div class="grid grid-cols-2 gap-2">
+					<button class="btn btn-soft" onclick={() => demo('volunteer')}
+						><HandHeart class="size-4" /> Волонтёр</button
+					>
+					<button class="btn btn-ghost" onclick={() => demo('org')}
+						><Building class="size-4" /> Организация</button
+					>
+				</div>
 			</div>
 		</div>
 	</main>

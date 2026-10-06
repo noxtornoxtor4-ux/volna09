@@ -1,15 +1,16 @@
 <script lang="ts">
-	import { BadgeCheck, Heart, MessageCircle, Send, Share2 } from '@lucide/svelte';
+	import { BadgeCheck, Heart, MessageCircle, Send, Share2, Star } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { toneClass } from '#lib/data.ts';
+	import { ME, MY_ORG, toneClass } from '#lib/data.ts';
 	import { timeAgo } from '#lib/format.ts';
 	import type { Post } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
 	import PostMedia from './PostMedia.svelte';
 
-	let { post }: { post: Post } = $props();
+	let { post, openComments = false }: { post: Post; openComments?: boolean } = $props();
 
-	let showComments = $state(false);
+	// svelte-ignore state_referenced_locally
+	let showComments = $state(openComments);
 	let draft = $state('');
 
 	const author = $derived(app.author(post.authorId));
@@ -17,6 +18,7 @@
 		post.opportunityId ? app.opportunity(post.opportunityId) : undefined
 	);
 	const org = $derived(post.orgId ? app.org(post.orgId) : undefined);
+	const profileHref = (id: string) => (id === ME || id === MY_ORG ? '/profile' : `/u?id=${id}`);
 
 	function comment(e: SubmitEvent) {
 		e.preventDefault();
@@ -28,28 +30,38 @@
 
 <article id={post.id} class="scroll-mt-24 card p-4 sm:p-5">
 	<header class="flex items-center gap-3">
-		<Avatar id={post.authorId} />
+		<a href={profileHref(post.authorId)}><Avatar id={post.authorId} /></a>
 		<div class="min-w-0 flex-1">
-			<div class="flex items-center gap-1 truncate font-bold">
+			<a
+				href={profileHref(post.authorId)}
+				class="flex items-center gap-1 truncate font-bold hover:underline"
+			>
 				{author.name}
 				{#if author.verified}<BadgeCheck
 						class="size-4 shrink-0 text-accent-text"
 						aria-label="Проверенная организация"
 					/>{/if}
-			</div>
+			</a>
 			<div class="text-xs text-muted">
 				{author.isOrg ? 'Организация' : 'Волонтёр'} · {timeAgo(post.createdAt)}
 			</div>
 		</div>
+		{#if post.kind === 'review'}
+			<span
+				class="inline-flex items-center gap-1 rounded-full bg-pastel-yellow px-2.5 py-1 text-[11px] font-bold text-pastel-yellow-ink"
+			>
+				<Star class="size-3 fill-current" /> Отзыв
+			</span>
+		{/if}
 	</header>
 
 	<p class="mt-3 text-[15px] leading-relaxed whitespace-pre-line">{post.text}</p>
 
-	{#if opportunity || org}
+	{#if opportunity || (org && org.id !== post.authorId)}
 		<div class="mt-3 flex flex-wrap gap-2">
 			{#if opportunity}
 				<a
-					href="/#{opportunity.id}"
+					href="/o?id={opportunity.id}"
 					class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold {toneClass[
 						opportunity.tone
 					].bg} {toneClass[opportunity.tone].text}"
@@ -59,14 +71,15 @@
 				</a>
 			{/if}
 			{#if org && org.id !== post.authorId}
-				<span
+				<a
+					href={profileHref(org.id)}
 					class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold {toneClass[
 						org.tone
 					].bg} {toneClass[org.tone].text}"
 				>
 					{org.emoji}
 					{org.name}
-				</span>
+				</a>
 			{/if}
 		</div>
 	{/if}
@@ -86,7 +99,7 @@
 			aria-pressed={post.liked}
 			aria-label="Нравится"
 		>
-			<Heart class="size-5 {post.liked ? 'fill-current' : ''}" />
+			<Heart class="size-5 transition {post.liked ? 'scale-110 fill-current' : ''}" />
 			{post.likes}
 		</button>
 		<button
@@ -114,7 +127,7 @@
 		<div class="mt-2 space-y-3">
 			{#each post.comments as c (c.id)}
 				<div class="flex gap-2.5">
-					<Avatar id={c.authorId} size="sm" />
+					<a href={profileHref(c.authorId)}><Avatar id={c.authorId} size="sm" /></a>
 					<div class="rounded-2xl bg-surface-2 px-3 py-2 text-sm">
 						<div class="text-xs font-bold">
 							{app.author(c.authorId).name}
