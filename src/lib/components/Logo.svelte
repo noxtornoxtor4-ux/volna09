@@ -1,11 +1,15 @@
-<script lang="ts">
-	import { Zap } from '@lucide/svelte';
-	import { brand } from '#lib/content.ts';
-</script>
-
-<a href="/" class="flex items-center gap-2 font-display text-[15px] font-bold text-white">
-	<span class="grid size-8 place-items-center rounded-lg bg-brand-500 text-accent-400">
-		<Zap class="size-5" strokeWidth={2.5} />
+<a href="/" class="flex items-center gap-2 text-lg font-extrabold tracking-tight">
+	<span class="grid size-9 place-items-center rounded-2xl bg-accent text-accent-ink">
+		<svg viewBox="0 0 32 32" class="size-6" aria-hidden="true">
+			<path
+				d="M5 19c3 0 3-4 6-4s3 4 6 4 3-4 6-4 3 2 3 2"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.8"
+				stroke-linecap="round"
+			/>
+			<circle cx="16" cy="9.5" r="2.6" fill="currentColor" />
+		</svg>
 	</span>
-	{brand.name}<span class="text-brand-400">{brand.suffix}</span>
+	Волна
 </a>

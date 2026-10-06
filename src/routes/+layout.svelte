@@ -1,18 +1,37 @@
 <script lang="ts">
 	import './layout.css';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import favicon from '#lib/assets/favicon.svg';
+	import { app } from '#lib/app.svelte.ts';
+	import AppShell from '#lib/components/AppShell.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+
+	const isAuthPage = $derived(page.url.pathname === '/login');
+
+	$effect(() => {
+		document.documentElement.dataset.accent = app.accent;
+		document.documentElement.dataset.mode = app.mode;
+	});
+
+	$effect(() => {
+		if (!app.session && !isAuthPage) goto('/login', { replaceState: true });
+	});
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>TestBoost AI — подготовка к ОРТ, ЕГЭ и SAT с ИИ</title>
+	<title>Волна — платформа для подростков-волонтёров</title>
 	<meta
 		name="description"
-		content="Пробные тесты ОРТ, ЕГЭ и SAT, ИИ объясняет каждую ошибку и подбирает похожие задачи на слабые темы."
+		content="Находи волонтёрские проекты, делись опытом, считай часы и собирай подтверждённое диджитал-портфолио."
 	/>
 </svelte:head>
 
-{@render children()}
+{#if isAuthPage}
+	{@render children()}
+{:else if app.session}
+	<AppShell>{@render children()}</AppShell>
+{/if}
