@@ -43,59 +43,69 @@
 	const badge = $derived(app.unread);
 </script>
 
-<div class="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
-	<!-- Десктоп: боковое меню -->
-	<aside
-		class="sticky top-0 hidden h-dvh flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-4 py-6 lg:flex"
-	>
-		<div class="px-2"><Logo /></div>
-		<nav class="flex flex-col gap-1">
-			{#each main as link (link.href)}
-				<a
-					href={link.href}
-					class="flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition {isActive(
-						link.href
-					)
-						? 'bg-accent-soft text-accent-text'
-						: 'text-muted hover:bg-surface-2 hover:text-ink'}"
-				>
-					<link.icon class="size-5" />
-					<span class="flex-1">{link.label}</span>
-					{#if link.href === '/notifications' && badge}
-						<span class="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-ink">{badge}</span>
-					{/if}
-				</a>
-			{/each}
-		</nav>
-		<div class="h-px bg-line"></div>
-		<nav class="flex flex-col gap-1">
-			{#each extra as link (link.href)}
-				<a
-					href={link.href}
-					class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-semibold transition {isActive(
-						link.href
-					)
-						? 'bg-accent-soft text-accent-text'
-						: 'text-muted hover:bg-surface-2 hover:text-ink'}"
-				>
-					<link.icon class="size-[18px]" />
-					{link.label}
-				</a>
-			{/each}
-		</nav>
-		<a
-			href="/settings?s=accounts"
-			class="mt-auto flex items-center gap-3 rounded-2xl bg-surface-2 p-3 transition hover:brightness-95"
+<div class="min-h-dvh">
+	<!--
+		Десктоп: боковое меню спрятано за левым краем и выезжает при наведении курсора
+		на узкую полосу у края экрана. Пока курсор над меню, оно остаётся открытым.
+	-->
+	<div class="group fixed inset-y-0 left-0 z-50 hidden w-4 lg:block">
+		<span
+			class="absolute top-1/2 left-1 h-16 w-1.5 -translate-y-1/2 rounded-full bg-line transition-opacity duration-200 group-focus-within:opacity-0 group-hover:opacity-0"
+			aria-hidden="true"
+		></span>
+		<aside
+			class="absolute inset-y-0 left-0 flex w-[264px] -translate-x-full flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-4 py-6 shadow-2xl shadow-black/0 transition duration-300 ease-out group-focus-within:translate-x-0 group-focus-within:shadow-black/15 group-hover:translate-x-0 group-hover:shadow-black/15"
 		>
-			<Avatar id={app.actorId} />
-			<div class="min-w-0 text-sm">
-				<div class="truncate font-bold">{app.author(app.actorId).name}</div>
-				<div class="text-xs text-muted">
-					{app.isOrg ? 'Организация · сменить' : 'Волонтёр · сменить'}
+			<div class="px-2"><Logo /></div>
+			<nav class="flex flex-col gap-1">
+				{#each main as link (link.href)}
+					<a
+						href={link.href}
+						class="flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition {isActive(
+							link.href
+						)
+							? 'bg-accent-soft text-accent-text'
+							: 'text-muted hover:bg-surface-2 hover:text-ink'}"
+					>
+						<link.icon class="size-5" />
+						<span class="flex-1">{link.label}</span>
+						{#if link.href === '/notifications' && badge}
+							<span class="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-ink">{badge}</span
+							>
+						{/if}
+					</a>
+				{/each}
+			</nav>
+			<div class="h-px bg-line"></div>
+			<nav class="flex flex-col gap-1">
+				{#each extra as link (link.href)}
+					<a
+						href={link.href}
+						class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-semibold transition {isActive(
+							link.href
+						)
+							? 'bg-accent-soft text-accent-text'
+							: 'text-muted hover:bg-surface-2 hover:text-ink'}"
+					>
+						<link.icon class="size-[18px]" />
+						{link.label}
+					</a>
+				{/each}
+			</nav>
+			<a
+				href="/settings?s=accounts"
+				class="mt-auto flex items-center gap-3 rounded-2xl bg-surface-2 p-3 transition hover:brightness-95"
+			>
+				<Avatar id={app.actorId} />
+				<div class="min-w-0 text-sm">
+					<div class="truncate font-bold">{app.author(app.actorId).name}</div>
+					<div class="text-xs text-muted">
+						{app.isOrg ? 'Организация · сменить' : 'Волонтёр · сменить'}
+					</div>
 				</div>
-			</div>
-		</a>
-	</aside>
+			</a>
+		</aside>
+	</div>
 
 	<div class="min-w-0">
 		<!-- Мобильная шапка: поиск и настройки в углу -->
