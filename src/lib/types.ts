@@ -6,7 +6,8 @@ export type Interest =
 /** Ключ пастельного цвета из дизайн-системы */
 export type Tone = 'blue' | 'yellow' | 'green' | 'lilac' | 'peach';
 
-export type Accent = 'sky' | 'sun' | 'mint' | 'lilac' | 'peach';
+export type Accent =
+	'sky' | 'sun' | 'mint' | 'lilac' | 'peach' | 'lemon' | 'blush' | 'aqua' | 'orchid' | 'periwinkle';
 
 export interface Organization {
 	id: string;

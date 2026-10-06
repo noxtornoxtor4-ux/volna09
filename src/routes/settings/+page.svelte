@@ -123,7 +123,7 @@
 						class="grid aspect-square place-items-center rounded-2xl border-2 transition {app.accent ===
 						id
 							? 'border-ink'
-							: 'border-transparent'}"
+							: 'border-line'}"
 						style="background: {a.color}"
 						onclick={() => app.setAccent(id as Accent)}
 						aria-label={a.label}

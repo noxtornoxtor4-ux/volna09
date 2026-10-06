@@ -79,6 +79,31 @@
 	--accent-strong: #c75a2f;
 	--accent-ink: #4a1d0b;
 }
+:root[data-accent='lemon'] {
+	--accent: #fffabf;
+	--accent-strong: #8a7d00;
+	--accent-ink: #3d3700;
+}
+:root[data-accent='blush'] {
+	--accent: #ffe7ff;
+	--accent-strong: #b04aa8;
+	--accent-ink: #4a1446;
+}
+:root[data-accent='aqua'] {
+	--accent: #b2f9e7;
+	--accent-strong: #138a6c;
+	--accent-ink: #0a3a2e;
+}
+:root[data-accent='orchid'] {
+	--accent: #f4adef;
+	--accent-strong: #b13aa6;
+	--accent-ink: #4a0f45;
+}
+:root[data-accent='periwinkle'] {
+	--accent: #bfc4ff;
+	--accent-strong: #4a54d1;
+	--accent-ink: #1b1f5c;
+}
 
 @theme inline {
 	--font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;

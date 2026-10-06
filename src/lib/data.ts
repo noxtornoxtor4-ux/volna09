@@ -55,7 +55,12 @@ export const accents: Record<Accent, { label: string; color: string }> = {
 	sun: { label: 'Мягкий жёлтый', color: '#ffe08a' },
 	mint: { label: 'Пастельно-зелёный', color: '#a8e6c4' },
 	lilac: { label: 'Лавандовый', color: '#cdb8ff' },
-	peach: { label: 'Персиковый', color: '#ffc4a8' }
+	peach: { label: 'Персиковый', color: '#ffc4a8' },
+	lemon: { label: 'Лимонный', color: '#fffabf' },
+	blush: { label: 'Нежно-розовый', color: '#ffe7ff' },
+	aqua: { label: 'Аквамарин', color: '#b2f9e7' },
+	orchid: { label: 'Орхидея', color: '#f4adef' },
+	periwinkle: { label: 'Барвинок', color: '#bfc4ff' }
 };
 
 /** Готовые Tailwind-классы для пастельных тонов (статические строки, чтобы Tailwind их увидел) */
