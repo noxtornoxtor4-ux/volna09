@@ -6,7 +6,7 @@
 
 <a
 	href="/"
-	class="flex shrink-0 items-center gap-2.5 font-display text-[19px] leading-none font-bold tracking-tight"
+	class="flex shrink-0 items-center gap-2.5 font-display text-[20px] leading-none font-black tracking-tight"
 	aria-label={tr('Волна')}
 >
 	<svg

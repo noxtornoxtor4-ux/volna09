@@ -116,9 +116,9 @@
 }
 
 @theme inline {
-	--font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-	/* Unbounded — название и заголовки страниц, Manrope — основной текст */
-	--font-display: 'Unbounded', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+	/* Nunito — округлый шрифт всего интерфейса; заголовки — его самые жирные начертания */
+	--font-sans: 'Nunito', ui-rounded, ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Nunito', ui-rounded, ui-sans-serif, system-ui, sans-serif;
 
 	--color-brand-blue: var(--brand-blue);
 	--color-brand-navy: var(--brand-navy);
@@ -157,7 +157,7 @@
 	}
 
 	h1 {
-		@apply font-display font-bold;
+		@apply font-display font-black;
 	}
 
 	::selection {
