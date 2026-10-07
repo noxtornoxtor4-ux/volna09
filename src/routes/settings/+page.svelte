@@ -12,6 +12,7 @@
 		Moon,
 		Palette,
 		Plus,
+		Smartphone,
 		RotateCcw,
 		Sun,
 		UserCog,
@@ -19,13 +20,20 @@
 	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
+	import InstallApp from '#lib/components/InstallApp.svelte';
 	import { ME, MY_ORG, accents, toneClass } from '#lib/data.ts';
 	import { formatDate } from '#lib/format.ts';
 	import type { Accent, Privacy, Role } from '#lib/types.ts';
 
-	type Section = 'guide' | 'account' | 'accounts' | 'style' | 'archive' | 'privacy';
+	type Section = 'install' | 'guide' | 'account' | 'accounts' | 'style' | 'archive' | 'privacy';
 
 	const sections: { id: Section; label: string; hint: string; icon: typeof BookOpen }[] = [
+		{
+			id: 'install',
+			label: 'Установить приложение',
+			hint: 'Иконка на телефоне и компьютере',
+			icon: Smartphone
+		},
 		{
 			id: 'guide',
 			label: 'Руководство по использованию',
@@ -170,7 +178,9 @@
 			{current.label}
 		</h1>
 
-		{#if section === 'guide'}
+		{#if section === 'install'}
+			<InstallApp />
+		{:else if section === 'guide'}
 			<ol class="space-y-3">
 				{#each guide as step, i (step.title)}
 					<li class="flex gap-4 card p-4">

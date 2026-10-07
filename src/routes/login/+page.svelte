@@ -3,6 +3,7 @@
 	import { onDestroy } from 'svelte';
 	import { ArrowRight, Building, ChevronLeft, HandHeart, Mail, Smartphone } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import InstallApp from '#lib/components/InstallApp.svelte';
 	import Logo from '#lib/components/Logo.svelte';
 	import type { Role, Session } from '#lib/types.ts';
 
@@ -280,6 +281,7 @@
 			</p>
 
 			<div class="mt-8 border-t border-line pt-6">
+				<InstallApp variant="banner" />
 				<p class="mb-2 text-center text-xs font-semibold text-muted">Демо без регистрации</p>
 				<div class="grid grid-cols-2 gap-2">
 					<button class="btn btn-soft" onclick={() => demo('volunteer')}

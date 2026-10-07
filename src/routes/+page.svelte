@@ -2,6 +2,7 @@
 	import { Bell, Search } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
+	import InstallApp from '#lib/components/InstallApp.svelte';
 	import StoriesBar from '#lib/components/StoriesBar.svelte';
 	import { categories } from '#lib/data.ts';
 	import type { Category } from '#lib/types.ts';
@@ -47,6 +48,8 @@
 		<Search class="size-5" />
 	</a>
 </header>
+
+<InstallApp variant="banner" />
 
 {#if tip}
 	<a

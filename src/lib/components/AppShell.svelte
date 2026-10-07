@@ -110,7 +110,7 @@
 	<div class="min-w-0">
 		<!-- Мобильная шапка: поиск и настройки в углу -->
 		<header
-			class="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-bg/85 px-4 py-2.5 backdrop-blur-lg lg:hidden"
+			class="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-bg/85 px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 backdrop-blur-lg lg:hidden"
 		>
 			<Logo />
 			<a href="/search" class="ml-auto btn size-10 rounded-full btn-ghost p-0" aria-label="Поиск"

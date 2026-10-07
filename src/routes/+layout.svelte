@@ -14,6 +14,9 @@
 	$effect(() => {
 		document.documentElement.dataset.accent = app.accent;
 		document.documentElement.dataset.mode = app.mode;
+		document
+			.querySelector('meta[name="theme-color"]')
+			?.setAttribute('content', app.mode === 'dark' ? '#111319' : '#f6f8fc');
 	});
 
 	$effect(() => {
