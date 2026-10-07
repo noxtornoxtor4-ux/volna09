@@ -5,11 +5,13 @@
 	import { ChevronLeft, MessageCircle } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import AwardShelves from '#lib/components/AwardShelves.svelte';
+	import CertificatesBlock from '#lib/components/CertificatesBlock.svelte';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import OrgShowcase from '#lib/components/OrgShowcase.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
-	import { ME, toneClass } from '#lib/data.ts';
+	import SkillsBlock from '#lib/components/SkillsBlock.svelte';
+	import { ME } from '#lib/data.ts';
 	import { plural } from '#lib/format.ts';
 
 	const id = $derived(page.url.searchParams.get('id') ?? '');
@@ -107,16 +109,8 @@
 		]}
 		actions={follow}
 	/>
-	<div class="mt-3 flex flex-wrap gap-2">
-		{#each person.interests as tid (tid)}
-			{@const t = app.topic(tid)}
-			{#if t}<span
-					class="rounded-full px-3 py-1 text-xs font-semibold {toneClass[t.tone].bg} {toneClass[
-						t.tone
-					].text}">{t.emoji} {tr(t.label)}</span
-				>{/if}
-		{/each}
-	</div>
+	<SkillsBlock personId={person.id} editable={person.id === ME} />
+	<CertificatesBlock personId={person.id} editable={person.id === ME} />
 	<div class="mt-5 mb-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-bold">
 		<button
 			class="rounded-xl py-2.5 {tab !== 'awards' ? 'bg-surface shadow-sm' : 'text-muted'}"

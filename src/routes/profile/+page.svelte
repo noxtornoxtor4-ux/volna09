@@ -6,7 +6,9 @@
 	import OrgShowcase from '#lib/components/OrgShowcase.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
-	import { ME, toneClass } from '#lib/data.ts';
+	import CertificatesBlock from '#lib/components/CertificatesBlock.svelte';
+	import SkillsBlock from '#lib/components/SkillsBlock.svelte';
+	import { ME } from '#lib/data.ts';
 	import { plural } from '#lib/format.ts';
 
 	const certificates = $derived(app.myAwards.filter((a) => a.type === 'certificate').length);
@@ -111,16 +113,8 @@
 		{/snippet}
 	</ProfileHeader>
 
-	<div class="mt-3 flex flex-wrap gap-2">
-		{#each app.profile.interests as id (id)}
-			{@const t = app.topic(id)}
-			{#if t}<span
-					class="rounded-full px-3 py-1 text-xs font-semibold {toneClass[t.tone].bg} {toneClass[
-						t.tone
-					].text}">{t.emoji} {tr(t.label)}</span
-				>{/if}
-		{/each}
-	</div>
+	<SkillsBlock personId={ME} editable />
+	<CertificatesBlock personId={ME} editable />
 
 	<div class="mt-4 grid grid-cols-2 gap-3">
 		<a href="/portfolio" class="flex items-center gap-3 card p-4 transition hover:border-accent">

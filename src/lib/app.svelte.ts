@@ -24,6 +24,7 @@ import {
 	seedTopics
 } from './data.ts';
 import { formatDate, plural } from './format.ts';
+import { deleteBlob } from './media-db.ts';
 import type {
 	Accent,
 	CustomTheme,
@@ -45,6 +46,8 @@ import type {
 	Profile,
 	Role,
 	Session,
+	Skill,
+	SkillMaterial,
 	Thread,
 	Tone,
 	ThemeMode,
@@ -69,6 +72,8 @@ interface Snapshot {
 	hours: HoursEntry[];
 	posts: Post[];
 	awards: Award[];
+	skills: Skill[];
+	skillMaterials: SkillMaterial[];
 	memberships: Membership[];
 	threads: Thread[];
 	conversations: Conversation[];
@@ -102,6 +107,8 @@ function fresh(): Snapshot {
 		hours: seedHours,
 		posts: seedPosts,
 		awards: seedAwards,
+		skills: [],
+		skillMaterials: [],
 		memberships: seedMemberships,
 		threads: seedThreads,
 		conversations: seedConversations,
@@ -173,6 +180,8 @@ class AppState {
 	hours = $state<HoursEntry[]>([]);
 	posts = $state<Post[]>([]);
 	awards = $state<Award[]>([]);
+	skills = $state<Skill[]>([]);
+	skillMaterials = $state<SkillMaterial[]>([]);
 	memberships = $state<Membership[]>([]);
 	threads = $state<Thread[]>([]);
 	conversations = $state<Conversation[]>([]);
@@ -211,6 +220,8 @@ class AppState {
 		this.hours = s.hours;
 		this.posts = s.posts;
 		this.awards = s.awards;
+		this.skills = s.skills;
+		this.skillMaterials = s.skillMaterials;
 		this.memberships = s.memberships;
 		this.threads = s.threads;
 		this.conversations = s.conversations;
@@ -242,6 +253,8 @@ class AppState {
 				p.media?.src?.startsWith('blob:') ? { ...p, media: { ...p.media, src: undefined } } : p
 			),
 			awards: this.awards,
+			skills: this.skills,
+			skillMaterials: this.skillMaterials,
 			memberships: this.memberships,
 			threads: this.threads,
 			conversations: this.conversations,
@@ -944,20 +957,107 @@ class AppState {
 			.sort((a, b) => b.date.localeCompare(a.date));
 	}
 
-	uploadCertificate(award: Pick<Award, 'title' | 'description' | 'fileName' | 'src'>) {
+	/** Сертификат, который волонтёр загрузил сам: фото документа или цифровая версия */
+	addCertificate(
+		certificate: Pick<
+			Award,
+			| 'title'
+			| 'description'
+			| 'issuer'
+			| 'date'
+			| 'skillIds'
+			| 'format'
+			| 'fileId'
+			| 'fileName'
+			| 'mime'
+			| 'src'
+		>
+	) {
 		this.awards.unshift({
-			...award,
+			...certificate,
 			id: uid(),
 			type: 'certificate',
 			tier: 'silver',
-			personId: ME,
-			date: day(0)
+			personId: ME
 		});
 		this.#save();
-		this.notify(tr('Документ добавлен на полку'));
+		this.notify(tr('Сертификат добавлен'));
+	}
+
+	certificatesOf(personId: string) {
+		return this.awardsOf(personId).filter((a) => a.type === 'certificate');
+	}
+
+	certificatesForSkill(skillId: string) {
+		return this.awards
+			.filter((a) => a.skillIds?.includes(skillId))
+			.sort((a, b) => b.date.localeCompare(a.date));
+	}
+
+	// ───────── Навыки ─────────
+
+	/** Навыки человека: основные сверху, затем по времени добавления */
+	skillsOf(personId: string) {
+		return this.skills
+			.filter((s) => s.personId === personId)
+			.sort(
+				(a, b) => Number(b.featured) - Number(a.featured) || a.createdAt.localeCompare(b.createdAt)
+			);
+	}
+
+	skill(id: string) {
+		return this.skills.find((s) => s.id === id);
+	}
+
+	addSkill(data: Pick<Skill, 'emoji' | 'title' | 'description' | 'level' | 'featured'>) {
+		const id = `sk-${uid()}`;
+		this.skills.push({ ...data, id, personId: ME, createdAt: now() });
+		this.#save();
+		this.notify(tr('Навык добавлен'));
+		return id;
+	}
+
+	updateSkill(skill: Skill) {
+		const index = this.skills.findIndex((s) => s.id === skill.id);
+		if (index === -1) return;
+		this.skills[index] = skill;
+		this.#save();
+		this.notify(tr('Навык сохранён'));
+	}
+
+	/** Удаляет навык вместе с его материалами; сертификаты остаются, но отвязываются */
+	removeSkill(id: string) {
+		this.skills = this.skills.filter((s) => s.id !== id);
+		this.skillMaterials = this.skillMaterials.filter((m) => m.skillId !== id);
+		for (const a of this.awards)
+			if (a.skillIds?.includes(id)) a.skillIds = a.skillIds.filter((s) => s !== id);
+		this.#save();
+	}
+
+	materialsOf(skillId: string) {
+		return this.skillMaterials
+			.filter((m) => m.skillId === skillId)
+			.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+	}
+
+	addMaterial(
+		material: Pick<SkillMaterial, 'skillId' | 'kind' | 'text' | 'src' | 'videoId' | 'poster'>
+	) {
+		this.skillMaterials.push({ ...material, id: uid(), personId: ME, createdAt: now() });
+		this.#save();
+		this.notify(tr('Материал добавлен'));
+	}
+
+	removeMaterial(id: string) {
+		const videoId = this.skillMaterials.find((m) => m.id === id)?.videoId;
+		if (videoId) deleteBlob(videoId).catch(() => {});
+		this.skillMaterials = this.skillMaterials.filter((m) => m.id !== id);
+		this.#save();
 	}
 
 	removeAward(id: string) {
+		const fileId = this.awards.find((a) => a.id === id)?.fileId;
+		if (fileId) deleteBlob(fileId).catch(() => {});
 		this.awards = this.awards.filter((a) => a.id !== id);
 		this.#save();
 	}

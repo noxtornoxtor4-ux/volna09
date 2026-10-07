@@ -176,7 +176,17 @@ export interface Award {
 	opportunityId?: string;
 	date: string;
 	fileName?: string;
+	/** Превью: сама фотография сертификата (уменьшенная) */
 	src?: string;
+	/** Кто выдал — для сертификатов, загруженных волонтёром */
+	issuer?: string;
+	/** Навыки, которые подтверждает сертификат */
+	skillIds?: string[];
+	/** Фото бумажного документа или цифровая версия (изображение, PDF) */
+	format?: 'photo' | 'digital';
+	/** Оригинал файла в хранилище медиа */
+	fileId?: string;
+	mime?: string;
 }
 
 export interface Membership {
@@ -328,4 +338,36 @@ export interface CustomTheme {
 	buttonPressed: string;
 	/** Акцентные элементы: переключатели, иконки меню, индикаторы */
 	accent: string;
+}
+
+export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+
+/** Навык волонтёра — отдельная сущность, к которой привязаны работы и сертификаты */
+export interface Skill {
+	id: string;
+	personId: string;
+	emoji: string;
+	title: string;
+	description: string;
+	level?: SkillLevel;
+	/** Основные навыки показываются в профиле первыми */
+	featured: boolean;
+	createdAt: string;
+}
+
+export type MaterialKind = 'photo' | 'text' | 'video';
+
+/** Материал внутри навыка: фото работы, текст или видео */
+export interface SkillMaterial {
+	id: string;
+	skillId: string;
+	personId: string;
+	kind: MaterialKind;
+	text?: string;
+	/** Фото работы (уменьшенное) */
+	src?: string;
+	/** Видео в хранилище медиа и его обложка */
+	videoId?: string;
+	poster?: string;
+	createdAt: string;
 }

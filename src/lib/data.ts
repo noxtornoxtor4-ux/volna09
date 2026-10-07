@@ -18,6 +18,7 @@ import type {
 	Person,
 	Post,
 	Profile,
+	SkillLevel,
 	Thread,
 	Conversation,
 	Tone,
@@ -208,6 +209,56 @@ export const awardTiers: Record<AwardTier, { label: string; color: string }> = {
 	gold: { label: tr('Золото'), color: '#f5c542' },
 	silver: { label: tr('Серебро'), color: '#c3cad6' },
 	bronze: { label: tr('Бронза'), color: '#d99a6c' }
+};
+
+/** Быстрый выбор навыка: эмодзи и название */
+export const skillPresets: { emoji: string; title: string }[] = [
+	{ emoji: '🎨', title: tr('Рисование') },
+	{ emoji: '🗣', title: tr('Коммуникабельность') },
+	{ emoji: '💻', title: tr('Программирование') },
+	{ emoji: '🎤', title: tr('Публичные выступления') },
+	{ emoji: '🌍', title: tr('Иностранные языки') },
+	{ emoji: '🎵', title: tr('Музыка') },
+	{ emoji: '📸', title: tr('Фотография') },
+	{ emoji: '🎬', title: tr('Видеомонтаж') },
+	{ emoji: '✍️', title: tr('Тексты и журналистика') },
+	{ emoji: '🧩', title: tr('Организация мероприятий') },
+	{ emoji: '🩺', title: tr('Первая помощь') },
+	{ emoji: '⚽', title: tr('Спорт') }
+];
+
+export const skillEmojis = [
+	'🎨',
+	'🗣',
+	'💻',
+	'🎤',
+	'🌍',
+	'🎵',
+	'📸',
+	'🎬',
+	'✍️',
+	'🧩',
+	'🩺',
+	'⚽',
+	'📚',
+	'🧪',
+	'🌱',
+	'🐾',
+	'🍳',
+	'🧵',
+	'🎭',
+	'🤝',
+	'📊',
+	'🛠️',
+	'♟️',
+	'💡'
+];
+
+export const skillLevels: Record<SkillLevel, string> = {
+	beginner: tr('Начинающий'),
+	intermediate: tr('Уверенный'),
+	advanced: tr('Продвинутый'),
+	expert: tr('Эксперт')
 };
 
 export function defaultQuestions(): FormQuestion[] {

@@ -4,51 +4,15 @@
 	import { app } from '#lib/app.svelte.ts';
 	import AwardItem from '#lib/components/AwardItem.svelte';
 	import AwardShelves from '#lib/components/AwardShelves.svelte';
+	import CertificateForm from '#lib/components/CertificateForm.svelte';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import { awardTiers, awardTypes } from '#lib/data.ts';
-	import { MAX_FILE_BYTES, compressImage, readDataUrl, takeFile } from '#lib/files.ts';
 	import type { Award, AwardTier, AwardType } from '#lib/types.ts';
 
 	const awards = $derived(app.isOrg ? app.issuedAwards : app.myAwards);
 
-	// Загрузка своего сертификата волонтёром
-	let upload = $state({
-		open: false,
-		title: '',
-		description: '',
-		fileName: '',
-		src: undefined as string | undefined
-	});
-
-	async function chooseFile(e: Event) {
-		const file = takeFile(e);
-		if (!file) return;
-		const src = file.type.startsWith('image/')
-			? await compressImage(file, 1400, 0.85)
-			: file.size <= MAX_FILE_BYTES
-				? await readDataUrl(file)
-				: undefined;
-		if (!src) app.notify(tr('Файл больше 1,5 МБ: сохраним только название'));
-		upload = {
-			open: true,
-			title: file.name.replace(/\.[^.]+$/, ''),
-			description: '',
-			fileName: file.name,
-			src
-		};
-	}
-
-	function saveUpload(e: SubmitEvent) {
-		e.preventDefault();
-		app.uploadCertificate({
-			title: upload.title.trim(),
-			description: upload.description.trim() || tr('Загружено волонтёром'),
-			fileName: upload.fileName,
-			src: upload.src
-		});
-		upload.open = false;
-	}
+	let addingCertificate = $state(false);
 
 	// Создание и вручение награды организацией
 	let creating = $state(false);
@@ -112,11 +76,10 @@
 			><Plus class="size-4" /> {tr('Создать награду')}</button
 		>
 	{:else}
-		<label class="btn cursor-pointer btn-soft">
+		<button class="btn btn-soft" onclick={() => (addingCertificate = true)}>
 			<Upload class="size-4" />
-			{tr('Загрузить сертификат')}
-			<input type="file" accept="image/*,application/pdf" class="sr-only" onchange={chooseFile} />
-		</label>
+			{tr('Добавить сертификат')}
+		</button>
 	{/if}
 </div>
 
@@ -134,29 +97,7 @@
 
 <AwardShelves {awards} showRecipient={app.isOrg} removable={!app.isOrg} />
 
-<Modal bind:open={upload.open} title={tr('Новый сертификат')}>
-	<form class="space-y-4" onsubmit={saveUpload}>
-		{#if upload.src?.startsWith('data:image')}
-			<img src={upload.src} alt="" class="max-h-48 w-full rounded-2xl object-contain" />
-		{/if}
-		<p class="text-sm text-muted">{tr('Файл: {0}', upload.fileName)}</p>
-		<label class="block"
-			><span class="label">{tr('Название')}</span><input
-				class="input"
-				required
-				bind:value={upload.title}
-			/></label
-		>
-		<label class="block"
-			><span class="label">{tr('За что и кто выдал')}</span><input
-				class="input"
-				placeholder={tr('Например: Фонд «Тёплые руки», за помощь пожилым')}
-				bind:value={upload.description}
-			/></label
-		>
-		<button class="btn w-full btn-primary">{tr('Поставить на полку')}</button>
-	</form>
-</Modal>
+<CertificateForm bind:open={addingCertificate} />
 
 <Modal bind:open={creating} title={tr('Создать награду')} wide>
 	<form class="grid gap-5 sm:grid-cols-[180px_1fr]" onsubmit={grant}>

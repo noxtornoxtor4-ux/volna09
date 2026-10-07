@@ -8,6 +8,7 @@
 	import type { Award, AwardType } from '#lib/types.ts';
 	import AwardItem from './AwardItem.svelte';
 	import Avatar from './Avatar.svelte';
+	import CertificateViewer from './CertificateViewer.svelte';
 	import Modal from './Modal.svelte';
 
 	let {
@@ -56,7 +57,10 @@
 	{/each}
 </div>
 
-{#if viewing}
+{#if viewing && viewing.type === 'certificate' && (viewing.fileId || viewing.src)}
+	<!-- Сертификат открывается во весь экран: реальная фотография или исходный файл -->
+	<CertificateViewer certificate={viewing} onclose={() => (viewing = null)} />
+{:else if viewing}
 	<Modal title={viewing.title} bind:open={() => true, (v) => !v && (viewing = null)}>
 		<div class="flex flex-col items-center gap-3 text-center">
 			{#if isImage(viewing.src)}
