@@ -63,8 +63,8 @@ export function smsError(error: unknown) {
 		return 'Неверный код. Проверьте SMS и попробуйте ещё раз';
 	if (code.includes('code-expired')) return 'Код устарел — отправьте новый';
 	if (code.includes('too-many-requests')) return 'Слишком много попыток. Попробуйте позже';
-	if (code.includes('quota-exceeded') || code.includes('billing'))
-		return 'Лимит SMS исчерпан. Попробуйте вход по email';
+	if (code.includes('billing')) return 'SMS пока недоступны для этого номера. Войдите по email';
+	if (code.includes('quota-exceeded')) return 'Лимит SMS на сегодня исчерпан. Войдите по email';
 	if (code.includes('operation-not-allowed')) return 'Вход по телефону не включён в Firebase';
 	if (code.includes('captcha') || code.includes('network'))
 		return 'Не удалось проверить, что вы не робот. Проверьте интернет';
