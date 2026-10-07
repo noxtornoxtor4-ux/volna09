@@ -1,5 +1,17 @@
 @import 'tailwindcss';
 
+/* Фирменный шрифт названия и заголовков. Файлы лежат в static/fonts, пока их нет — Manrope */
+@font-face {
+	font-family: 'Dotuda';
+	src:
+		url('/fonts/Dotuda.woff2') format('woff2'),
+		url('/fonts/Dotuda.woff') format('woff'),
+		url('/fonts/Dotuda.otf') format('opentype');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+
 @custom-variant dark (&:where([data-mode='dark'], [data-mode='dark'] *));
 
 /* Поверхности и текст: светлая тема по умолчанию */
@@ -22,15 +34,20 @@
 	--pastel-peach: #ffe7dc;
 	--pastel-peach-ink: #b5512a;
 
-	/* Акцент по умолчанию — пастельно-голубой */
-	--accent: #a9d4ff;
-	--accent-strong: #2f7fd8;
-	--accent-ink: #0f2a47;
+	/* Фирменные цвета: ярко-голубой и тёмно-синий */
+	--brand-blue: #7692ff;
+	--brand-navy: #091540;
+
+	/* Акцент по умолчанию — фирменный голубой */
+	--accent: #7692ff;
+	--accent-strong: #3d5bd9;
+	--accent-ink: #091540;
 	--accent-text: var(--accent-strong);
 	--accent-soft: color-mix(in srgb, var(--accent) 28%, var(--surface));
 }
 
 :root[data-mode='dark'] {
+	--brand-navy: #dfe6ff;
 	--bg: #111319;
 	--surface: #1a1d25;
 	--surface-2: #232733;
@@ -54,6 +71,11 @@
 }
 
 /* Акцентные гаммы, которые пользователь выбирает в настройках */
+:root[data-accent='wave'] {
+	--accent: #7692ff;
+	--accent-strong: #3d5bd9;
+	--accent-ink: #091540;
+}
 :root[data-accent='sky'] {
 	--accent: #a9d4ff;
 	--accent-strong: #2f7fd8;
@@ -107,6 +129,10 @@
 
 @theme inline {
 	--font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Dotuda', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+
+	--color-brand-blue: var(--brand-blue);
+	--color-brand-navy: var(--brand-navy);
 
 	--color-bg: var(--bg);
 	--color-surface: var(--surface);
@@ -188,7 +214,7 @@
 
 /* Кольцо непросмотренной темы в сторисах */
 @utility story-ring {
-	background: conic-gradient(from 200deg, #a9d4ff, #bfc4ff, #f4adef, #ffe08a, #a8e6c4, #a9d4ff);
+	background: conic-gradient(from 200deg, #7692ff, #abd2fa, #f4adef, #ffe08a, #a8e6c4, #7692ff);
 }
 
 /* Сердце при лайке двойным тапом */

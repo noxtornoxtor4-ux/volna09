@@ -4,7 +4,9 @@
 	import { app } from '#lib/app.svelte.ts';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import InstallApp from '#lib/components/InstallApp.svelte';
+	import Logo from '#lib/components/Logo.svelte';
 	import StoriesBar from '#lib/components/StoriesBar.svelte';
+	import Wordmark from '#lib/components/Wordmark.svelte';
 	import { categories, cities } from '#lib/data.ts';
 	import type { Category } from '#lib/types.ts';
 
@@ -27,10 +29,15 @@
 		)
 	);
 	const firstName = $derived(app.profile.name.split(' ')[0]);
-	const tip = $derived(app.aiTips[0]);
 </script>
 
 <svelte:head><title>{tr('Возможности — Волна')}</title></svelte:head>
+
+<!-- Фирменный логотип в самом верху раздела «Возможности» -->
+<div class="mb-5 flex items-center gap-3">
+	<Logo size={44} name={false} />
+	<Wordmark class="h-9 w-auto sm:h-11" />
+</div>
 
 <header class="mb-5 flex items-start gap-3">
 	<div class="min-w-0 flex-1">
@@ -70,23 +77,6 @@
 </header>
 
 <InstallApp variant="banner" />
-
-{#if tip}
-	<a
-		href={tip.action?.href ?? '/notifications'}
-		class="mb-6 flex items-center gap-3 rounded-3xl bg-accent-soft p-3 pr-4 transition hover:brightness-95"
-	>
-		<span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-surface text-lg"
-			>{tip.emoji}</span
-		>
-		<span class="min-w-0 flex-1 text-sm">
-			<span class="flex items-center gap-1 text-xs font-bold text-accent-text"
-				>{tr('ИИ-помощник')}</span
-			>
-			<span class="line-clamp-2">{tip.text}</span>
-		</span>
-	</a>
-{/if}
 
 <section class="mb-6">
 	<h2 class="mb-3 flex items-center gap-2 text-lg font-extrabold">{tr('Для вас')}</h2>

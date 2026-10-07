@@ -86,7 +86,7 @@ interface Snapshot {
 function fresh(): Snapshot {
 	return structuredClone({
 		session: null,
-		accent: 'sky',
+		accent: 'wave',
 		mode: 'light',
 		profile: seedProfile,
 		orgProfile: seedOrgProfile,
@@ -152,16 +152,9 @@ export interface Author {
 	verified?: boolean;
 }
 
-export interface AiTip {
-	id: string;
-	emoji: string;
-	text: string;
-	action?: { label: string; href: string };
-}
-
 class AppState {
 	session = $state<Session | null>(null);
-	accent = $state<Accent>('sky');
+	accent = $state<Accent>('wave');
 	mode = $state<'light' | 'dark'>('light');
 	profile = $state<Profile>(seedProfile);
 	orgProfile = $state<OrgProfile>(seedOrgProfile);
@@ -661,118 +654,6 @@ class AppState {
 			...this.reminders
 		]);
 		return this.upcoming.filter((o) => ids.has(o.id)).sort((a, b) => a.date.localeCompare(b.date));
-	}
-
-	/**
-	 * ИИ-помощник: напоминания, собранные из состояния заявок, дедлайнов и часов.
-	 * Правила простые и прозрачные — в проде их можно заменить вызовом LLM.
-	 */
-	get aiTips(): AiTip[] {
-		const tips: AiTip[] = [];
-		const tomorrow = day(1);
-		if (this.isOrg) {
-			const pending = this.orgApplications.filter((a) => a.status === 'pending').length;
-			if (pending)
-				tips.push({
-					id: 'apps',
-					emoji: '📝',
-					text: tr(
-						'{0} заявки ждут вашего решения. Волонтёры быстрее откликаются, если ответить в течение суток.',
-						pending
-					),
-					action: { label: tr('Открыть заявки'), href: '/cabinet?folder=applications' }
-				});
-			const hours = this.orgHours.filter((h) => h.status === 'pending');
-			if (hours.length)
-				tips.push({
-					id: 'hours',
-					emoji: '⏱️',
-					text: tr(
-						'Подтвердите {0} ч волонтёрства от {1} участников — без этого часы не попадут в их портфолио.',
-						hours.reduce((s, h) => s + h.hours, 0),
-						hours.length
-					),
-					action: { label: tr('Подтвердить часы'), href: '/cabinet?folder=hours' }
-				});
-			const questions = this.orgOpportunities
-				.flatMap((o) => this.threadsFor(o.id))
-				.filter((t) => this.isUnanswered(t));
-			if (questions.length)
-				tips.push({
-					id: 'questions',
-					emoji: '💬',
-					text: tr('{0} вопрос(а) от волонтёров без ответа.', questions.length),
-					action: { label: tr('Ответить'), href: `/chat?id=${questions[0].id}` }
-				});
-			for (const o of this.orgOpportunities.filter((o) => o.date === tomorrow)) {
-				tips.push({
-					id: `tmr-${o.id}`,
-					emoji: '📣',
-					text: tr('Завтра «{0}». Напомните участникам о времени и месте.', o.title),
-					action: { label: tr('Создать уведомление'), href: `/notifications?event=${o.id}` }
-				});
-			}
-			return tips;
-		}
-		for (const { opportunity: o } of this.participation.filter(
-			(p) => p.opportunity.date === tomorrow
-		)) {
-			tips.push({
-				id: `tmr-${o.id}`,
-				emoji: '⏰',
-				text: tr(
-					'Завтра «{0}» в {1}. Не забудьте: {2}.',
-					o.title,
-					o.time.split('–')[0],
-					o.requirements.slice(1).join(', ').toLowerCase() || tr('хорошее настроение')
-				),
-				action: { label: tr('Подробнее'), href: `/o?id=${o.id}` }
-			});
-		}
-		for (const o of this.upcoming) {
-			if (!o.deadline || this.myApplication(o.id)) continue;
-			const days = Math.round((Date.parse(o.deadline) - Date.parse(day(0))) / 864e5);
-			if (this.isReminded(o.id) && days >= 0 && days <= 7) {
-				tips.push({
-					id: `dl-${o.id}`,
-					emoji: '🔔',
-					text: tr(
-						'Вы просили напомнить: приём заявок на «{0}» закрывается {1}.',
-						o.title,
-						formatDate(o.deadline)
-					),
-					action: { label: tr('Податься'), href: `/o?id=${o.id}&apply=1` }
-				});
-			}
-		}
-		const pick = this.recommendations.find(
-			(o) => !this.myApplication(o.id) && !this.isReminded(o.id)
-		);
-		if (pick) {
-			const topic = this.topic(pick.tags.find((t) => this.profile.interests.includes(t)) ?? '');
-			tips.push({
-				id: `rec-${pick.id}`,
-				emoji: '✨',
-				text: tr(
-					'Вам может понравиться «{0}»{1}.',
-					pick.title,
-					topic ? tr(' — это про {0}', tr(topic.label).toLowerCase()) : ''
-				),
-				action: { label: tr('Посмотреть'), href: `/o?id=${pick.id}` }
-			});
-		}
-		if (this.pendingHours) {
-			tips.push({
-				id: 'hours',
-				emoji: '⏱️',
-				text: tr(
-					'{0} ч ждут подтверждения организаторами. Как только подтвердят — они появятся в портфолио.',
-					this.pendingHours
-				),
-				action: { label: tr('Портфолио'), href: '/portfolio?tab=requests' }
-			});
-		}
-		return tips;
 	}
 
 	get recommendations() {

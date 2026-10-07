@@ -6,7 +6,17 @@ export type Category = 'project' | 'training' | 'action' | 'meeting' | 'recruitm
 export type Tone = 'blue' | 'yellow' | 'green' | 'lilac' | 'peach';
 
 export type Accent =
-	'sky' | 'sun' | 'mint' | 'lilac' | 'peach' | 'lemon' | 'blush' | 'aqua' | 'orchid' | 'periwinkle';
+	| 'wave'
+	| 'sky'
+	| 'sun'
+	| 'mint'
+	| 'lilac'
+	| 'peach'
+	| 'lemon'
+	| 'blush'
+	| 'aqua'
+	| 'orchid'
+	| 'periwinkle';
 
 /** Тема для сторисов и рекомендаций. Пользователи могут создавать свои */
 export interface Topic {

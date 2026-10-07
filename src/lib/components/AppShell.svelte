@@ -60,13 +60,13 @@
 	-->
 	<div class="group fixed inset-y-0 left-0 z-50 hidden w-4 lg:block">
 		<span
-			class="absolute top-1/2 left-1 h-16 w-1.5 -translate-y-1/2 rounded-full bg-line transition-opacity duration-200 group-focus-within:opacity-0 group-hover:opacity-0"
+			class="absolute top-1/2 left-1 h-16 w-1.5 -translate-y-1/2 rounded-full bg-brand-blue/40 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-focus-within:opacity-0 group-hover:opacity-0"
 			aria-hidden="true"
 		></span>
 		<aside
-			class="absolute inset-y-0 left-0 flex w-[264px] -translate-x-full flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-4 py-6 shadow-2xl shadow-black/0 transition duration-300 ease-out group-focus-within:translate-x-0 group-focus-within:shadow-black/15 group-hover:translate-x-0 group-hover:shadow-black/15"
+			class="absolute inset-y-0 left-0 flex w-[264px] -translate-x-full flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-4 py-6 shadow-2xl shadow-black/0 transition-[translate,box-shadow] delay-150 duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[translate] group-focus-within:translate-x-0 group-focus-within:shadow-black/15 group-focus-within:delay-0 group-hover:translate-x-0 group-hover:shadow-black/15 group-hover:delay-0"
 		>
-			<div class="px-2"><Logo /></div>
+			<div class="flex h-10 items-center px-1"><Logo /></div>
 			<nav class="flex flex-col gap-1">
 				{#each sidebar as link (link.href)}
 					<a

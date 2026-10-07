@@ -66,6 +66,7 @@ export const seedTopics: Topic[] = [
 ];
 
 export const accents: Record<Accent, { label: string; color: string }> = {
+	wave: { label: tr('Волна — фирменный'), color: '#7692ff' },
 	sky: { label: tr('Пастельно-голубой'), color: '#a9d4ff' },
 	sun: { label: tr('Мягкий жёлтый'), color: '#ffe08a' },
 	mint: { label: tr('Пастельно-зелёный'), color: '#a8e6c4' },

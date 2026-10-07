@@ -40,37 +40,6 @@
 
 	<div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
 		<div class="space-y-5">
-			<!-- ИИ-помощник -->
-			<section class="relative overflow-hidden rounded-[2rem] bg-accent-soft p-5">
-				<div
-					class="pointer-events-none absolute -top-12 -right-12 size-40 rounded-full bg-accent/50 blur-2xl"
-				></div>
-				<h2 class="relative flex items-center gap-2 font-extrabold">{tr('ИИ-помощник')}</h2>
-				<ul class="relative mt-3 space-y-2">
-					{#each app.aiTips as tip (tip.id)}
-						<li class="flex items-start gap-3 rounded-3xl bg-surface p-3">
-							<span class="grid size-9 shrink-0 place-items-center rounded-2xl bg-surface-2 text-lg"
-								>{tip.emoji}</span
-							>
-							<div class="min-w-0 flex-1 text-sm">
-								<p>{tip.text}</p>
-								{#if tip.action}
-									<a
-										href={tip.action.href}
-										class="mt-2 inline-flex items-center gap-1 text-xs font-bold text-accent-text"
-										>{tip.action.label} <ChevronRight class="size-3.5" /></a
-									>
-								{/if}
-							</div>
-						</li>
-					{:else}
-						<li class="rounded-3xl bg-surface p-4 text-sm text-muted">
-							{tr('Всё сделано! Новых напоминаний нет ✨')}
-						</li>
-					{/each}
-				</ul>
-			</section>
-
 			<section>
 				<h2 class="mb-3 font-extrabold">{tr('Новое')}</h2>
 				<ul class="divide-y divide-line card">
@@ -168,7 +137,7 @@
 					<li class="flex gap-3 rounded-3xl bg-accent-soft p-4 text-sm">
 						<span
 							>{tr(
-								'ИИ-напоминание придёт {0}: время, место и что взять с собой.',
+								'Напоминание придёт {0}: время, место и что взять с собой.',
 								relativeDay(o.date) === tr('завтра')
 									? tr('сегодня вечером')
 									: tr('за день до начала')

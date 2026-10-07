@@ -101,23 +101,6 @@
 	</header>
 
 	{#if !folder}
-		{#if app.aiTips.length}
-			<a
-				href={app.aiTips[0].action?.href ?? '/notifications'}
-				class="mb-5 flex items-center gap-3 rounded-3xl bg-accent-soft p-3 pr-4 transition hover:brightness-95"
-			>
-				<span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-surface text-lg"
-					>{app.aiTips[0].emoji}</span
-				>
-				<span class="min-w-0 flex-1 text-sm">
-					<span class="flex items-center gap-1 text-xs font-bold text-accent-text"
-						>{tr('ИИ-помощник')}</span
-					>
-					<span class="line-clamp-2">{app.aiTips[0].text}</span>
-				</span>
-			</a>
-		{/if}
-
 		<!-- Папки -->
 		<div class="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
 			{#each folders as f (f.id)}
