@@ -22,9 +22,9 @@
 			<img src="/icon-192.png" alt="" class="size-11 shrink-0 rounded-2xl" />
 			<div class="min-w-0 flex-1">
 				<div class="truncate text-sm font-bold">Приложение «Волна»</div>
-				<div class="truncate text-xs opacity-75">
-					{installer.ios ? 'Поделиться → «На экран „Домой“»' : 'Иконка на экране, работает офлайн'}
-				</div>
+				{#if installer.ios}
+					<div class="truncate text-xs opacity-75">Поделиться → «На экран „Домой“»</div>
+				{/if}
 			</div>
 			{#if installer.canPrompt}
 				<button
