@@ -1,17 +1,5 @@
 @import 'tailwindcss';
 
-/* Фирменный шрифт названия и заголовков. Файлы лежат в static/fonts, пока их нет — Manrope */
-@font-face {
-	font-family: 'Dotuda';
-	src:
-		url('/fonts/Dotuda.woff2') format('woff2'),
-		url('/fonts/Dotuda.woff') format('woff'),
-		url('/fonts/Dotuda.otf') format('opentype');
-	font-weight: normal;
-	font-style: normal;
-	font-display: swap;
-}
-
 @custom-variant dark (&:where([data-mode='dark'], [data-mode='dark'] *));
 
 /* Поверхности и текст: светлая тема по умолчанию */
@@ -129,7 +117,8 @@
 
 @theme inline {
 	--font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-	--font-display: 'Dotuda', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+	/* Unbounded — название и заголовки страниц, Manrope — основной текст */
+	--font-display: 'Unbounded', 'Manrope', ui-sans-serif, system-ui, sans-serif;
 
 	--color-brand-blue: var(--brand-blue);
 	--color-brand-navy: var(--brand-navy);
@@ -165,6 +154,10 @@
 
 	body {
 		@apply bg-bg font-sans text-ink antialiased transition-colors;
+	}
+
+	h1 {
+		@apply font-display font-bold;
 	}
 
 	::selection {

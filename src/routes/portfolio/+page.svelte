@@ -89,7 +89,7 @@
 		{#each tabs as t (t.id)}
 			<button
 				class="chip {tab === t.id ? 'border-accent bg-accent text-accent-ink' : ''}"
-				onclick={() => goto(`?tab=${t.id}`, { replaceState: true, reset: false })}
+				onclick={() => goto(`?tab=${t.id}`, { replace: true, reset: false })}
 			>
 				{t.label}
 			</button>

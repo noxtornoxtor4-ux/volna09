@@ -55,7 +55,7 @@
 					? { name: newOrg.name.trim(), city: newOrg.city.trim(), about: newOrg.about.trim() }
 					: undefined
 		});
-		goto(app.isOrg ? '/cabinet' : '/', { replaceState: true });
+		goto(app.isOrg ? '/cabinet' : '/', { replace: true });
 	}
 
 	const fullPhone = $derived(`+996${phoneDigits.slice(-9)}`);

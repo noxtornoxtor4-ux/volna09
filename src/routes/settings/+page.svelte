@@ -180,7 +180,7 @@
 
 	function logout() {
 		app.logout();
-		goto('/login', { replaceState: true });
+		goto('/login', { replace: true });
 	}
 
 	function savePrivacy() {

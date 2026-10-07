@@ -39,9 +39,9 @@
 
 	$effect(() => {
 		// Ждём ответа Firebase: вошедший пользователь не должен мелькнуть на экране входа
-		if (app.ready && !app.session && !isAuthPage) goto('/login', { replaceState: true });
+		if (app.ready && !app.session && !isAuthPage) goto('/login', { replace: true });
 		if (app.ready && app.session && isAuthPage)
-			goto(app.isOrg ? '/cabinet' : '/', { replaceState: true });
+			goto(app.isOrg ? '/cabinet' : '/', { replace: true });
 	});
 </script>
 
