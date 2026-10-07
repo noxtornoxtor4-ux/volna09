@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Bell, ChevronDown, MapPin, Search } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
@@ -12,12 +13,12 @@
 	let filter = $state<Filter>('all');
 
 	const filters: { id: Filter; label: string }[] = [
-		{ id: 'all', label: 'Все' },
+		{ id: 'all', label: tr('Все') },
 		...(['project', 'training', 'action', 'meeting', 'recruitment'] as Category[]).map((id) => ({
 			id,
 			label: categories[id].plural
 		})),
-		{ id: 'saved', label: 'Напомнить позже' }
+		{ id: 'saved', label: tr('Напомнить позже') }
 	];
 
 	const list = $derived(
@@ -29,29 +30,30 @@
 	const tip = $derived(app.aiTips[0]);
 </script>
 
-<svelte:head><title>Возможности — Волна</title></svelte:head>
+<svelte:head><title>{tr('Возможности — Волна')}</title></svelte:head>
 
 <header class="mb-5 flex items-start gap-3">
 	<div class="min-w-0 flex-1">
-		<p class="text-sm font-semibold text-muted">Привет, {firstName} 👋</p>
+		<p class="text-sm font-semibold text-muted">{tr('Привет, {0} 👋', firstName)}</p>
 		<h1 class="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">
-			Чем поможем миру сегодня?
+			{tr('Чем поможем миру сегодня?')}
 		</h1>
 		<!-- Город: лента показывает мероприятия выбранного города и онлайн -->
 		<label
 			class="relative mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent-soft py-1.5 pr-8 pl-3 text-sm font-bold text-accent-text"
 		>
 			<MapPin class="size-4" />
-			{app.viewCity === 'all' ? 'Все города' : app.viewCity}
+			{app.viewCity === 'all' ? tr('Все города') : tr(app.viewCity)}
 			<ChevronDown class="pointer-events-none absolute right-2.5 size-4" />
 			<select
 				class="absolute inset-0 cursor-pointer opacity-0"
 				value={app.viewCity}
 				onchange={(e) => app.setViewCity(e.currentTarget.value)}
-				aria-label="Город"
+				aria-label={tr('Город')}
 			>
-				<option value="all">Все города</option>
-				{#each [...new Set([...cities, app.profile.city])] as c (c)}<option value={c}>{c}</option
+				<option value="all">{tr('Все города')}</option>
+				{#each [...new Set([...cities, app.profile.city])] as c (c)}<option value={c}
+						>{tr(c)}</option
 					>{/each}
 			</select>
 		</label>
@@ -60,8 +62,8 @@
 	<a
 		href="/search"
 		class="btn hidden size-12 shrink-0 rounded-2xl btn-ghost p-0 lg:grid"
-		aria-label="Поиск"
-		title="Поиск"
+		aria-label={tr('Поиск')}
+		title={tr('Поиск')}
 	>
 		<Search class="size-5" />
 	</a>
@@ -78,14 +80,16 @@
 			>{tip.emoji}</span
 		>
 		<span class="min-w-0 flex-1 text-sm">
-			<span class="flex items-center gap-1 text-xs font-bold text-accent-text">ИИ-помощник</span>
+			<span class="flex items-center gap-1 text-xs font-bold text-accent-text"
+				>{tr('ИИ-помощник')}</span
+			>
 			<span class="line-clamp-2">{tip.text}</span>
 		</span>
 	</a>
 {/if}
 
 <section class="mb-6">
-	<h2 class="mb-3 flex items-center gap-2 text-lg font-extrabold">Для вас</h2>
+	<h2 class="mb-3 flex items-center gap-2 text-lg font-extrabold">{tr('Для вас')}</h2>
 	<StoriesBar />
 </section>
 
@@ -113,13 +117,13 @@
 {:else}
 	<div class="card p-10 text-center text-muted">
 		{filter === 'saved'
-			? 'Нажмите «Напомнить позже» на карточке, и она появится здесь.'
+			? tr('Нажмите «Напомнить позже» на карточке, и она появится здесь.')
 			: app.viewCity !== 'all'
-				? `В городе ${app.viewCity} пока нет таких мероприятий.`
-				: 'Пока ничего нет в этой категории.'}
+				? tr('В городе {0} пока нет таких мероприятий.', tr(app.viewCity))
+				: tr('Пока ничего нет в этой категории.')}
 		{#if app.viewCity !== 'all'}
 			<button class="mt-4 btn btn-soft" onclick={() => app.setViewCity('all')}
-				>Показать все города</button
+				>{tr('Показать все города')}</button
 			>
 		{/if}
 	</div>

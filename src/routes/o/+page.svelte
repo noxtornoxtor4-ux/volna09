@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import {
@@ -43,7 +44,7 @@
 			if (navigator.share) await navigator.share({ title: o?.title, url });
 			else {
 				await navigator.clipboard.writeText(url);
-				app.notify('Ссылка скопирована');
+				app.notify(tr('Ссылка скопирована'));
 			}
 		} catch {
 			// окно «Поделиться» закрыто
@@ -51,21 +52,23 @@
 	}
 </script>
 
-<svelte:head><title>{o?.title ?? 'Мероприятие'} — Волна</title></svelte:head>
+<svelte:head><title>{tr('{0} — Волна', o?.title ?? tr('Мероприятие'))}</title></svelte:head>
 
 {#if !o}
 	<div class="card p-10 text-center">
-		<p class="text-lg font-bold">Мероприятие не найдено</p>
-		<a href="/" class="mt-4 btn btn-primary">К возможностям</a>
+		<p class="text-lg font-bold">{tr('Мероприятие не найдено')}</p>
+		<a href="/" class="mt-4 btn btn-primary">{tr('К возможностям')}</a>
 	</div>
 {:else}
 	{@const category = categories[o.category]}
 	<div class="mb-4 flex items-center justify-between">
 		<button class="btn btn-ghost" onclick={() => history.back()}
-			><ChevronLeft class="size-4" /> Назад</button
+			><ChevronLeft class="size-4" /> {tr('Назад')}</button
 		>
-		<button class="btn size-10 rounded-full btn-ghost p-0" onclick={share} aria-label="Поделиться"
-			><Share2 class="size-4" /></button
+		<button
+			class="btn size-10 rounded-full btn-ghost p-0"
+			onclick={share}
+			aria-label={tr('Поделиться')}><Share2 class="size-4" /></button
 		>
 	</div>
 
@@ -94,7 +97,7 @@
 					{#if app.isPromoted(o)}
 						<span
 							class="inline-flex items-center gap-1 rounded-full bg-ink/80 px-3 py-1.5 text-xs font-bold text-bg"
-							>Продвигается</span
+							>{tr('Продвигается')}</span
 						>
 					{/if}
 				</div>
@@ -107,14 +110,14 @@
 						{@const t = app.topic(tag)}
 						{#if t}<span
 								class="rounded-full px-3 py-1 text-xs font-semibold {toneClass[t.tone]
-									.bg} {toneClass[t.tone].text}">{t.emoji} {t.label}</span
+									.bg} {toneClass[t.tone].text}">{t.emoji} {tr(t.label)}</span
 							>{/if}
 					{/each}
 				</div>
 			</div>
 
 			<section class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-				{#each [{ icon: CalendarDays, label: 'Дата', value: `${formatDate(o.date)}, ${relativeDay(o.date)}` }, { icon: Clock, label: 'Время', value: o.time }, { icon: MapPin, label: 'Место', value: o.place }, { icon: Hourglass, label: 'Волонтёрские часы', value: `+${hoursLabel(o.hours)}` }, { icon: Users, label: 'Участники', value: `${app.taken(o.id)} из ${o.spots}` }, { icon: Bell, label: 'Заявки до', value: o.deadline ? formatDate(o.deadline) : 'без дедлайна' }] as item (item.label)}
+				{#each [{ icon: CalendarDays, label: tr('Дата'), value: `${formatDate(o.date)}, ${relativeDay(o.date)}` }, { icon: Clock, label: tr('Время'), value: o.time }, { icon: MapPin, label: tr('Место'), value: o.place }, { icon: Hourglass, label: tr('Волонтёрские часы'), value: `+${hoursLabel(o.hours)}` }, { icon: Users, label: tr('Участники'), value: tr('{0} из {1}', app.taken(o.id), o.spots) }, { icon: Bell, label: tr('Заявки до'), value: o.deadline ? formatDate(o.deadline) : tr('без дедлайна') }] as item (item.label)}
 					<div class="rounded-3xl bg-surface p-3.5 ring-1 ring-line">
 						<item.icon class="size-5 text-accent-text" />
 						<div class="mt-2 text-xs text-muted">{item.label}</div>
@@ -124,13 +127,13 @@
 			</section>
 
 			<section class="card p-5">
-				<h2 class="mb-2 text-lg font-extrabold">О мероприятии</h2>
+				<h2 class="mb-2 text-lg font-extrabold">{tr('О мероприятии')}</h2>
 				<p class="text-[15px] leading-relaxed">{o.description}</p>
 			</section>
 
 			{#if o.tasks.length}
 				<section class="card p-5">
-					<h2 class="mb-3 text-lg font-extrabold">Что нужно делать</h2>
+					<h2 class="mb-3 text-lg font-extrabold">{tr('Что нужно делать')}</h2>
 					<ol class="space-y-2.5">
 						{#each o.tasks as task, i (i)}
 							<li class="flex gap-3">
@@ -147,7 +150,7 @@
 
 			{#if o.requirements.length}
 				<section class="card p-5">
-					<h2 class="mb-3 text-lg font-extrabold">Требования</h2>
+					<h2 class="mb-3 text-lg font-extrabold">{tr('Требования')}</h2>
 					<ul class="space-y-2">
 						{#each o.requirements as r (r)}
 							<li class="flex items-center gap-2 text-[15px]">
@@ -170,7 +173,9 @@
 										class="size-4 shrink-0 text-accent-text"
 									/>{/if}
 							</div>
-							<div class="text-xs text-muted">{app.followersCount(org.id)} подписчиков</div>
+							<div class="text-xs text-muted">
+								{tr('{0} подписчиков', app.followersCount(org.id))}
+							</div>
 						</div>
 					</a>
 					{#if !app.isOrg}
@@ -178,19 +183,19 @@
 							class="mt-3 btn w-full {app.isFollowing(org.id) ? 'btn-ghost' : 'btn-soft'}"
 							onclick={() => app.toggleFollow(org.id)}
 						>
-							{app.isFollowing(org.id) ? 'Вы подписаны' : 'Подписаться'}
+							{app.isFollowing(org.id) ? tr('Вы подписаны') : tr('Подписаться')}
 						</button>
 					{/if}
 				</div>
 			{/if}
 
 			<div class="card p-4">
-				<div class="mb-2 text-sm font-bold">Идут · {participants.length}</div>
+				<div class="mb-2 text-sm font-bold">{tr('Идут · {0}', participants.length)}</div>
 				<div class="flex -space-x-2">
 					{#each participants.slice(0, 8) as a (a.id)}
 						<Avatar id={a.personId} size="sm" ring />
 					{:else}
-						<span class="text-sm text-muted">Станьте первым участником</span>
+						<span class="text-sm text-muted">{tr('Станьте первым участником')}</span>
 					{/each}
 				</div>
 			</div>
@@ -202,16 +207,16 @@
 				{#if owner}
 					<div class="grid grid-cols-2 gap-2">
 						<a href="/notifications?event={o.id}" class="btn btn-primary"
-							><Megaphone class="size-4" /> Уведомление</a
+							><Megaphone class="size-4" /> {tr('Уведомление')}</a
 						>
 						<a href="/notifications?event={o.id}" class="btn btn-soft"
-							><MessageCircleQuestion class="size-4" /> Вопросы · {questions.length}</a
+							><MessageCircleQuestion class="size-4" /> {tr('Вопросы · {0}', questions.length)}</a
 						>
 						<button class="btn btn-ghost" onclick={() => (promoting = o.id)}
-							><Rocket class="size-4" /> Продвигать</button
+							><Rocket class="size-4" /> {tr('Продвигать')}</button
 						>
 						<a href="/cabinet?folder=applications" class="btn btn-ghost"
-							><Users class="size-4" /> Заявки</a
+							><Users class="size-4" /> {tr('Заявки')}</a
 						>
 					</div>
 				{:else if !app.isOrg}
@@ -224,21 +229,21 @@
 							>
 								<Check class="size-4" />
 								{mine.status === 'approved'
-									? 'Вы участвуете'
+									? tr('Вы участвуете')
 									: mine.status === 'declined'
-										? 'Отклонено'
-										: 'На рассмотрении'}
+										? tr('Отклонено')
+										: tr('На рассмотрении')}
 							</span>
 						{:else}
 							<button class="btn flex-1 btn-primary py-3" onclick={() => app.openApply(o.id)}
-								>Податься</button
+								>{tr('Податься')}</button
 							>
 						{/if}
 						<button
 							class="btn {app.isReminded(o.id) ? 'btn-soft' : 'btn-ghost'} px-3"
 							onclick={() => app.toggleReminder(o.id)}
-							aria-label="Напомнить позже"
-							title="Напомнить позже"
+							aria-label={tr('Напомнить позже')}
+							title={tr('Напомнить позже')}
 						>
 							{#if app.isReminded(o.id)}<BellRing class="size-5" />{:else}<Bell
 									class="size-5"
@@ -247,14 +252,16 @@
 						<a
 							href="/chat?id={app.threadId(o.id, ME)}"
 							class="btn btn-ghost px-3"
-							aria-label="Задать вопрос организатору"
-							title="Задать вопрос организатору"
+							aria-label={tr('Задать вопрос организатору')}
+							title={tr('Задать вопрос организатору')}
 						>
 							<MessageCircleQuestion class="size-5" />
 						</a>
 					</div>
 				{:else}
-					<p class="text-center text-sm text-muted">Вы смотрите мероприятие другой организации.</p>
+					<p class="text-center text-sm text-muted">
+						{tr('Вы смотрите мероприятие другой организации.')}
+					</p>
 				{/if}
 			</div>
 			<div class="h-20 lg:hidden"></div>

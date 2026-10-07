@@ -1,3 +1,4 @@
+import { tr } from './i18n.ts';
 import {
 	ME,
 	MY_ORG,
@@ -254,7 +255,7 @@ class AppState {
 		try {
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
 		} catch {
-			this.notify('Не удалось сохранить: в браузере закончилось место');
+			this.notify(tr('Не удалось сохранить: в браузере закончилось место'));
 		}
 	}
 
@@ -326,7 +327,9 @@ class AppState {
 		this.session.role = role;
 		this.#save();
 		this.notify(
-			role === 'org' ? `Вы вошли как ${this.orgProfile.name}` : `Вы вошли как ${this.profile.name}`
+			role === 'org'
+				? tr('Вы вошли как {0}', this.orgProfile.name)
+				: tr('Вы вошли как {0}', this.profile.name)
 		);
 	}
 
@@ -339,7 +342,7 @@ class AppState {
 		if (!this.session) return;
 		this.session.contact = contact;
 		this.#save();
-		this.notify('Учётная запись обновлена');
+		this.notify(tr('Учётная запись обновлена'));
 	}
 
 	setAccent(accent: Accent) {
@@ -362,13 +365,13 @@ class AppState {
 		if (profile.city !== this.profile.city) this.viewCity = profile.city;
 		this.profile = profile;
 		this.#save();
-		this.notify('Профиль сохранён');
+		this.notify(tr('Профиль сохранён'));
 	}
 
 	updateOrgProfile(profile: OrgProfile) {
 		this.orgProfile = profile;
 		this.#save();
-		this.notify('Профиль организации сохранён');
+		this.notify(tr('Профиль организации сохранён'));
 	}
 
 	resetDemo() {
@@ -382,7 +385,7 @@ class AppState {
 			orgProfile: $state.snapshot(orgProfile)
 		});
 		this.#save();
-		this.notify('Демо-данные восстановлены');
+		this.notify(tr('Демо-данные восстановлены'));
 	}
 
 	// ───────── Справочники ─────────
@@ -430,7 +433,7 @@ class AppState {
 			};
 		}
 		const person = people.find((p) => p.id === id);
-		return { name: person?.name ?? 'Волонтёр', tone: person?.tone ?? 'blue', isOrg: false };
+		return { name: person?.name ?? tr('Волонтёр'), tone: person?.tone ?? 'blue', isOrg: false };
 	}
 
 	topic(id: string) {
@@ -441,7 +444,7 @@ class AppState {
 		const id = `t-${uid()}`;
 		this.topics.push({ ...topic, id, custom: true });
 		this.#save();
-		this.notify('Тема создана и видна всем');
+		this.notify(tr('Тема создана и видна всем'));
 		return id;
 	}
 
@@ -522,17 +525,17 @@ class AppState {
 			this.#alert(
 				'org',
 				'📝',
-				`${this.profile.name} подала заявку на «${o.title}»`,
+				tr('{0} подала заявку на «{1}»', this.profile.name, o.title),
 				'/cabinet?folder=applications'
 			);
 		}
 		this.#save();
-		this.notify('Анкета отправлена организатору');
+		this.notify(tr('Анкета отправлена организатору'));
 	}
 
 	openApply(opportunityId: string) {
 		if (this.isOrg) {
-			this.notify('Подавать заявки можно из аккаунта волонтёра');
+			this.notify(tr('Подавать заявки можно из аккаунта волонтёра'));
 			return;
 		}
 		this.applyingId = opportunityId;
@@ -545,10 +548,10 @@ class AppState {
 	toggleReminder(opportunityId: string) {
 		if (this.isReminded(opportunityId)) {
 			this.reminders = this.reminders.filter((id) => id !== opportunityId);
-			this.notify('Убрано из «Напомнить позже»');
+			this.notify(tr('Убрано из «Напомнить позже»'));
 		} else {
 			this.reminders.push(opportunityId);
-			this.notify('Напомним за день до дедлайна 🔔');
+			this.notify(tr('Напомним за день до дедлайна 🔔'));
 		}
 		this.#save();
 	}
@@ -585,13 +588,13 @@ class AppState {
 		thread.messages.push({ id: uid(), from, text, at: now() });
 		const o = this.opportunity(opportunityId);
 		if (o && !this.isOrg && o.orgId === this.myOrgId) {
-			this.#alert('org', '💬', `Новый вопрос по «${o.title}»`, `/chat?id=${id}`);
+			this.#alert('org', '💬', tr('Новый вопрос по «{0}»', o.title), `/chat?id=${id}`);
 		}
 		if (o && this.isOrg && personId === ME) {
 			this.#alert(
 				'volunteer',
 				'💬',
-				`${this.orgProfile.name} ответил на ваш вопрос`,
+				tr('{0} ответил на ваш вопрос', this.orgProfile.name),
 				`/chat?id=${id}`
 			);
 		}
@@ -620,7 +623,11 @@ class AppState {
 		this.#save();
 		const count = this.participants(opportunityId).length;
 		this.notify(
-			`Уведомление отправлено ${count} ${plural(count, 'участнику', 'участникам', 'участникам')}`
+			tr(
+				'Уведомление отправлено {0} {1}',
+				count,
+				plural(count, 'участнику', 'участникам', 'участникам')
+			)
 		);
 	}
 
@@ -669,16 +676,23 @@ class AppState {
 				tips.push({
 					id: 'apps',
 					emoji: '📝',
-					text: `${pending} заявки ждут вашего решения. Волонтёры быстрее откликаются, если ответить в течение суток.`,
-					action: { label: 'Открыть заявки', href: '/cabinet?folder=applications' }
+					text: tr(
+						'{0} заявки ждут вашего решения. Волонтёры быстрее откликаются, если ответить в течение суток.',
+						pending
+					),
+					action: { label: tr('Открыть заявки'), href: '/cabinet?folder=applications' }
 				});
 			const hours = this.orgHours.filter((h) => h.status === 'pending');
 			if (hours.length)
 				tips.push({
 					id: 'hours',
 					emoji: '⏱️',
-					text: `Подтвердите ${hours.reduce((s, h) => s + h.hours, 0)} ч волонтёрства от ${hours.length} участников — без этого часы не попадут в их портфолио.`,
-					action: { label: 'Подтвердить часы', href: '/cabinet?folder=hours' }
+					text: tr(
+						'Подтвердите {0} ч волонтёрства от {1} участников — без этого часы не попадут в их портфолио.',
+						hours.reduce((s, h) => s + h.hours, 0),
+						hours.length
+					),
+					action: { label: tr('Подтвердить часы'), href: '/cabinet?folder=hours' }
 				});
 			const questions = this.orgOpportunities
 				.flatMap((o) => this.threadsFor(o.id))
@@ -687,15 +701,15 @@ class AppState {
 				tips.push({
 					id: 'questions',
 					emoji: '💬',
-					text: `${questions.length} вопрос(а) от волонтёров без ответа.`,
-					action: { label: 'Ответить', href: `/chat?id=${questions[0].id}` }
+					text: tr('{0} вопрос(а) от волонтёров без ответа.', questions.length),
+					action: { label: tr('Ответить'), href: `/chat?id=${questions[0].id}` }
 				});
 			for (const o of this.orgOpportunities.filter((o) => o.date === tomorrow)) {
 				tips.push({
 					id: `tmr-${o.id}`,
 					emoji: '📣',
-					text: `Завтра «${o.title}». Напомните участникам о времени и месте.`,
-					action: { label: 'Создать уведомление', href: `/notifications?event=${o.id}` }
+					text: tr('Завтра «{0}». Напомните участникам о времени и месте.', o.title),
+					action: { label: tr('Создать уведомление'), href: `/notifications?event=${o.id}` }
 				});
 			}
 			return tips;
@@ -706,8 +720,13 @@ class AppState {
 			tips.push({
 				id: `tmr-${o.id}`,
 				emoji: '⏰',
-				text: `Завтра «${o.title}» в ${o.time.split('–')[0]}. Не забудьте: ${o.requirements.slice(1).join(', ').toLowerCase() || 'хорошее настроение'}.`,
-				action: { label: 'Подробнее', href: `/o?id=${o.id}` }
+				text: tr(
+					'Завтра «{0}» в {1}. Не забудьте: {2}.',
+					o.title,
+					o.time.split('–')[0],
+					o.requirements.slice(1).join(', ').toLowerCase() || tr('хорошее настроение')
+				),
+				action: { label: tr('Подробнее'), href: `/o?id=${o.id}` }
 			});
 		}
 		for (const o of this.upcoming) {
@@ -717,8 +736,12 @@ class AppState {
 				tips.push({
 					id: `dl-${o.id}`,
 					emoji: '🔔',
-					text: `Вы просили напомнить: приём заявок на «${o.title}» закрывается ${formatDate(o.deadline)}.`,
-					action: { label: 'Податься', href: `/o?id=${o.id}&apply=1` }
+					text: tr(
+						'Вы просили напомнить: приём заявок на «{0}» закрывается {1}.',
+						o.title,
+						formatDate(o.deadline)
+					),
+					action: { label: tr('Податься'), href: `/o?id=${o.id}&apply=1` }
 				});
 			}
 		}
@@ -730,16 +753,23 @@ class AppState {
 			tips.push({
 				id: `rec-${pick.id}`,
 				emoji: '✨',
-				text: `Вам может понравиться «${pick.title}»${topic ? ` — это про ${topic.label.toLowerCase()}` : ''}.`,
-				action: { label: 'Посмотреть', href: `/o?id=${pick.id}` }
+				text: tr(
+					'Вам может понравиться «{0}»{1}.',
+					pick.title,
+					topic ? tr(' — это про {0}', tr(topic.label).toLowerCase()) : ''
+				),
+				action: { label: tr('Посмотреть'), href: `/o?id=${pick.id}` }
 			});
 		}
 		if (this.pendingHours) {
 			tips.push({
 				id: 'hours',
 				emoji: '⏱️',
-				text: `${this.pendingHours} ч ждут подтверждения организаторами. Как только подтвердят — они появятся в портфолио.`,
-				action: { label: 'Портфолио', href: '/portfolio?tab=requests' }
+				text: tr(
+					'{0} ч ждут подтверждения организаторами. Как только подтвердят — они появятся в портфолио.',
+					this.pendingHours
+				),
+				action: { label: tr('Портфолио'), href: '/portfolio?tab=requests' }
 			});
 		}
 		return tips;
@@ -832,7 +862,7 @@ class AppState {
 			lastRead: { [me]: now() }
 		});
 		this.#save();
-		this.notify('Групповой чат создан');
+		this.notify(tr('Групповой чат создан'));
 		return id;
 	}
 
@@ -844,7 +874,7 @@ class AppState {
 	leaveConversation(conversation: Conversation) {
 		conversation.members = conversation.members.filter((m) => m !== this.actorId);
 		this.#save();
-		this.notify('Вы вышли из чата');
+		this.notify(tr('Вы вышли из чата'));
 	}
 
 	sendToConversation(conversation: Conversation, text: string) {
@@ -878,7 +908,7 @@ class AppState {
 			createdAt: now()
 		});
 		this.#save();
-		this.notify(post.kind === 'review' ? 'Отзыв опубликован' : 'Пост опубликован');
+		this.notify(post.kind === 'review' ? tr('Отзыв опубликован') : tr('Пост опубликован'));
 	}
 
 	postsBy(authorId: string) {
@@ -908,11 +938,11 @@ class AppState {
 		const url = `${location.origin}/feed#${post.id}`;
 		try {
 			if (navigator.share)
-				await navigator.share({ title: 'Волна', text: post.text.slice(0, 80), url });
+				await navigator.share({ title: tr('Волна'), text: post.text.slice(0, 80), url });
 			else await navigator.clipboard.writeText(url);
 			post.shares += 1;
 			this.#save();
-			if (!navigator.share) this.notify('Ссылка скопирована');
+			if (!navigator.share) this.notify(tr('Ссылка скопирована'));
 		} catch {
 			// пользователь закрыл системное окно «Поделиться»
 		}
@@ -976,12 +1006,12 @@ class AppState {
 			this.#alert(
 				'org',
 				'⏱️',
-				`${this.profile.name} просит подтвердить ${entry.hours} ч`,
+				tr('{0} просит подтвердить {1} ч', this.profile.name, entry.hours),
 				'/cabinet?folder=hours'
 			);
 		}
 		this.#save();
-		this.notify('Заявка на подтверждение часов отправлена');
+		this.notify(tr('Заявка на подтверждение часов отправлена'));
 	}
 
 	participationOf(personId: string) {
@@ -1022,7 +1052,7 @@ class AppState {
 			date: day(0)
 		});
 		this.#save();
-		this.notify('Документ добавлен на полку');
+		this.notify(tr('Документ добавлен на полку'));
 	}
 
 	removeAward(id: string) {
@@ -1041,13 +1071,17 @@ class AppState {
 			this.#alert(
 				'volunteer',
 				'🏆',
-				`${this.orgProfile.name} наградил вас: «${award.title}»`,
+				tr('{0} наградил вас: «{1}»', this.orgProfile.name, award.title),
 				'/awards'
 			);
 		}
 		this.#save();
 		this.notify(
-			`Награда вручена ${personIds.length} ${plural(personIds.length, 'волонтёру', 'волонтёрам', 'волонтёрам')}`
+			tr(
+				'Награда вручена {0} {1}',
+				personIds.length,
+				plural(personIds.length, 'волонтёру', 'волонтёрам', 'волонтёрам')
+			)
 		);
 	}
 
@@ -1060,7 +1094,7 @@ class AppState {
 	addDayPhoto(date: string, src: string) {
 		this.dayPhotos.push({ id: uid(), owner: this.role, date, src });
 		this.#save();
-		this.notify('Фото добавлено в календарь');
+		this.notify(tr('Фото добавлено в календарь'));
 	}
 
 	removeDayPhoto(id: string) {
@@ -1129,7 +1163,7 @@ class AppState {
 		const id = uid();
 		this.opportunities.push({ ...data, id, orgId: this.myOrgId });
 		this.#save();
-		this.notify('Мероприятие опубликовано');
+		this.notify(tr('Мероприятие опубликовано'));
 		return id;
 	}
 
@@ -1138,30 +1172,30 @@ class AppState {
 		if (!o) return;
 		o.promotedUntil = day(days);
 		this.#save();
-		this.notify(`«${o.title}» продвигается до ${formatDate(o.promotedUntil)}`);
+		this.notify(tr('«{0}» продвигается до {1}', o.title, formatDate(o.promotedUntil)));
 	}
 
 	decide(application: Application, status: ApplicationStatus) {
 		application.status = status;
-		if (status === 'approved') application.role ??= 'Волонтёр';
+		if (status === 'approved') application.role ??= tr('Волонтёр');
 		const o = this.opportunity(application.opportunityId);
 		if (o && application.personId === ME && status !== 'pending') {
 			this.#alert(
 				'volunteer',
 				status === 'approved' ? '✅' : '😔',
 				status === 'approved'
-					? `Заявка на «${o.title}» подтверждена — день отмечен в календаре`
-					: `Заявка на «${o.title}» отклонена`,
+					? tr('Заявка на «{0}» подтверждена — день отмечен в календаре', o.title)
+					: tr('Заявка на «{0}» отклонена', o.title),
 				status === 'approved' ? '/calendar' : `/o?id=${o.id}`
 			);
 		}
 		this.#save();
 		this.notify(
 			status === 'approved'
-				? 'Участие подтверждено'
+				? tr('Участие подтверждено')
 				: status === 'declined'
-					? 'Заявка отклонена'
-					: 'Заявка возвращена'
+					? tr('Заявка отклонена')
+					: tr('Заявка возвращена')
 		);
 	}
 
@@ -1178,17 +1212,17 @@ class AppState {
 			date: o.date,
 			hours: o.hours,
 			status: 'verified',
-			note: 'Начислено куратором'
+			note: tr('Начислено куратором')
 		});
 		if (application.personId === ME)
 			this.#alert(
 				'volunteer',
 				'⏱️',
-				`Начислено ${o.hours} ч за «${o.title}»`,
+				tr('Начислено {0} ч за «{1}»', o.hours, o.title),
 				'/portfolio?tab=hours'
 			);
 		this.#save();
-		this.notify(`Начислено ${o.hours} ч`);
+		this.notify(tr('Начислено {0} ч', o.hours));
 	}
 
 	isCredited(application: Application) {
@@ -1207,13 +1241,13 @@ class AppState {
 				'volunteer',
 				ok ? '⏱️' : '😔',
 				ok
-					? `Подтверждено ${entry.hours} ч: «${entry.title}»`
-					: `Часы за «${entry.title}» не подтверждены`,
+					? tr('Подтверждено {0} ч: «{1}»', entry.hours, entry.title)
+					: tr('Часы за «{0}» не подтверждены', entry.title),
 				'/portfolio?tab=requests'
 			);
 		}
 		this.#save();
-		this.notify(ok ? `Подтверждено ${entry.hours} ч` : 'Часы отклонены');
+		this.notify(ok ? tr('Подтверждено {0} ч', entry.hours) : tr('Часы отклонены'));
 	}
 
 	// ───────── Архив и поиск ─────────

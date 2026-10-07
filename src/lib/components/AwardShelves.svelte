@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Trash } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { awardTiers, awardTypes } from '#lib/data.ts';
@@ -43,7 +44,7 @@
 						</button>
 					{:else}
 						<p class="w-full self-center pb-6 text-center text-sm text-muted">
-							Пока пусто — всё впереди ✨
+							{tr('Пока пусто — всё впереди ✨')}
 						</p>
 					{/each}
 				</div>
@@ -80,14 +81,17 @@
 			</span>
 			<p class="text-[15px]">{viewing.description}</p>
 			<p class="text-sm text-muted">
-				{viewing.orgId ? `Выдал: ${app.org(viewing.orgId)?.name}` : 'Загружено волонтёром'} · {formatDate(
-					viewing.date,
-					{ day: 'numeric', month: 'long', year: 'numeric' }
-				)}
+				{viewing.orgId
+					? tr('Выдал: {0}', app.org(viewing.orgId)?.name)
+					: tr('Загружено волонтёром')} · {formatDate(viewing.date, {
+					day: 'numeric',
+					month: 'long',
+					year: 'numeric'
+				})}
 			</p>
 			{#if viewing.opportunityId}
 				<a href="/o?id={viewing.opportunityId}" class="text-sm font-semibold text-accent-text"
-					>За «{app.opportunity(viewing.opportunityId)?.title}»</a
+					>{tr('За «{0}»', app.opportunity(viewing.opportunityId)?.title)}</a
 				>
 			{/if}
 			{#if showRecipient}
@@ -103,7 +107,8 @@
 						viewing = null;
 					}}
 				>
-					<Trash class="size-4" /> Убрать с полки
+					<Trash class="size-4" />
+					{tr('Убрать с полки')}
 				</button>
 			{/if}
 		</div>

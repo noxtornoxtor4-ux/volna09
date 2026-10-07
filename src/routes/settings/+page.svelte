@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getLocale, locales, tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import {
@@ -7,6 +8,7 @@
 		Check,
 		ChevronLeft,
 		ChevronRight,
+		Languages,
 		Lock,
 		LogOut,
 		Moon,
@@ -21,30 +23,38 @@
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import InstallApp from '#lib/components/InstallApp.svelte';
+	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import { ME, accents, toneClass } from '#lib/data.ts';
 	import { formatDate } from '#lib/format.ts';
 	import type { Accent, Privacy, Role } from '#lib/types.ts';
 
-	type Section = 'install' | 'guide' | 'account' | 'accounts' | 'style' | 'archive' | 'privacy';
+	type Section =
+		'language' | 'install' | 'guide' | 'account' | 'accounts' | 'style' | 'archive' | 'privacy';
 
 	const sections: { id: Section; label: string; hint: string; icon: typeof BookOpen }[] = [
+		{ id: 'language', label: tr('Язык'), hint: locales[getLocale()].label, icon: Languages },
 		{
 			id: 'install',
-			label: 'Установить приложение',
-			hint: 'Иконка на телефоне и компьютере',
+			label: tr('Установить приложение'),
+			hint: tr('Иконка на телефоне и компьютере'),
 			icon: Smartphone
 		},
 		{
 			id: 'guide',
-			label: 'Руководство по использованию',
-			hint: 'Как всё устроено',
+			label: tr('Руководство по использованию'),
+			hint: tr('Как всё устроено'),
 			icon: BookOpen
 		},
-		{ id: 'account', label: 'Учётная запись', hint: 'Телефон, email, пароль', icon: UserCog },
-		{ id: 'accounts', label: 'Аккаунты', hint: 'Волонтёр и организация', icon: Users },
-		{ id: 'style', label: 'Стиль приложения', hint: 'Цвет и тема', icon: Palette },
-		{ id: 'archive', label: 'Архив мероприятий', hint: 'Прошедшие события', icon: Archive },
-		{ id: 'privacy', label: 'Конфиденциальность', hint: 'Кто что видит', icon: Lock }
+		{
+			id: 'account',
+			label: tr('Учётная запись'),
+			hint: tr('Телефон, email, пароль'),
+			icon: UserCog
+		},
+		{ id: 'accounts', label: tr('Аккаунты'), hint: tr('Волонтёр и организация'), icon: Users },
+		{ id: 'style', label: tr('Стиль приложения'), hint: tr('Цвет и тема'), icon: Palette },
+		{ id: 'archive', label: tr('Архив мероприятий'), hint: tr('Прошедшие события'), icon: Archive },
+		{ id: 'privacy', label: tr('Конфиденциальность'), hint: tr('Кто что видит'), icon: Lock }
 	];
 
 	const section = $derived(page.url.searchParams.get('s') as Section | null);
@@ -59,55 +69,61 @@
 			? [
 					{
 						emoji: '➕',
-						title: 'Публикуйте мероприятия',
-						text: 'Кнопка «+» в кабинете открывает конструктор: описание, задачи, постер и своя анкета для волонтёров.'
+						title: tr('Публикуйте мероприятия'),
+						text: tr(
+							'Кнопка «+» в кабинете открывает конструктор: описание, задачи, постер и своя анкета для волонтёров.'
+						)
 					},
 					{
 						emoji: '📁',
-						title: 'Работайте с папками',
-						text: 'В кабинете три папки: заявки, волонтёры и подтверждение часов.'
+						title: tr('Работайте с папками'),
+						text: tr('В кабинете три папки: заявки, волонтёры и подтверждение часов.')
 					},
 					{
 						emoji: '📣',
-						title: 'Отправляйте уведомления',
-						text: 'Откройте мероприятие в «Уведомлениях» — можно написать всем участникам и ответить на вопросы в чате.'
+						title: tr('Отправляйте уведомления'),
+						text: tr(
+							'Откройте мероприятие в «Уведомлениях» — можно написать всем участникам и ответить на вопросы в чате.'
+						)
 					},
 					{
 						emoji: '🏆',
-						title: 'Награждайте',
-						text: 'В «Кабинете наград» создайте медаль, кубок или сертификат и вручите участникам.'
+						title: tr('Награждайте'),
+						text: tr(
+							'В «Кабинете наград» создайте медаль, кубок или сертификат и вручите участникам.'
+						)
 					},
 					{
 						emoji: '🚀',
-						title: 'Продвигайте',
-						text: 'Продвижение поднимает мероприятие в начало ленты и сторисов.'
+						title: tr('Продвигайте'),
+						text: tr('Продвижение поднимает мероприятие в начало ленты и сторисов.')
 					}
 				]
 			: [
 					{
 						emoji: '✨',
-						title: 'Смотрите «Для вас»',
-						text: 'Сторисы по темам на главной — листайте постеры и сразу подавайтесь.'
+						title: tr('Смотрите «Для вас»'),
+						text: tr('Сторисы по темам на главной — листайте постеры и сразу подавайтесь.')
 					},
 					{
 						emoji: '📝',
-						title: 'Подавайте анкету',
-						text: 'Кнопка «Податься» открывает анкету организатора. Ответ придёт в уведомления.'
+						title: tr('Подавайте анкету'),
+						text: tr('Кнопка «Податься» открывает анкету организатора. Ответ придёт в уведомления.')
 					},
 					{
 						emoji: '🗓️',
-						title: 'Следите за календарём',
-						text: 'После подтверждения день отмечается сам, а ИИ напомнит накануне.'
+						title: tr('Следите за календарём'),
+						text: tr('После подтверждения день отмечается сам, а ИИ напомнит накануне.')
 					},
 					{
 						emoji: '⏱️',
-						title: 'Подтверждайте часы',
-						text: 'В портфолио отправьте организации заявку — подтверждённые часы видны всем.'
+						title: tr('Подтверждайте часы'),
+						text: tr('В портфолио отправьте организации заявку — подтверждённые часы видны всем.')
 					},
 					{
 						emoji: '🏅',
-						title: 'Собирайте награды',
-						text: 'Медали, кубки и сертификаты стоят на полках в «Кабинете наград».'
+						title: tr('Собирайте награды'),
+						text: tr('Медали, кубки и сертификаты стоят на полках в «Кабинете наград».')
 					}
 				]
 	);
@@ -131,17 +147,17 @@
 	}
 </script>
 
-<svelte:head><title>Настройки — Волна</title></svelte:head>
+<svelte:head><title>{tr('Настройки — Волна')}</title></svelte:head>
 
 {#if !current}
-	<h1 class="mb-5 text-2xl font-extrabold tracking-tight sm:text-3xl">Настройки</h1>
+	<h1 class="mb-5 text-2xl font-extrabold tracking-tight sm:text-3xl">{tr('Настройки')}</h1>
 	<div class="mx-auto max-w-2xl space-y-4">
 		<a href="/profile" class="flex items-center gap-3 card p-4 transition hover:border-accent">
 			<Avatar id={app.actorId} size="lg" />
 			<div class="min-w-0 flex-1">
 				<div class="truncate font-bold">{app.author(app.actorId).name}</div>
 				<div class="text-sm text-muted">
-					{app.isOrg ? 'Аккаунт организации' : 'Аккаунт волонтёра'} · {app.session?.contact}
+					{app.isOrg ? tr('Аккаунт организации') : tr('Аккаунт волонтёра')} · {app.session?.contact}
 				</div>
 			</div>
 			<ChevronRight class="size-5 text-muted" />
@@ -167,18 +183,24 @@
 			{/each}
 		</ul>
 		<button class="btn w-full btn-ghost text-pastel-peach-ink" onclick={logout}
-			><LogOut class="size-4" /> Выйти</button
+			><LogOut class="size-4" /> {tr('Выйти')}</button
 		>
 	</div>
 {:else}
-	<a href="/settings" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> Настройки</a>
+	<a href="/settings" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> {tr('Настройки')}</a
+	>
 	<div class="mx-auto max-w-2xl">
 		<h1 class="mb-5 flex items-center gap-2 text-2xl font-extrabold tracking-tight">
 			<current.icon class="size-6 text-accent-text" />
 			{current.label}
 		</h1>
 
-		{#if section === 'install'}
+		{#if section === 'language'}
+			<section class="card p-5">
+				<LanguagePicker />
+				<p class="mt-3 text-sm text-muted">{tr('Приложение перезапустится на выбранном языке.')}</p>
+			</section>
+		{:else if section === 'install'}
 			<InstallApp />
 		{:else if section === 'guide'}
 			<ol class="space-y-3">
@@ -203,19 +225,21 @@
 						app.updateContact(contact.trim());
 					}}
 				>
-					<span class="label">{app.session?.method === 'phone' ? 'Номер телефона' : 'Email'}</span>
+					<span class="label"
+						>{app.session?.method === 'phone' ? tr('Номер телефона') : 'Email'}</span
+					>
 					<input class="input" required bind:value={contact} />
-					<button class="btn btn-primary">Сохранить</button>
+					<button class="btn btn-primary">{tr('Сохранить')}</button>
 				</form>
 				<form
 					class="space-y-3 card p-5"
 					onsubmit={(e) => {
 						e.preventDefault();
 						password = '';
-						app.notify('Пароль обновлён (демо)');
+						app.notify(tr('Пароль обновлён (демо)'));
 					}}
 				>
-					<span class="label">Новый пароль</span>
+					<span class="label">{tr('Новый пароль')}</span>
 					<input
 						class="input"
 						type="password"
@@ -224,23 +248,25 @@
 						autocomplete="new-password"
 						bind:value={password}
 					/>
-					<button class="btn btn-ghost" disabled={password.length < 6}>Сменить пароль</button>
+					<button class="btn btn-ghost" disabled={password.length < 6}
+						>{tr('Сменить пароль')}</button
+					>
 				</form>
 				<div class="space-y-2 card p-5">
 					<button class="btn w-full btn-ghost" onclick={() => app.resetDemo()}
-						><RotateCcw class="size-4" /> Восстановить демо-данные</button
+						><RotateCcw class="size-4" /> {tr('Восстановить демо-данные')}</button
 					>
 					<button class="btn w-full btn-ghost text-pastel-peach-ink" onclick={logout}
-						><LogOut class="size-4" /> Выйти из аккаунта</button
+						><LogOut class="size-4" /> {tr('Выйти из аккаунта')}</button
 					>
 				</div>
 			</div>
 		{:else if section === 'accounts'}
 			<p class="mb-4 text-sm text-muted">
-				Переключайтесь между личным аккаунтом и аккаунтом организации без повторного входа.
+				{tr('Переключайтесь между личным аккаунтом и аккаунтом организации без повторного входа.')}
 			</p>
 			<ul class="space-y-3">
-				{#each [{ role: 'volunteer' as Role, id: ME, label: 'Волонтёр' }, { role: 'org' as Role, id: app.myOrgId, label: 'Организация' }] as acc (acc.role)}
+				{#each [{ role: 'volunteer' as Role, id: ME, label: tr('Волонтёр') }, { role: 'org' as Role, id: app.myOrgId, label: tr('Организация') }] as acc (acc.role)}
 					{@const active = app.role === acc.role}
 					<li
 						class="flex items-center gap-3 card p-4 {active
@@ -255,20 +281,22 @@
 						{#if active}
 							<span
 								class="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-ink"
-								><Check class="size-3.5" /> Активен</span
+								><Check class="size-3.5" /> {tr('Активен')}</span
 							>
 						{:else}
-							<button class="btn btn-soft" onclick={() => switchTo(acc.role)}>Перейти</button>
+							<button class="btn btn-soft" onclick={() => switchTo(acc.role)}
+								>{tr('Перейти')}</button
+							>
 						{/if}
 					</li>
 				{/each}
 			</ul>
 			<button class="mt-4 btn w-full btn-ghost" onclick={logout}
-				><Plus class="size-4" /> Добавить аккаунт</button
+				><Plus class="size-4" /> {tr('Добавить аккаунт')}</button
 			>
 		{:else if section === 'style'}
 			<section class="card p-5">
-				<span class="label">Акцентный цвет</span>
+				<span class="label">{tr('Акцентный цвет')}</span>
 				<div class="grid grid-cols-5 gap-2">
 					{#each Object.entries(accents) as [id, a] (id)}
 						<button
@@ -288,28 +316,28 @@
 				</div>
 				<p class="mt-2 text-sm font-semibold">{accents[app.accent].label}</p>
 
-				<span class="mt-5 label">Тема</span>
+				<span class="mt-5 label">{tr('Тема')}</span>
 				<div class="grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
 					<button
 						class="flex items-center justify-center gap-2 rounded-xl py-2.5 {app.mode === 'light'
 							? 'bg-surface shadow-sm'
 							: 'text-muted'}"
-						onclick={() => app.setMode('light')}><Sun class="size-4" /> Светлая</button
+						onclick={() => app.setMode('light')}><Sun class="size-4" /> {tr('Светлая')}</button
 					>
 					<button
 						class="flex items-center justify-center gap-2 rounded-xl py-2.5 {app.mode === 'dark'
 							? 'bg-surface shadow-sm'
 							: 'text-muted'}"
-						onclick={() => app.setMode('dark')}><Moon class="size-4" /> Тёмная</button
+						onclick={() => app.setMode('dark')}><Moon class="size-4" /> {tr('Тёмная')}</button
 					>
 				</div>
 
 				<div class="mt-5 rounded-3xl bg-surface-2 p-4">
-					<p class="label">Предпросмотр</p>
+					<p class="label">{tr('Предпросмотр')}</p>
 					<div class="flex flex-wrap gap-2">
-						<span class="btn btn-primary">Податься</span>
-						<span class="btn btn-soft">Напомнить позже</span>
-						<span class="chip border-accent bg-accent-soft text-accent-text">Тренинги</span>
+						<span class="btn btn-primary">{tr('Податься')}</span>
+						<span class="btn btn-soft">{tr('Напомнить позже')}</span>
+						<span class="chip border-accent bg-accent-soft text-accent-text">{tr('Тренинги')}</span>
 					</div>
 				</div>
 			</section>
@@ -336,19 +364,23 @@
 								</div>
 								<div class="mt-1 text-xs font-semibold">
 									{app.isOrg
-										? `${app.participants(o.id).length} участников · ${app.awards.filter((a) => a.opportunityId === o.id).length} наград`
-										: `${role ?? 'Волонтёр'} · ${o.hours} ч`}
+										? tr(
+												'{0} участников · {1} наград',
+												app.participants(o.id).length,
+												app.awards.filter((a) => a.opportunityId === o.id).length
+											)
+										: tr('{0} · {1} ч', role ?? tr('Волонтёр'), o.hours)}
 								</div>
 							</div>
 						</a>
 					</li>
 				{:else}
-					<li class="card p-6 text-center text-sm text-muted">Архив пуст.</li>
+					<li class="card p-6 text-center text-sm text-muted">{tr('Архив пуст.')}</li>
 				{/each}
 			</ul>
 		{:else if section === 'privacy'}
 			<div class="divide-y divide-line card">
-				{#each [{ key: 'publicProfile', label: 'Открытый профиль', hint: 'Профиль и публикации видны всем пользователям' }, { key: 'showHours', label: 'Показывать часы', hint: 'Счётчик часов и проекты видны в профиле' }, { key: 'searchable', label: 'Находить меня в поиске', hint: 'По имени и городу' }] as item (item.key)}
+				{#each [{ key: 'publicProfile', label: tr('Открытый профиль'), hint: tr('Профиль и публикации видны всем пользователям') }, { key: 'showHours', label: tr('Показывать часы'), hint: tr('Счётчик часов и проекты видны в профиле') }, { key: 'searchable', label: tr('Находить меня в поиске'), hint: tr('По имени и городу') }] as item (item.key)}
 					{@const key = item.key as 'publicProfile' | 'showHours' | 'searchable'}
 					<label class="flex cursor-pointer items-center gap-3 p-4">
 						<span class="min-w-0 flex-1">
@@ -367,9 +399,9 @@
 					</label>
 				{/each}
 				<div class="p-4">
-					<span class="block font-semibold">Кто может писать мне</span>
+					<span class="block font-semibold">{tr('Кто может писать мне')}</span>
 					<div class="mt-3 grid grid-cols-3 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
-						{#each [{ id: 'all', label: 'Все' }, { id: 'orgs', label: 'Организации' }, { id: 'none', label: 'Никто' }] as opt (opt.id)}
+						{#each [{ id: 'all', label: tr('Все') }, { id: 'orgs', label: tr('Организации') }, { id: 'none', label: tr('Никто') }] as opt (opt.id)}
 							<button
 								class="rounded-xl py-2 {privacy.messages === opt.id
 									? 'bg-surface shadow-sm'
@@ -384,7 +416,7 @@
 				</div>
 			</div>
 			<p class="mt-3 text-xs text-muted">
-				Демо-режим: настройки сохраняются, но в прототипе нет других реальных пользователей.
+				{tr('Демо-режим: настройки сохраняются, но в прототипе нет других реальных пользователей.')}
 			</p>
 		{/if}
 	</div>

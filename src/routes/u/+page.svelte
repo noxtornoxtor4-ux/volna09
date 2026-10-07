@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { ChevronLeft, MessageCircle } from '@lucide/svelte';
@@ -18,16 +19,18 @@
 	let tab = $state<'posts' | 'awards' | 'events'>('posts');
 </script>
 
-<svelte:head><title>{org?.name ?? person?.name ?? 'Профиль'} — Волна</title></svelte:head>
+<svelte:head
+	><title>{tr('{0} — Волна', org?.name ?? person?.name ?? tr('Профиль'))}</title></svelte:head
+>
 
 <button class="mb-4 btn btn-ghost" onclick={() => history.back()}
-	><ChevronLeft class="size-4" /> Назад</button
+	><ChevronLeft class="size-4" /> {tr('Назад')}</button
 >
 
 {#snippet follow()}
 	{#if !isSelf}
 		<button class="btn btn-ghost" onclick={() => goto(`/messages?c=${app.startDm(id)}`)}>
-			<MessageCircle class="size-4" /> <span class="hidden sm:inline">Написать</span>
+			<MessageCircle class="size-4" /> <span class="hidden sm:inline">{tr('Написать')}</span>
 		</button>
 	{/if}
 	{#if !isSelf && !app.isOrg}
@@ -35,10 +38,10 @@
 			class="btn {app.isFollowing(id) ? 'btn-ghost' : 'btn-primary'}"
 			onclick={() => app.toggleFollow(id)}
 		>
-			{app.isFollowing(id) ? 'Вы подписаны' : 'Подписаться'}
+			{app.isFollowing(id) ? tr('Вы подписаны') : tr('Подписаться')}
 		</button>
 	{:else if isSelf}
-		<a href="/profile" class="btn btn-ghost">Мой профиль</a>
+		<a href="/profile" class="btn btn-ghost">{tr('Мой профиль')}</a>
 	{/if}
 {/snippet}
 
@@ -47,16 +50,19 @@
 	<ProfileHeader
 		id={org.id}
 		name={org.name}
-		subtitle="Организация · {org.city}"
+		subtitle={tr('Организация · {0}', tr(org.city))}
 		bio={org.about}
 		look={org.id === app.myOrgId ? app.orgProfile : {}}
 		tone={org.tone}
 		verified={org.verified}
 		stats={[
-			{ label: 'подписчиков', value: app.followersCount(org.id) },
-			{ label: 'мероприятий', value: app.opportunities.filter((o) => o.orgId === org.id).length },
-			{ label: 'скоро', value: events.length },
-			{ label: 'наград выдано', value: app.awards.filter((a) => a.orgId === org.id).length }
+			{ label: tr('подписчиков'), value: app.followersCount(org.id) },
+			{
+				label: tr('мероприятий'),
+				value: app.opportunities.filter((o) => o.orgId === org.id).length
+			},
+			{ label: tr('скоро'), value: events.length },
+			{ label: tr('наград выдано'), value: app.awards.filter((a) => a.orgId === org.id).length }
 		]}
 		actions={follow}
 	/>
@@ -64,11 +70,11 @@
 	<div class="mt-5 mb-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-bold">
 		<button
 			class="rounded-xl py-2.5 {tab !== 'events' ? 'bg-surface shadow-sm' : 'text-muted'}"
-			onclick={() => (tab = 'posts')}>Публикации</button
+			onclick={() => (tab = 'posts')}>{tr('Публикации')}</button
 		>
 		<button
 			class="rounded-xl py-2.5 {tab === 'events' ? 'bg-surface shadow-sm' : 'text-muted'}"
-			onclick={() => (tab = 'events')}>Мероприятия · {events.length}</button
+			onclick={() => (tab = 'events')}>{tr('Мероприятия · {0}', events.length)}</button
 		>
 	</div>
 	{#if tab === 'events'}
@@ -76,7 +82,7 @@
 			{#each events as o (o.id)}<OpportunityCard opportunity={o} />{:else}<p
 					class="text-sm text-muted"
 				>
-					Скоро здесь появятся мероприятия.
+					{tr('Скоро здесь появятся мероприятия.')}
 				</p>{/each}
 		</div>
 	{:else}
@@ -86,16 +92,16 @@
 	<ProfileHeader
 		id={person.id}
 		name={person.name}
-		subtitle="{person.age} {plural(person.age, 'год', 'года', 'лет')} · {person.city}"
+		subtitle="{person.age} {plural(person.age, 'год', 'года', 'лет')} · {tr(person.city)}"
 		bio={person.bio}
 		look={person.id === ME ? app.profile : {}}
 		tone={person.tone}
 		stats={[
-			{ label: 'подписчиков', value: app.followersCount(person.id) },
-			{ label: 'часов', value: app.verifiedHoursOf(person.id) },
-			{ label: 'проектов', value: app.participationOf(person.id).length },
+			{ label: tr('подписчиков'), value: app.followersCount(person.id) },
+			{ label: tr('часов'), value: app.verifiedHoursOf(person.id) },
+			{ label: tr('проектов'), value: app.participationOf(person.id).length },
 			{
-				label: 'сертификатов',
+				label: tr('сертификатов'),
 				value: app.awardsOf(person.id).filter((a) => a.type === 'certificate').length
 			}
 		]}
@@ -107,18 +113,18 @@
 			{#if t}<span
 					class="rounded-full px-3 py-1 text-xs font-semibold {toneClass[t.tone].bg} {toneClass[
 						t.tone
-					].text}">{t.emoji} {t.label}</span
+					].text}">{t.emoji} {tr(t.label)}</span
 				>{/if}
 		{/each}
 	</div>
 	<div class="mt-5 mb-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-bold">
 		<button
 			class="rounded-xl py-2.5 {tab !== 'awards' ? 'bg-surface shadow-sm' : 'text-muted'}"
-			onclick={() => (tab = 'posts')}>Публикации</button
+			onclick={() => (tab = 'posts')}>{tr('Публикации')}</button
 		>
 		<button
 			class="rounded-xl py-2.5 {tab === 'awards' ? 'bg-surface shadow-sm' : 'text-muted'}"
-			onclick={() => (tab = 'awards')}>Награды · {app.awardsOf(person.id).length}</button
+			onclick={() => (tab = 'awards')}>{tr('Награды · {0}', app.awardsOf(person.id).length)}</button
 		>
 	</div>
 	{#if tab === 'awards'}
@@ -128,7 +134,7 @@
 	{/if}
 {:else}
 	<div class="card p-10 text-center">
-		<p class="text-lg font-bold">Профиль не найден</p>
-		<a href="/search" class="mt-4 btn btn-primary">К поиску</a>
+		<p class="text-lg font-bold">{tr('Профиль не найден')}</p>
+		<a href="/search" class="mt-4 btn btn-primary">{tr('К поиску')}</a>
 	</div>
 {/if}

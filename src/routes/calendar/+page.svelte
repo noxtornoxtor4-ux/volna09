@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { BellRing, Camera, Hourglass, Trash, Users } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Calendar, { type Mark } from '#lib/components/Calendar.svelte';
@@ -53,9 +54,9 @@
 	}
 </script>
 
-<svelte:head><title>Календарь — Волна</title></svelte:head>
+<svelte:head><title>{tr('Календарь — Волна')}</title></svelte:head>
 
-<h1 class="mb-5 text-2xl font-extrabold tracking-tight sm:text-3xl">Календарь</h1>
+<h1 class="mb-5 text-2xl font-extrabold tracking-tight sm:text-3xl">{tr('Календарь')}</h1>
 
 <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
 	<section class="card p-4 sm:p-6">
@@ -86,20 +87,23 @@
 							<div class="text-xs text-muted">{o.time} · {o.place}</div>
 							{#if app.isOrg}
 								<div class="mt-1 flex items-center gap-1 text-xs font-semibold">
-									<Users class="size-3.5" />{app.participants(o.id).length} участников
+									<Users class="size-3.5" />{tr('{0} участников', app.participants(o.id).length)}
 								</div>
 							{:else if status === 'approved'}
-								<div class="mt-1 text-xs font-semibold text-pastel-blue-ink">Вы участвуете</div>
+								<div class="mt-1 text-xs font-semibold text-pastel-blue-ink">
+									{tr('Вы участвуете')}
+								</div>
 							{:else}
 								<div class="mt-1 text-xs font-semibold text-pastel-yellow-ink">
-									Заявка на рассмотрении
+									{tr('Заявка на рассмотрении')}
 								</div>
 							{/if}
 						</div>
 					</a>
 					{#if status === 'approved' && o.date > today}
 						<p class="mt-1.5 flex items-center gap-1.5 px-2 text-xs text-muted">
-							<BellRing class="size-3.5" /> Напомним {formatDate(dayBefore(o.date))} — за день до начала
+							<BellRing class="size-3.5" />
+							{tr('Напомним {0} — за день до начала', formatDate(dayBefore(o.date)))}
 						</p>
 					{/if}
 				</li>
@@ -108,25 +112,28 @@
 				<li class="flex items-center gap-3 rounded-3xl bg-surface-2 p-3 text-sm">
 					<Hourglass class="size-5 text-pastel-green-ink" />
 					<span class="flex-1">{h.title}</span>
-					<b>{h.hours} ч</b>
+					<b>{tr('{0} ч', h.hours)}</b>
 				</li>
 			{/each}
 			{#if !dayEvents.length && !dayHours.length}
 				<li class="rounded-3xl bg-surface-2 p-4 text-sm text-muted">
-					В этот день ничего не запланировано. {app.isOrg
-						? 'Опубликуйте мероприятие в кабинете.'
-						: 'Подайте заявку — после подтверждения день отметится сам.'}
+					{tr(
+						'В этот день ничего не запланировано. {0}',
+						app.isOrg
+							? tr('Опубликуйте мероприятие в кабинете.')
+							: tr('Подайте заявку — после подтверждения день отметится сам.')
+					)}
 				</li>
 			{/if}
 		</ul>
 
 		<div class="mt-5">
 			<div class="mb-2 flex items-center justify-between">
-				<h3 class="font-bold">Фото дня</h3>
+				<h3 class="font-bold">{tr('Фото дня')}</h3>
 				{#if isMarked}
 					<label class="btn cursor-pointer btn-soft py-2 text-xs">
 						<Camera class="size-4" />
-						{uploading ? 'Загрузка…' : 'Добавить'}
+						{uploading ? tr('Загрузка…') : tr('Добавить')}
 						<input
 							type="file"
 							accept="image/*"
@@ -145,7 +152,7 @@
 							<button
 								class="absolute top-1 right-1 grid size-7 place-items-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
 								onclick={() => app.removeDayPhoto(p.id)}
-								aria-label="Удалить фото"
+								aria-label={tr('Удалить фото')}
 							>
 								<Trash class="size-3.5" />
 							</button>
@@ -155,8 +162,8 @@
 			{:else}
 				<p class="text-sm text-muted">
 					{isMarked
-						? 'Сохраните воспоминания об этом дне.'
-						: 'Фото можно добавить в отмеченные дни.'}
+						? tr('Сохраните воспоминания об этом дне.')
+						: tr('Фото можно добавить в отмеченные дни.')}
 				</p>
 			{/if}
 		</div>
@@ -164,7 +171,7 @@
 </div>
 
 <section class="mt-5">
-	<h2 class="mb-3 text-lg font-extrabold">Ближайшие</h2>
+	<h2 class="mb-3 text-lg font-extrabold">{tr('Ближайшие')}</h2>
 	<div class="-mx-4 no-scrollbar flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:px-0">
 		{#each upcoming as { o, status } (o.id)}
 			<button
@@ -188,14 +195,14 @@
 						: 'text-pastel-yellow-ink'}"
 				>
 					{app.isOrg
-						? `${app.participants(o.id).length} участников`
+						? tr('{0} участников', app.participants(o.id).length)
 						: status === 'approved'
-							? '✓ участие подтверждено'
-							: '⏳ ждёт подтверждения'}
+							? tr('✓ участие подтверждено')
+							: tr('⏳ ждёт подтверждения')}
 				</div>
 			</button>
 		{:else}
-			<p class="text-sm text-muted">Пока нет предстоящих мероприятий.</p>
+			<p class="text-sm text-muted">{tr('Пока нет предстоящих мероприятий.')}</p>
 		{/each}
 	</div>
 </section>

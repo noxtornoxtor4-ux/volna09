@@ -1,4 +1,5 @@
 import { CalendarHeart, GraduationCap, HandHeart, Megaphone, Rocket } from '@lucide/svelte';
+import { tr } from './i18n.ts';
 import type {
 	Accent,
 	Alert,
@@ -40,11 +41,16 @@ export const categories: Record<
 	Category,
 	{ label: string; plural: string; tone: Tone; icon: typeof Rocket }
 > = {
-	project: { label: 'Проект', plural: 'Проекты', tone: 'blue', icon: Rocket },
-	training: { label: 'Тренинг', plural: 'Тренинги', tone: 'yellow', icon: GraduationCap },
-	action: { label: 'Разовая акция', plural: 'Разовые акции', tone: 'green', icon: HandHeart },
-	meeting: { label: 'Встреча', plural: 'Встречи', tone: 'lilac', icon: CalendarHeart },
-	recruitment: { label: 'Набор', plural: 'Наборы', tone: 'peach', icon: Megaphone }
+	project: { label: tr('Проект'), plural: tr('Проекты'), tone: 'blue', icon: Rocket },
+	training: { label: tr('Тренинг'), plural: tr('Тренинги'), tone: 'yellow', icon: GraduationCap },
+	action: {
+		label: tr('Разовая акция'),
+		plural: tr('Разовые акции'),
+		tone: 'green',
+		icon: HandHeart
+	},
+	meeting: { label: tr('Встреча'), plural: tr('Встречи'), tone: 'lilac', icon: CalendarHeart },
+	recruitment: { label: tr('Набор'), plural: tr('Наборы'), tone: 'peach', icon: Megaphone }
 };
 
 export const seedTopics: Topic[] = [
@@ -60,16 +66,16 @@ export const seedTopics: Topic[] = [
 ];
 
 export const accents: Record<Accent, { label: string; color: string }> = {
-	sky: { label: 'Пастельно-голубой', color: '#a9d4ff' },
-	sun: { label: 'Мягкий жёлтый', color: '#ffe08a' },
-	mint: { label: 'Пастельно-зелёный', color: '#a8e6c4' },
-	lilac: { label: 'Лавандовый', color: '#cdb8ff' },
-	peach: { label: 'Персиковый', color: '#ffc4a8' },
-	lemon: { label: 'Лимонный', color: '#fffabf' },
-	blush: { label: 'Нежно-розовый', color: '#ffe7ff' },
-	aqua: { label: 'Аквамарин', color: '#b2f9e7' },
-	orchid: { label: 'Орхидея', color: '#f4adef' },
-	periwinkle: { label: 'Барвинок', color: '#bfc4ff' }
+	sky: { label: tr('Пастельно-голубой'), color: '#a9d4ff' },
+	sun: { label: tr('Мягкий жёлтый'), color: '#ffe08a' },
+	mint: { label: tr('Пастельно-зелёный'), color: '#a8e6c4' },
+	lilac: { label: tr('Лавандовый'), color: '#cdb8ff' },
+	peach: { label: tr('Персиковый'), color: '#ffc4a8' },
+	lemon: { label: tr('Лимонный'), color: '#fffabf' },
+	blush: { label: tr('Нежно-розовый'), color: '#ffe7ff' },
+	aqua: { label: tr('Аквамарин'), color: '#b2f9e7' },
+	orchid: { label: tr('Орхидея'), color: '#f4adef' },
+	periwinkle: { label: tr('Барвинок'), color: '#bfc4ff' }
 };
 
 /** Готовые Tailwind-классы для пастельных тонов (статические строки, чтобы Tailwind их увидел) */
@@ -102,24 +108,24 @@ export const cities = [
 
 /** Готовые шаблоны постеров профиля */
 export const coverPresets: Record<string, { label: string; css: string }> = {
-	dawn: { label: 'Рассвет', css: 'linear-gradient(135deg, #ffd6e0, #ffe7ba 50%, #c6f1ff)' },
-	sky: { label: 'Небо', css: 'linear-gradient(160deg, #a9d4ff, #bfc4ff 55%, #f4adef)' },
-	mint: { label: 'Мята', css: 'linear-gradient(135deg, #b2f9e7, #a9d4ff)' },
-	forest: { label: 'Лес', css: 'linear-gradient(135deg, #a8e6c4, #daf5e6 60%, #fff4c7)' },
+	dawn: { label: tr('Рассвет'), css: 'linear-gradient(135deg, #ffd6e0, #ffe7ba 50%, #c6f1ff)' },
+	sky: { label: tr('Небо'), css: 'linear-gradient(160deg, #a9d4ff, #bfc4ff 55%, #f4adef)' },
+	mint: { label: tr('Мята'), css: 'linear-gradient(135deg, #b2f9e7, #a9d4ff)' },
+	forest: { label: tr('Лес'), css: 'linear-gradient(135deg, #a8e6c4, #daf5e6 60%, #fff4c7)' },
 	sun: {
-		label: 'Солнце',
+		label: tr('Солнце'),
 		css: 'radial-gradient(circle at 20% 30%, #fffabf, transparent 45%), linear-gradient(135deg, #ffe08a, #ffc4a8)'
 	},
-	lavender: { label: 'Лаванда', css: 'linear-gradient(135deg, #cdb8ff, #ffe7ff)' },
+	lavender: { label: tr('Лаванда'), css: 'linear-gradient(135deg, #cdb8ff, #ffe7ff)' },
 	dots: {
-		label: 'Горошек',
+		label: tr('Горошек'),
 		css: 'radial-gradient(#ffffff99 2.5px, transparent 2.5px) 0 0 / 22px 22px, linear-gradient(135deg, #a9d4ff, #cdb8ff)'
 	},
 	stripes: {
-		label: 'Полоски',
+		label: tr('Полоски'),
 		css: 'repeating-linear-gradient(45deg, #ffffff55 0 12px, transparent 12px 24px), linear-gradient(135deg, #ffc4a8, #f4adef)'
 	},
-	night: { label: 'Ночь', css: 'linear-gradient(135deg, #1f2633, #5b62e8 70%, #cdb8ff)' }
+	night: { label: tr('Ночь'), css: 'linear-gradient(135deg, #1f2633, #5b62e8 70%, #cdb8ff)' }
 };
 
 /** Готовые аватары-эмодзи */
@@ -143,28 +149,28 @@ export const avatarEmojis = [
 export const tones: Tone[] = ['blue', 'yellow', 'green', 'lilac', 'peach'];
 
 export const awardTypes: Record<AwardType, { label: string; plural: string; emoji: string }> = {
-	medal: { label: 'Медаль', plural: 'Медали', emoji: '🏅' },
-	cup: { label: 'Кубок', plural: 'Кубки', emoji: '🏆' },
-	certificate: { label: 'Сертификат', plural: 'Сертификаты и грамоты', emoji: '📜' }
+	medal: { label: tr('Медаль'), plural: tr('Медали'), emoji: '🏅' },
+	cup: { label: tr('Кубок'), plural: tr('Кубки'), emoji: '🏆' },
+	certificate: { label: tr('Сертификат'), plural: tr('Сертификаты и грамоты'), emoji: '📜' }
 };
 
 export const awardTiers: Record<AwardTier, { label: string; color: string }> = {
-	gold: { label: 'Золото', color: '#f5c542' },
-	silver: { label: 'Серебро', color: '#c3cad6' },
-	bronze: { label: 'Бронза', color: '#d99a6c' }
+	gold: { label: tr('Золото'), color: '#f5c542' },
+	silver: { label: tr('Серебро'), color: '#c3cad6' },
+	bronze: { label: tr('Бронза'), color: '#d99a6c' }
 };
 
 export function defaultQuestions(): FormQuestion[] {
 	return [
-		{ id: 'q-name', label: 'Имя и фамилия', type: 'text', required: true, prefill: 'name' },
-		{ id: 'q-age', label: 'Возраст', type: 'text', required: true, prefill: 'age' },
-		{ id: 'q-contact', label: 'Телефон или Telegram для связи', type: 'text', required: true },
-		{ id: 'q-why', label: 'Почему хотите участвовать?', type: 'textarea', required: true },
+		{ id: 'q-name', label: tr('Имя и фамилия'), type: 'text', required: true, prefill: 'name' },
+		{ id: 'q-age', label: tr('Возраст'), type: 'text', required: true, prefill: 'age' },
+		{ id: 'q-contact', label: tr('Телефон или Telegram для связи'), type: 'text', required: true },
+		{ id: 'q-why', label: tr('Почему хотите участвовать?'), type: 'textarea', required: true },
 		{
 			id: 'q-exp',
-			label: 'Был ли у вас опыт волонтёрства?',
+			label: tr('Был ли у вас опыт волонтёрства?'),
 			type: 'choice',
-			options: ['Да, много раз', 'Пару раз', 'Это мой первый раз'],
+			options: [tr('Да, много раз'), tr('Пару раз'), tr('Это мой первый раз')],
 			required: false
 		}
 	];

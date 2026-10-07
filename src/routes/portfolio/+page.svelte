@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { CircleCheck, CircleX, Hourglass, Plus } from '@lucide/svelte';
@@ -14,11 +15,11 @@
 	type Tab = 'hours' | 'projects' | 'orgs' | 'awards' | 'requests';
 
 	const tabs: { id: Tab; label: string }[] = [
-		{ id: 'hours', label: 'Часы' },
-		{ id: 'projects', label: 'Проекты' },
-		{ id: 'orgs', label: 'Организации' },
-		{ id: 'awards', label: 'Награды' },
-		{ id: 'requests', label: 'Подтверждение часов' }
+		{ id: 'hours', label: tr('Часы') },
+		{ id: 'projects', label: tr('Проекты') },
+		{ id: 'orgs', label: tr('Организации') },
+		{ id: 'awards', label: tr('Награды') },
+		{ id: 'requests', label: tr('Подтверждение часов') }
 	];
 
 	const tab = $derived((page.url.searchParams.get('tab') as Tab) || 'hours');
@@ -27,16 +28,16 @@
 	const statusView: Record<HoursStatus, { label: string; cls: string; icon: typeof CircleCheck }> =
 		{
 			verified: {
-				label: 'Подтверждено',
+				label: tr('Подтверждено'),
 				cls: 'bg-pastel-green text-pastel-green-ink',
 				icon: CircleCheck
 			},
 			pending: {
-				label: 'На проверке',
+				label: tr('На проверке'),
 				cls: 'bg-pastel-yellow text-pastel-yellow-ink',
 				icon: Hourglass
 			},
-			rejected: { label: 'Отклонено', cls: 'bg-surface-2 text-muted', icon: CircleX }
+			rejected: { label: tr('Отклонено'), cls: 'bg-surface-2 text-muted', icon: CircleX }
 		};
 
 	const verified = $derived(app.myHours.filter((h) => h.status === 'verified'));
@@ -44,42 +45,42 @@
 		verified.filter((h) => h.orgId === orgId).reduce((s, h) => s + h.hours, 0);
 </script>
 
-<svelte:head><title>Портфолио — Волна</title></svelte:head>
+<svelte:head><title>{tr('Портфолио — Волна')}</title></svelte:head>
 
 {#if app.isOrg}
 	<div class="card p-10 text-center">
-		<p class="text-lg font-bold">Портфолио ведут волонтёры</p>
-		<p class="mt-1 text-sm text-muted">Часы волонтёров вашей организации — в кабинете.</p>
-		<a href="/cabinet?folder=hours" class="mt-4 btn btn-primary">Открыть кабинет</a>
+		<p class="text-lg font-bold">{tr('Портфолио ведут волонтёры')}</p>
+		<p class="mt-1 text-sm text-muted">{tr('Часы волонтёров вашей организации — в кабинете.')}</p>
+		<a href="/cabinet?folder=hours" class="mt-4 btn btn-primary">{tr('Открыть кабинет')}</a>
 	</div>
 {:else}
 	<div class="mb-5 flex flex-wrap items-end justify-between gap-3">
 		<div>
-			<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Портфолио</h1>
+			<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{tr('Портфолио')}</h1>
 			<p class="text-sm text-muted">
-				Подтверждённая история волонтёрства для вуза, работы и грантов
+				{tr('Подтверждённая история волонтёрства для вуза, работы и грантов')}
 			</p>
 		</div>
 		<button class="btn btn-primary" onclick={() => (requesting = true)}
-			><Plus class="size-4" /> Заявка на часы</button
+			><Plus class="size-4" /> {tr('Заявка на часы')}</button
 		>
 	</div>
 
 	<section class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
 		<div class="col-span-2 card bg-accent-soft p-5 sm:col-span-1">
-			<div class="text-sm font-semibold text-accent-text">Подтверждено</div>
-			<div class="text-4xl font-extrabold">{app.verifiedHours} ч</div>
+			<div class="text-sm font-semibold text-accent-text">{tr('Подтверждено')}</div>
+			<div class="text-4xl font-extrabold">{tr('{0} ч', app.verifiedHours)}</div>
 		</div>
 		<div class="card p-5">
-			<div class="text-sm text-muted">На проверке</div>
-			<div class="text-2xl font-extrabold">{app.pendingHours} ч</div>
+			<div class="text-sm text-muted">{tr('На проверке')}</div>
+			<div class="text-2xl font-extrabold">{tr('{0} ч', app.pendingHours)}</div>
 		</div>
 		<div class="card p-5">
-			<div class="text-sm text-muted">Проектов</div>
+			<div class="text-sm text-muted">{tr('Проектов')}</div>
 			<div class="text-2xl font-extrabold">{app.participation.length}</div>
 		</div>
 		<div class="col-span-2 card p-5 sm:col-span-1">
-			<div class="text-sm text-muted">Наград</div>
+			<div class="text-sm text-muted">{tr('Наград')}</div>
 			<div class="text-2xl font-extrabold">{app.myAwards.length}</div>
 		</div>
 	</section>
@@ -111,10 +112,10 @@
 							{formatDate(h.date, { day: 'numeric', month: 'long', year: 'numeric' })} · {org?.name}
 						</div>
 					</div>
-					<span class="font-extrabold">+{h.hours} ч</span>
+					<span class="font-extrabold">{tr('+{0} ч', h.hours)}</span>
 				</li>
 			{:else}
-				<li class="p-6 text-center text-sm text-muted">Подтверждённых часов пока нет.</li>
+				<li class="p-6 text-center text-sm text-muted">{tr('Подтверждённых часов пока нет.')}</li>
 			{/each}
 		</ul>
 	{:else if tab === 'projects'}
@@ -130,7 +131,7 @@
 						<div class="text-xs text-muted">{app.org(o.orgId)?.name}</div>
 						<div class="mt-2 flex flex-wrap gap-1.5 text-xs">
 							<span class="rounded-full bg-surface-2 px-2.5 py-1 font-semibold"
-								>{a.role ?? 'Волонтёр'}</span
+								>{a.role ?? tr('Волонтёр')}</span
 							>
 							<span class="rounded-full bg-surface-2 px-2.5 py-1"
 								>{formatDate(o.date, { day: 'numeric', month: 'short', year: 'numeric' })}</span
@@ -141,7 +142,7 @@
 					</div>
 				</a>
 			{:else}
-				<p class="text-sm text-muted">Проекты появятся после подтверждения заявок.</p>
+				<p class="text-sm text-muted">{tr('Проекты появятся после подтверждения заявок.')}</p>
 			{/each}
 		</div>
 	{:else if tab === 'orgs'}
@@ -155,16 +156,24 @@
 							<div class="min-w-0">
 								<div class="font-bold">{org.name}</div>
 								<div class="text-xs text-muted">
-									{m.role} · с {formatDate(m.since, { month: 'long', year: 'numeric' })}
+									{tr(
+										'{0} · с {1}',
+										m.role,
+										formatDate(m.since, { month: 'long', year: 'numeric' })
+									)}
 								</div>
 							</div>
 						</div>
 						<p class="mt-3 text-sm text-muted">{org.about}</p>
 						<div class="mt-3 flex gap-2 text-xs font-semibold">
-							<span class="rounded-full bg-surface-2 px-3 py-1">{byOrg(org.id)} ч подтверждено</span
+							<span class="rounded-full bg-surface-2 px-3 py-1"
+								>{tr('{0} ч подтверждено', byOrg(org.id))}</span
 							>
 							<span class="rounded-full bg-surface-2 px-3 py-1"
-								>{app.participation.filter((p) => p.opportunity.orgId === org.id).length} мероприятий</span
+								>{tr(
+									'{0} мероприятий',
+									app.participation.filter((p) => p.opportunity.orgId === org.id).length
+								)}</span
 							>
 						</div>
 					</a>
@@ -175,8 +184,9 @@
 		<AwardShelves awards={app.myAwards} removable />
 	{:else}
 		<p class="mb-4 text-sm text-muted">
-			Отправьте организации заявку на подтверждение часов. После проверки куратором часы попадут в
-			портфолио.
+			{tr(
+				'Отправьте организации заявку на подтверждение часов. После проверки куратором часы попадут в портфолио.'
+			)}
 		</p>
 		<ul class="space-y-2">
 			{#each app.myHours as h (h.id)}
@@ -184,7 +194,7 @@
 				<li class="flex items-center gap-3 card p-4">
 					<Avatar id={h.orgId} />
 					<div class="min-w-0 flex-1">
-						<div class="truncate font-semibold">{h.title} · {h.hours} ч</div>
+						<div class="truncate font-semibold">{tr('{0} · {1} ч', h.title, h.hours)}</div>
 						<div class="truncate text-xs text-muted">
 							{app.org(h.orgId)?.name} · {formatDate(h.date)}
 						</div>
@@ -198,7 +208,7 @@
 		</ul>
 	{/if}
 
-	<Modal bind:open={requesting} title="Заявка на подтверждение часов">
+	<Modal bind:open={requesting} title={tr('Заявка на подтверждение часов')}>
 		<LogHoursForm ondone={() => (requesting = false)} />
 	</Modal>
 {/if}

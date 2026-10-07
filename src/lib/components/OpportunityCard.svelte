@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import {
 		BadgeCheck,
 		Bell,
@@ -65,14 +66,14 @@
 			<span
 				class="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-bold text-bg backdrop-blur"
 			>
-				Продвигается
+				{tr('Продвигается')}
 			</span>
 		{/if}
 		{#if o.deadline}
 			<span
 				class="absolute bottom-3 left-3 rounded-full bg-surface/90 px-3 py-1 text-xs font-semibold backdrop-blur"
 			>
-				⏳ заявки до {formatDate(o.deadline, { day: 'numeric', month: 'short' })}
+				{tr('⏳ заявки до {0}', formatDate(o.deadline, { day: 'numeric', month: 'short' }))}
 			</span>
 		{/if}
 	</div>
@@ -80,7 +81,7 @@
 	<div class="flex flex-1 flex-col gap-3 p-4 sm:p-5">
 		<div>
 			<h3 class="text-lg leading-snug font-extrabold tracking-tight group-hover:underline">
-				{o.title || 'Название мероприятия'}
+				{o.title || tr('Название мероприятия')}
 			</h3>
 			{#if org}
 				<div class="mt-1.5 flex items-center gap-1.5 text-sm text-muted">
@@ -88,14 +89,14 @@
 					<span class="truncate">{org.name}</span>
 					{#if org.verified}<BadgeCheck
 							class="size-4 shrink-0 text-accent-text"
-							aria-label="Проверенная организация"
+							aria-label={tr('Проверенная организация')}
 						/>{/if}
 				</div>
 			{/if}
 		</div>
 
 		<p class="line-clamp-2 text-sm text-muted">
-			{o.description || 'Короткое описание мероприятия'}
+			{o.description || tr('Короткое описание мероприятия')}
 		</p>
 
 		<ul class="grid grid-cols-2 gap-2 text-[13px]">
@@ -107,7 +108,7 @@
 			</li>
 			<li class="flex items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2">
 				<MapPin class="size-4 shrink-0 text-muted" />
-				<span class="truncate">{o.place || 'Место'}</span>
+				<span class="truncate">{o.place || tr('Место')}</span>
 			</li>
 			<li class="flex items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2">
 				<Hourglass class="size-4 shrink-0 text-muted" />
@@ -115,7 +116,7 @@
 			</li>
 			<li class="flex items-center gap-2 rounded-xl bg-surface-2 px-2.5 py-2">
 				<Users class="size-4 shrink-0 text-muted" />
-				<span>{taken}/{o.spots} человек</span>
+				<span>{tr('{0}/{1} человек', taken, o.spots)}</span>
 			</li>
 		</ul>
 
@@ -131,10 +132,10 @@
 				>
 					<Check class="size-4" />
 					{mine.status === 'approved'
-						? 'Вы участвуете'
+						? tr('Вы участвуете')
 						: mine.status === 'declined'
-							? 'Отклонено'
-							: 'Анкета отправлена'}
+							? tr('Отклонено')
+							: tr('Анкета отправлена')}
 				</a>
 			{:else}
 				<button
@@ -142,7 +143,7 @@
 					disabled={preview || full}
 					onclick={() => app.openApply(o.id)}
 				>
-					{full ? 'Мест нет' : 'Податься'}
+					{full ? tr('Мест нет') : tr('Податься')}
 				</button>
 			{/if}
 			<button
@@ -150,17 +151,19 @@
 				disabled={preview}
 				onclick={() => app.toggleReminder(o.id)}
 				aria-pressed={reminded}
-				aria-label="Напомнить позже"
-				title="Напомнить позже"
+				aria-label={tr('Напомнить позже')}
+				title={tr('Напомнить позже')}
 			>
 				{#if reminded}<BellRing class="size-4" />{:else}<Bell class="size-4" />{/if}
-				<span class="hidden text-xs sm:inline">{reminded ? 'Напомним' : 'Напомнить позже'}</span>
+				<span class="hidden text-xs sm:inline"
+					>{reminded ? tr('Напомним') : tr('Напомнить позже')}</span
+				>
 			</button>
 			<a
 				href={preview ? undefined : `/chat?id=${app.threadId(o.id, ME)}`}
 				class="btn btn-ghost px-3"
-				aria-label="Задать вопрос организатору"
-				title="Задать вопрос организатору"
+				aria-label={tr('Задать вопрос организатору')}
+				title={tr('Задать вопрос организатору')}
 			>
 				<MessageCircleQuestion class="size-4" />
 			</a>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { ChevronLeft } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
@@ -7,9 +8,9 @@
 	const ids = $derived(tab === 'followers' ? app.myFollowers : app.following);
 </script>
 
-<svelte:head><title>Подписчики — Волна</title></svelte:head>
+<svelte:head><title>{tr('Подписчики — Волна')}</title></svelte:head>
 
-<a href="/profile" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> Профиль</a>
+<a href="/profile" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> {tr('Профиль')}</a>
 
 <div class="mx-auto max-w-xl">
 	<div class="mb-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-bold">
@@ -17,14 +18,14 @@
 			class="rounded-xl py-2.5 {tab === 'followers' ? 'bg-surface shadow-sm' : 'text-muted'}"
 			onclick={() => (tab = 'followers')}
 		>
-			Подписчики · {app.myFollowers.length}
+			{tr('Подписчики · {0}', app.myFollowers.length)}
 		</button>
 		<button
 			class="rounded-xl py-2.5 {tab === 'following' ? 'bg-surface shadow-sm' : 'text-muted'}"
 			onclick={() => (tab = 'following')}
 			disabled={app.isOrg}
 		>
-			Подписки · {app.isOrg ? 0 : app.following.length}
+			{tr('Подписки · {0}', app.isOrg ? 0 : app.following.length)}
 		</button>
 	</div>
 
@@ -38,8 +39,12 @@
 						<div class="truncate font-bold">{a.name}</div>
 						<div class="text-xs text-muted">
 							{a.isOrg
-								? 'Организация'
-								: `${app.person(id)?.city ?? ''} · ${app.verifiedHoursOf(id)} ч волонтёрства`}
+								? tr('Организация')
+								: tr(
+										'{0} · {1} ч волонтёрства',
+										tr(app.person(id)?.city ?? ''),
+										app.verifiedHoursOf(id)
+									)}
 						</div>
 					</div>
 				</a>
@@ -48,12 +53,12 @@
 						class="btn py-2 text-xs {app.isFollowing(id) ? 'btn-ghost' : 'btn-soft'}"
 						onclick={() => app.toggleFollow(id)}
 					>
-						{app.isFollowing(id) ? 'Вы подписаны' : 'Подписаться'}
+						{app.isFollowing(id) ? tr('Вы подписаны') : tr('Подписаться')}
 					</button>
 				{/if}
 			</li>
 		{:else}
-			<li class="p-6 text-center text-sm text-muted">Здесь пока никого нет.</li>
+			<li class="p-6 text-center text-sm text-muted">{tr('Здесь пока никого нет.')}</li>
 		{/each}
 	</ul>
 </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Check, Search } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { people } from '#lib/data.ts';
@@ -43,7 +44,7 @@
 	<input
 		class="input py-2.5 pl-10"
 		type="search"
-		placeholder="Найти волонтёра или организацию"
+		placeholder={tr('Найти волонтёра или организацию')}
 		bind:value={query}
 	/>
 </label>
@@ -63,7 +64,9 @@
 				<Avatar {id} size="sm" />
 				<span class="min-w-0 flex-1">
 					<span class="block truncate text-sm font-semibold">{a.name}</span>
-					<span class="block text-xs text-muted">{a.isOrg ? 'Организация' : 'Волонтёр'}</span>
+					<span class="block text-xs text-muted"
+						>{a.isOrg ? tr('Организация') : tr('Волонтёр')}</span
+					>
 				</span>
 				{#if multiple}
 					<span
@@ -77,6 +80,6 @@
 			</button>
 		</li>
 	{:else}
-		<li class="p-4 text-center text-sm text-muted">Никого не нашли</li>
+		<li class="p-4 text-center text-sm text-muted">{tr('Никого не нашли')}</li>
 	{/each}
 </ul>

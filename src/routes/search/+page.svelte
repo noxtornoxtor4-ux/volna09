@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { BadgeCheck, ChevronRight, Search, X } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
@@ -14,17 +15,17 @@
 	const tabs = $derived<{ id: Tab; label: string; count: number }[]>([
 		{
 			id: 'all',
-			label: 'Всё',
+			label: tr('Всё'),
 			count: results.people.length + results.orgs.length + results.opportunities.length
 		},
-		{ id: 'people', label: 'Волонтёры', count: results.people.length },
-		{ id: 'orgs', label: 'Организации', count: results.orgs.length },
-		{ id: 'events', label: 'Мероприятия', count: results.opportunities.length }
+		{ id: 'people', label: tr('Волонтёры'), count: results.people.length },
+		{ id: 'orgs', label: tr('Организации'), count: results.orgs.length },
+		{ id: 'events', label: tr('Мероприятия'), count: results.opportunities.length }
 	]);
 	const show = (section: Tab) => tab === 'all' || tab === section;
 </script>
 
-<svelte:head><title>Поиск — Волна</title></svelte:head>
+<svelte:head><title>{tr('Поиск — Волна')}</title></svelte:head>
 
 <div class="mx-auto max-w-2xl">
 	<label class="relative mb-4 block">
@@ -36,14 +37,14 @@
 			class="input rounded-3xl py-4 pr-12 pl-12 text-base"
 			type="search"
 			autofocus
-			placeholder="Волонтёры, организации, мероприятия…"
+			placeholder={tr('Волонтёры, организации, мероприятия…')}
 			bind:value={query}
 		/>
 		{#if query}
 			<button
 				class="absolute top-1/2 right-3 grid size-8 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-surface-2"
 				onclick={() => (query = '')}
-				aria-label="Очистить"><X class="size-4" /></button
+				aria-label={tr('Очистить')}><X class="size-4" /></button
 			>
 		{/if}
 	</label>
@@ -61,7 +62,7 @@
 
 	{#if show('people') && results.people.length}
 		<section class="mb-6">
-			<h2 class="mb-2 text-sm font-bold text-muted">Волонтёры</h2>
+			<h2 class="mb-2 text-sm font-bold text-muted">{tr('Волонтёры')}</h2>
 			<ul class="divide-y divide-line card">
 				{#each results.people as p (p.id)}
 					<li class="flex items-center gap-3 p-3">
@@ -70,7 +71,13 @@
 							<div class="min-w-0">
 								<div class="truncate font-bold">{p.name}</div>
 								<div class="truncate text-xs text-muted">
-									{p.age} лет · {p.city} · {app.verifiedHoursOf(p.id)} ч · {p.bio}
+									{tr(
+										'{0} лет · {1} · {2} ч · {3}',
+										p.age,
+										tr(p.city),
+										app.verifiedHoursOf(p.id),
+										p.bio
+									)}
 								</div>
 							</div>
 						</a>
@@ -79,7 +86,7 @@
 								class="btn py-2 text-xs {app.isFollowing(p.id) ? 'btn-ghost' : 'btn-soft'}"
 								onclick={() => app.toggleFollow(p.id)}
 							>
-								{app.isFollowing(p.id) ? 'Вы подписаны' : 'Подписаться'}
+								{app.isFollowing(p.id) ? tr('Вы подписаны') : tr('Подписаться')}
 							</button>
 						{/if}
 					</li>
@@ -90,7 +97,7 @@
 
 	{#if show('orgs') && results.orgs.length}
 		<section class="mb-6">
-			<h2 class="mb-2 text-sm font-bold text-muted">Организации</h2>
+			<h2 class="mb-2 text-sm font-bold text-muted">{tr('Организации')}</h2>
 			<ul class="divide-y divide-line card">
 				{#each results.orgs as org (org.id)}
 					<li>
@@ -106,7 +113,7 @@
 										/>{/if}
 								</div>
 								<div class="truncate text-xs text-muted">
-									{app.followersCount(org.id)} подписчиков · {org.about}
+									{tr('{0} подписчиков · {1}', app.followersCount(org.id), org.about)}
 								</div>
 							</div>
 							<ChevronRight class="size-5 text-muted" />
@@ -119,7 +126,7 @@
 
 	{#if show('events') && results.opportunities.length}
 		<section class="mb-6">
-			<h2 class="mb-2 text-sm font-bold text-muted">Мероприятия и проекты</h2>
+			<h2 class="mb-2 text-sm font-bold text-muted">{tr('Мероприятия и проекты')}</h2>
 			<ul class="space-y-2">
 				{#each results.opportunities as o (o.id)}
 					<li>
@@ -146,6 +153,8 @@
 	{/if}
 
 	{#if tabs[0].count === 0}
-		<div class="card p-10 text-center text-muted">По запросу «{query}» ничего не нашлось.</div>
+		<div class="card p-10 text-center text-muted">
+			{tr('По запросу «{0}» ничего не нашлось.', query)}
+		</div>
 	{/if}
 </div>

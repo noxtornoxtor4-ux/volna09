@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { onDestroy } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import {
@@ -82,21 +83,21 @@
 	<button
 		class="absolute top-4 right-4 hidden size-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:grid"
 		onclick={onclose}
-		aria-label="Закрыть"
+		aria-label={tr('Закрыть')}
 	>
 		<X class="size-5" />
 	</button>
 	<button
 		class="absolute left-[calc(50%-15rem)] hidden size-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 lg:grid"
 		onclick={prev}
-		aria-label="Назад"
+		aria-label={tr('Назад')}
 	>
 		<ChevronLeft class="size-5" />
 	</button>
 	<button
 		class="absolute right-[calc(50%-15rem)] hidden size-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 lg:grid"
 		onclick={next}
-		aria-label="Дальше"
+		aria-label={tr('Дальше')}
 	>
 		<ChevronRight class="size-5" />
 	</button>
@@ -124,15 +125,15 @@
 				>{topic.emoji}</span
 			>
 			<div class="min-w-0 flex-1 leading-tight">
-				<div class="font-extrabold">{topic.label}</div>
+				<div class="font-extrabold">{tr(topic.label)}</div>
 				<div class="text-xs text-ink/70">
-					{slides.length ? `${slide + 1} из ${slides.length}` : 'пока пусто'}
+					{slides.length ? tr('{0} из {1}', slide + 1, slides.length) : tr('пока пусто')}
 				</div>
 			</div>
 			<button
 				class="grid size-10 place-items-center rounded-full bg-surface/80 sm:hidden"
 				onclick={onclose}
-				aria-label="Закрыть"
+				aria-label={tr('Закрыть')}
 			>
 				<X class="size-5" />
 			</button>
@@ -157,12 +158,12 @@
 						<button
 							class="absolute inset-y-0 left-0 z-10 w-1/3"
 							onclick={prev}
-							aria-label="Предыдущий постер"
+							aria-label={tr('Предыдущий постер')}
 						></button>
 						<button
 							class="absolute inset-y-0 right-0 z-10 w-2/3"
 							onclick={next}
-							aria-label="Следующий постер"
+							aria-label={tr('Следующий постер')}
 						></button>
 					</div>
 
@@ -193,24 +194,31 @@
 								><Hourglass class="size-4 text-muted" />+{hoursLabel(o.hours)}</span
 							>
 							<span class="flex items-center gap-1.5"
-								><Users class="size-4 text-muted" />{app.taken(o.id)}/{o.spots} человек</span
+								><Users class="size-4 text-muted" />{tr(
+									'{0}/{1} человек',
+									app.taken(o.id),
+									o.spots
+								)}</span
 							>
 						</div>
 						<div class="flex gap-2 pt-1">
 							{#if app.myApplication(o.id)}
-								<span class="btn flex-1 btn-soft"><Check class="size-4" /> Анкета отправлена</span>
+								<span class="btn flex-1 btn-soft"
+									><Check class="size-4" /> {tr('Анкета отправлена')}</span
+								>
 							{:else}
 								<button class="btn flex-1 btn-primary py-3" onclick={() => app.openApply(o.id)}
-									>Податься</button
+									>{tr('Податься')}</button
 								>
 							{/if}
 							<button
 								class="btn flex-1 {app.isReminded(o.id) ? 'btn-soft' : 'btn-ghost'} py-3"
 								onclick={() => app.toggleReminder(o.id)}
 							>
-								{#if app.isReminded(o.id)}<BellRing class="size-4" /> Напомним{:else}<Bell
+								{#if app.isReminded(o.id)}<BellRing class="size-4" /> {tr('Напомним')}{:else}<Bell
 										class="size-4"
-									/> Напомнить позже{/if}
+									/>
+									{tr('Напомнить позже')}{/if}
 							</button>
 						</div>
 					</div>
@@ -218,11 +226,13 @@
 			{:else}
 				<div class="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center" in:fade>
 					<span class="text-7xl">{topic.emoji}</span>
-					<p class="text-lg font-extrabold">По теме «{topic.label}» пока нет мероприятий</p>
-					<p class="text-sm text-ink/70">
-						Организаторы увидят тему и смогут отметить ею свои события.
+					<p class="text-lg font-extrabold">
+						{tr('По теме «{0}» пока нет мероприятий', tr(topic.label))}
 					</p>
-					<button class="mt-2 btn bg-surface" onclick={next}>Следующая тема</button>
+					<p class="text-sm text-ink/70">
+						{tr('Организаторы увидят тему и смогут отметить ею свои события.')}
+					</p>
+					<button class="mt-2 btn bg-surface" onclick={next}>{tr('Следующая тема')}</button>
 				</div>
 			{/if}
 		{/key}

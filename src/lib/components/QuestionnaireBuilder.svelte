@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { ArrowDown, ArrowUp, Plus, RotateCcw, Trash, X } from '@lucide/svelte';
 	import { defaultQuestions } from '#lib/data.ts';
 	import type { FormQuestion, QuestionType } from '#lib/types.ts';
@@ -6,10 +7,10 @@
 	let { questions = $bindable() }: { questions: FormQuestion[] } = $props();
 
 	const types: Record<QuestionType, string> = {
-		text: 'Короткий ответ',
-		textarea: 'Развёрнутый ответ',
-		choice: 'Один вариант',
-		multi: 'Несколько вариантов'
+		text: tr('Короткий ответ'),
+		textarea: tr('Развёрнутый ответ'),
+		choice: tr('Один вариант'),
+		multi: tr('Несколько вариантов')
 	};
 
 	function add() {
@@ -29,7 +30,7 @@
 	function setType(q: FormQuestion, type: QuestionType) {
 		q.type = type;
 		if ((type === 'choice' || type === 'multi') && !q.options?.length)
-			q.options = ['Вариант 1', 'Вариант 2'];
+			q.options = [tr('Вариант 1'), tr('Вариант 2')];
 	}
 </script>
 
@@ -41,21 +42,26 @@
 					class="mt-2.5 grid size-6 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold text-accent-ink"
 					>{i + 1}</span
 				>
-				<input class="input bg-surface" placeholder="Текст вопроса" required bind:value={q.label} />
+				<input
+					class="input bg-surface"
+					placeholder={tr('Текст вопроса')}
+					required
+					bind:value={q.label}
+				/>
 				<div class="flex shrink-0 flex-col">
 					<button
 						type="button"
 						class="grid size-6 place-items-center text-muted hover:text-ink disabled:opacity-30"
 						disabled={i === 0}
 						onclick={() => move(i, -1)}
-						aria-label="Выше"><ArrowUp class="size-4" /></button
+						aria-label={tr('Выше')}><ArrowUp class="size-4" /></button
 					>
 					<button
 						type="button"
 						class="grid size-6 place-items-center text-muted hover:text-ink disabled:opacity-30"
 						disabled={i === questions.length - 1}
 						onclick={() => move(i, 1)}
-						aria-label="Ниже"><ArrowDown class="size-4" /></button
+						aria-label={tr('Ниже')}><ArrowDown class="size-4" /></button
 					>
 				</div>
 			</div>
@@ -64,7 +70,7 @@
 					class="input w-auto bg-surface py-2"
 					value={q.type}
 					onchange={(e) => setType(q, e.currentTarget.value as QuestionType)}
-					aria-label="Тип ответа"
+					aria-label={tr('Тип ответа')}
 				>
 					{#each Object.entries(types) as [value, label] (value)}
 						<option {value}>{label}</option>
@@ -75,13 +81,14 @@
 						type="checkbox"
 						class="size-4 accent-[var(--accent-strong)]"
 						bind:checked={q.required}
-					/> Обязательный
+					/>
+					{tr('Обязательный')}
 				</label>
 				<button
 					type="button"
 					class="ml-auto grid size-9 place-items-center rounded-xl text-muted hover:bg-surface hover:text-pastel-peach-ink"
 					onclick={() => questions.splice(i, 1)}
-					aria-label="Удалить вопрос"
+					aria-label={tr('Удалить вопрос')}
 				>
 					<Trash class="size-4" />
 				</button>
@@ -95,21 +102,21 @@
 							<input
 								class="w-28 bg-transparent py-1.5 text-sm outline-none"
 								bind:value={q.options![j]}
-								aria-label="Вариант {j + 1}"
+								aria-label={tr('Вариант {0}', j + 1)}
 							/>
 							<button
 								type="button"
 								class="grid size-6 place-items-center rounded-full text-muted hover:bg-surface-2"
 								onclick={() => q.options!.splice(j, 1)}
-								aria-label="Удалить вариант"><X class="size-3" /></button
+								aria-label={tr('Удалить вариант')}><X class="size-3" /></button
 							>
 						</span>
 					{/each}
 					<button
 						type="button"
 						class="chip py-1.5"
-						onclick={() => q.options!.push(`Вариант ${q.options!.length + 1}`)}
-						><Plus class="size-3.5" /> вариант</button
+						onclick={() => q.options!.push(tr('Вариант {0}', q.options!.length + 1))}
+						><Plus class="size-3.5" /> {tr('вариант')}</button
 					>
 				</div>
 			{/if}
@@ -117,10 +124,10 @@
 	{/each}
 	<div class="flex flex-wrap gap-2">
 		<button type="button" class="btn btn-soft" onclick={add}
-			><Plus class="size-4" /> Добавить вопрос</button
+			><Plus class="size-4" /> {tr('Добавить вопрос')}</button
 		>
 		<button type="button" class="btn btn-ghost" onclick={() => (questions = defaultQuestions())}
-			><RotateCcw class="size-4" /> Шаблон</button
+			><RotateCcw class="size-4" /> {tr('Шаблон')}</button
 		>
 	</div>
 </div>

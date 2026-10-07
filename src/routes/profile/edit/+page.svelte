@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
 	import { ChevronLeft, Megaphone, Plus, Trash } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
@@ -33,7 +34,7 @@
 		const banner: OrgBanner = {
 			title: '',
 			text: '',
-			ctaLabel: 'Подробнее',
+			ctaLabel: tr('Подробнее'),
 			ctaHref: '',
 			tone: orgForm.tone ?? app.myOrg.tone
 		};
@@ -62,14 +63,14 @@
 	}
 </script>
 
-<svelte:head><title>Редактировать профиль — Волна</title></svelte:head>
+<svelte:head><title>{tr('Редактировать профиль — Волна')}</title></svelte:head>
 
-<a href="/profile" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> Профиль</a>
+<a href="/profile" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> {tr('Профиль')}</a>
 
 <form class="mx-auto max-w-2xl space-y-5" onsubmit={save}>
 	{#if app.isOrg}
 		<section class="card p-5">
-			<h2 class="mb-4 text-lg font-extrabold">Оформление страницы</h2>
+			<h2 class="mb-4 text-lg font-extrabold">{tr('Оформление страницы')}</h2>
 			<LookPicker
 				bind:look={orgForm}
 				tone={orgForm.tone ?? app.myOrg.tone}
@@ -77,7 +78,7 @@
 				fallback={app.myOrg.emoji}
 			/>
 			<div class="mt-5">
-				<span class="label">Цвет страницы</span>
+				<span class="label">{tr('Цвет страницы')}</span>
 				<div class="flex gap-2">
 					{#each tones as t (t)}
 						<button
@@ -87,7 +88,7 @@
 								? 'border-ink'
 								: 'border-transparent'}"
 							onclick={() => (orgForm.tone = t)}
-							aria-label="Цвет {t}"
+							aria-label={tr('Цвет {0}', t)}
 						></button>
 					{/each}
 				</div>
@@ -95,29 +96,29 @@
 		</section>
 
 		<section class="space-y-4 card p-5">
-			<h2 class="text-lg font-extrabold">Информация</h2>
+			<h2 class="text-lg font-extrabold">{tr('Информация')}</h2>
 			<label class="block"
-				><span class="label">Название организации</span><input
+				><span class="label">{tr('Название организации')}</span><input
 					class="input"
 					required
 					bind:value={orgForm.name}
 				/></label
 			>
 			<label class="block">
-				<span class="label">Город</span>
+				<span class="label">{tr('Город')}</span>
 				<select class="input" bind:value={orgForm.city}>
-					{#each cityOptions as c (c)}<option value={c}>{c}</option>{/each}
+					{#each cityOptions as c (c)}<option value={c}>{tr(c)}</option>{/each}
 				</select>
 			</label>
 			<label class="block"
-				><span class="label">О нас</span><textarea
+				><span class="label">{tr('О нас')}</span><textarea
 					class="min-h-24 input"
 					maxlength="240"
 					bind:value={orgForm.about}></textarea></label
 			>
 			<div class="grid gap-3 sm:grid-cols-2">
 				<label class="block"
-					><span class="label">Сайт</span><input
+					><span class="label">{tr('Сайт')}</span><input
 						class="input"
 						placeholder="example.kg"
 						bind:value={orgForm.website}
@@ -132,61 +133,62 @@
 				>
 			</div>
 			{#if app.myOrg.verified}<p class="text-xs text-muted">
-					✓ Организация проверена платформой
+					{tr('✓ Организация проверена платформой')}
 				</p>{/if}
 		</section>
 
 		<section class="space-y-4 card p-5">
 			<div class="flex items-center justify-between">
 				<h2 class="flex items-center gap-2 text-lg font-extrabold">
-					<Megaphone class="size-5 text-accent-text" /> Баннер
+					<Megaphone class="size-5 text-accent-text" />
+					{tr('Баннер')}
 				</h2>
 				{#if orgForm.banner}
 					<button
 						type="button"
 						class="text-sm font-semibold text-muted hover:text-ink"
-						onclick={() => (orgForm.banner = undefined)}>Убрать</button
+						onclick={() => (orgForm.banner = undefined)}>{tr('Убрать')}</button
 					>
 				{/if}
 			</div>
 			{#if orgForm.banner}
 				<div class="rounded-3xl p-4 {toneClass[orgForm.banner.tone].bg}">
-					<div class="font-extrabold">{orgForm.banner.title || 'Заголовок баннера'}</div>
+					<div class="font-extrabold">{orgForm.banner.title || tr('Заголовок баннера')}</div>
 					<p class="text-sm">
-						{orgForm.banner.text || 'Текст: набор волонтёров, акция или важное объявление'}
+						{orgForm.banner.text || tr('Текст: набор волонтёров, акция или важное объявление')}
 					</p>
 					{#if orgForm.banner.ctaLabel}<span class="mt-3 btn bg-ink py-2 text-sm text-bg"
 							>{orgForm.banner.ctaLabel}</span
 						>{/if}
 				</div>
 				<label class="block"
-					><span class="label">Заголовок</span><input
+					><span class="label">{tr('Заголовок')}</span><input
 						class="input"
 						maxlength="60"
 						bind:value={orgForm.banner.title}
 					/></label
 				>
 				<label class="block"
-					><span class="label">Текст</span><textarea
+					><span class="label">{tr('Текст')}</span><textarea
 						class="min-h-16 input"
 						maxlength="160"
 						bind:value={orgForm.banner.text}></textarea></label
 				>
 				<div class="grid gap-3 sm:grid-cols-2">
 					<label class="block"
-						><span class="label">Текст кнопки</span><input
+						><span class="label">{tr('Текст кнопки')}</span><input
 							class="input"
 							maxlength="24"
 							bind:value={orgForm.banner.ctaLabel}
 						/></label
 					>
 					<label class="block">
-						<span class="label">Куда ведёт кнопка</span>
+						<span class="label">{tr('Куда ведёт кнопка')}</span>
 						<select class="input" bind:value={orgForm.banner.ctaHref}>
-							<option value="">Без кнопки</option>
+							<option value="">{tr('Без кнопки')}</option>
 							{#each orgEvents as o (o.id)}<option value="/o?id={o.id}">{o.emoji} {o.title}</option
 								>{/each}
-							<option value="/cabinet/new?category=recruitment">Форма нового набора</option>
+							<option value="/cabinet/new?category=recruitment">{tr('Форма нового набора')}</option>
 						</select>
 					</label>
 				</div>
@@ -198,39 +200,39 @@
 								? 'border-ink'
 								: 'border-transparent'}"
 							onclick={() => orgForm.banner && (orgForm.banner.tone = t)}
-							aria-label="Цвет баннера {t}"
+							aria-label={tr('Цвет баннера {0}', t)}
 						></button>
 					{/each}
 				</div>
 			{:else}
 				<p class="text-sm text-muted">
-					Большой баннер вверху страницы: набор волонтёров, акция или важное объявление.
+					{tr('Большой баннер вверху страницы: набор волонтёров, акция или важное объявление.')}
 				</p>
 				<button type="button" class="btn btn-soft" onclick={enableBanner}
-					><Plus class="size-4" /> Добавить баннер</button
+					><Plus class="size-4" /> {tr('Добавить баннер')}</button
 				>
 			{/if}
 		</section>
 
 		<section class="space-y-3 card p-5">
-			<h2 class="text-lg font-extrabold">Анонсы</h2>
+			<h2 class="text-lg font-extrabold">{tr('Анонсы')}</h2>
 			<div class="space-y-2 rounded-3xl bg-surface-2 p-3">
 				<input
 					class="input bg-surface"
-					placeholder="Заголовок анонса"
+					placeholder={tr('Заголовок анонса')}
 					maxlength="60"
 					bind:value={news.title}
 				/>
 				<textarea
 					class="min-h-16 input bg-surface"
-					placeholder="Что важно знать волонтёрам"
+					placeholder={tr('Что важно знать волонтёрам')}
 					maxlength="240"
 					bind:value={news.text}></textarea>
 				<button
 					type="button"
 					class="btn btn-soft"
 					disabled={!news.title.trim() || !news.text.trim()}
-					onclick={addNews}><Plus class="size-4" /> Добавить анонс</button
+					onclick={addNews}><Plus class="size-4" /> {tr('Добавить анонс')}</button
 				>
 			</div>
 			{#each orgForm.announcements ?? [] as item (item.id)}
@@ -247,7 +249,7 @@
 						class="text-muted hover:text-pastel-peach-ink"
 						onclick={() =>
 							(orgForm.announcements = orgForm.announcements?.filter((a) => a.id !== item.id))}
-						aria-label="Удалить анонс"
+						aria-label={tr('Удалить анонс')}
 					>
 						<Trash class="size-4" />
 					</button>
@@ -257,22 +259,24 @@
 
 		<section class="flex flex-wrap items-center justify-between gap-3 card p-5">
 			<div>
-				<h2 class="text-lg font-extrabold">Наборы волонтёров</h2>
-				<p class="text-sm text-muted">Открытые наборы показываются на странице организации.</p>
+				<h2 class="text-lg font-extrabold">{tr('Наборы волонтёров')}</h2>
+				<p class="text-sm text-muted">
+					{tr('Открытые наборы показываются на странице организации.')}
+				</p>
 			</div>
 			<a href="/cabinet/new?category=recruitment" class="btn btn-soft"
-				><Plus class="size-4" /> Опубликовать набор</a
+				><Plus class="size-4" /> {tr('Опубликовать набор')}</a
 			>
 		</section>
 	{:else}
 		<section class="card p-5">
-			<h2 class="mb-4 text-lg font-extrabold">Постер и аватар</h2>
+			<h2 class="mb-4 text-lg font-extrabold">{tr('Постер и аватар')}</h2>
 			<LookPicker bind:look={form} tone={form.tone} fallback={initials(form.name)} />
 		</section>
 
 		<section class="space-y-4 card p-5">
 			<label class="block"
-				><span class="label">ФИО</span><input
+				><span class="label">{tr('ФИО')}</span><input
 					class="input"
 					required
 					bind:value={form.name}
@@ -280,7 +284,7 @@
 			>
 			<div class="grid grid-cols-2 gap-3">
 				<label class="block"
-					><span class="label">Возраст</span><input
+					><span class="label">{tr('Возраст')}</span><input
 						class="input"
 						type="number"
 						min="12"
@@ -290,23 +294,23 @@
 					/></label
 				>
 				<label class="block">
-					<span class="label">Город</span>
+					<span class="label">{tr('Город')}</span>
 					<select class="input" bind:value={form.city}>
-						{#each cityOptions as c (c)}<option value={c}>{c}</option>{/each}
+						{#each cityOptions as c (c)}<option value={c}>{tr(c)}</option>{/each}
 					</select>
 				</label>
 			</div>
 			<p class="-mt-2 text-xs text-muted">
-				По городу подбираются мероприятия, наборы и активности на главной.
+				{tr('По городу подбираются мероприятия, наборы и активности на главной.')}
 			</p>
 			<label class="block"
-				><span class="label">О себе</span><textarea
+				><span class="label">{tr('О себе')}</span><textarea
 					class="min-h-20 input"
 					maxlength="160"
 					bind:value={form.bio}></textarea></label
 			>
 			<div>
-				<span class="label">Цвет профиля</span>
+				<span class="label">{tr('Цвет профиля')}</span>
 				<div class="flex gap-2">
 					{#each tones as t (t)}
 						<button
@@ -315,13 +319,13 @@
 								? 'border-ink'
 								: 'border-transparent'}"
 							onclick={() => (form.tone = t)}
-							aria-label="Цвет {t}"
+							aria-label={tr('Цвет {0}', t)}
 						></button>
 					{/each}
 				</div>
 			</div>
 			<div>
-				<span class="label">Интересы — по ним собираются сторисы «Для вас»</span>
+				<span class="label">{tr('Интересы — по ним собираются сторисы «Для вас»')}</span>
 				<div class="flex flex-wrap gap-2">
 					{#each app.topics as t (t.id)}
 						{@const on = form.interests.includes(t.id)}
@@ -329,7 +333,7 @@
 							type="button"
 							class="chip {on ? 'border-accent bg-accent-soft text-accent-text' : ''}"
 							onclick={() => toggleInterest(t.id)}
-							aria-pressed={on}>{t.emoji} {t.label}</button
+							aria-pressed={on}>{t.emoji} {tr(t.label)}</button
 						>
 					{/each}
 				</div>
@@ -337,5 +341,5 @@
 		</section>
 	{/if}
 
-	<button class="btn w-full btn-primary py-3">Сохранить</button>
+	<button class="btn w-full btn-primary py-3">{tr('Сохранить')}</button>
 </form>

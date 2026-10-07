@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { X } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
@@ -18,7 +19,7 @@
 	<div class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
 		<button
 			class="absolute inset-0 bg-black/35 backdrop-blur-[3px]"
-			aria-label="Закрыть"
+			aria-label={tr('Закрыть')}
 			onclick={() => (open = false)}
 			transition:fade={{ duration: 150 }}
 		></button>
@@ -37,7 +38,7 @@
 				<button
 					class="btn size-9 shrink-0 rounded-full btn-ghost p-0"
 					onclick={() => (open = false)}
-					aria-label="Закрыть"
+					aria-label={tr('Закрыть')}
 				>
 					<X class="size-4" />
 				</button>

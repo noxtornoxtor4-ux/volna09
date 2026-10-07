@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
 	import { ChevronLeft, Megaphone, Send } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import { ME, toneClass } from '#lib/data.ts';
-	import { formatDate } from '#lib/format.ts';
+	import { formatDate, formatTime } from '#lib/format.ts';
 
 	const id = $derived(page.url.searchParams.get('id') ?? '');
 	const [opportunityId, personId] = $derived(id.split('__'));
@@ -41,17 +42,15 @@
 		draft = '';
 	}
 
-	const time = (iso: string) =>
-		new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-	const quick = ['Что взять с собой?', 'Можно прийти с другом?', 'Во сколько сбор?'];
+	const quick = [tr('Что взять с собой?'), tr('Можно прийти с другом?'), tr('Во сколько сбор?')];
 </script>
 
-<svelte:head><title>Чат — Волна</title></svelte:head>
+<svelte:head><title>{tr('Чат — Волна')}</title></svelte:head>
 
 {#if !allowed || !o}
 	<div class="card p-10 text-center">
-		<p class="text-lg font-bold">Чат недоступен</p>
-		<a href="/notifications" class="mt-4 btn btn-primary">К уведомлениям</a>
+		<p class="text-lg font-bold">{tr('Чат недоступен')}</p>
+		<a href="/notifications" class="mt-4 btn btn-primary">{tr('К уведомлениям')}</a>
 	</div>
 {:else}
 	<div
@@ -61,7 +60,7 @@
 			<button
 				class="btn size-10 rounded-full btn-ghost p-0"
 				onclick={() => history.back()}
-				aria-label="Назад"><ChevronLeft class="size-5" /></button
+				aria-label={tr('Назад')}><ChevronLeft class="size-5" /></button
 			>
 			<Avatar id={partnerId} />
 			<div class="min-w-0 flex-1">
@@ -89,7 +88,8 @@
 						<div
 							class="flex items-center justify-center gap-1.5 text-xs font-bold text-accent-text"
 						>
-							<Megaphone class="size-3.5" /> Уведомление для всех участников
+							<Megaphone class="size-3.5" />
+							{tr('Уведомление для всех участников')}
 						</div>
 						<div class="mt-1 font-bold">{item.title}</div>
 						<p>{item.text}</p>
@@ -104,13 +104,13 @@
 								: 'rounded-bl-md bg-surface shadow-sm'}"
 						>
 							{item.text}
-							<div class="mt-0.5 text-right text-[10px] opacity-60">{time(item.at)}</div>
+							<div class="mt-0.5 text-right text-[10px] opacity-60">{formatTime(item.at)}</div>
 						</div>
 					</div>
 				{/if}
 			{:else}
 				<p class="pt-10 text-center text-sm text-muted">
-					Задайте вопрос — организатор ответит здесь.
+					{tr('Задайте вопрос — организатор ответит здесь.')}
 				</p>
 			{/each}
 		</div>
@@ -126,10 +126,10 @@
 			<form class="flex gap-2" onsubmit={send}>
 				<input
 					class="input"
-					placeholder={app.isOrg ? 'Ответ волонтёру…' : 'Ваш вопрос организатору…'}
+					placeholder={app.isOrg ? tr('Ответ волонтёру…') : tr('Ваш вопрос организатору…')}
 					bind:value={draft}
 				/>
-				<button class="btn btn-primary px-4" disabled={!draft.trim()} aria-label="Отправить"
+				<button class="btn btn-primary px-4" disabled={!draft.trim()} aria-label={tr('Отправить')}
 					><Send class="size-4" /></button
 				>
 			</form>

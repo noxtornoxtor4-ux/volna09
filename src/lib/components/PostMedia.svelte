@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { onDestroy } from 'svelte';
 	import { Heart, Pause, Play, Volume2, VolumeX } from '@lucide/svelte';
 	import { toneClass } from '#lib/data.ts';
@@ -113,8 +114,8 @@
 	role="button"
 	tabindex="0"
 	aria-label={isVideo
-		? `${playing ? 'Пауза' : 'Смотреть видео'}${onlike ? '. Двойной тап — нравится' : ''}`
-		: 'Фото. Двойной тап — нравится'}
+		? `${playing ? tr('Пауза') : tr('Смотреть видео')}${onlike ? tr('. Двойной тап — нравится') : ''}`
+		: tr('Фото. Двойной тап — нравится')}
 	onpointerup={tap}
 	onkeydown={keydown}
 >
@@ -164,14 +165,14 @@
 			<span
 				class="absolute inset-x-3 top-12 rounded-2xl bg-black/50 p-2 text-center text-xs text-white"
 			>
-				Видео хранится на устройстве автора — здесь видна только обложка
+				{tr('Видео хранится на устройстве автора — здесь видна только обложка')}
 			</span>
 		{/if}
 
 		<span
 			class="absolute top-3 left-3 rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur"
 		>
-			{vertical ? 'Shorts' : 'Видео'}
+			{vertical ? 'Shorts' : tr('Видео')}
 		</span>
 		{#if !isDemo && url}
 			<button
@@ -179,7 +180,7 @@
 				data-control
 				class="absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-black/35 text-white"
 				onclick={() => (muted = !muted)}
-				aria-label={muted ? 'Включить звук' : 'Выключить звук'}
+				aria-label={muted ? tr('Включить звук') : tr('Выключить звук')}
 			>
 				{#if muted}<VolumeX class="size-4" />{:else}<Volume2 class="size-4" />{/if}
 			</button>

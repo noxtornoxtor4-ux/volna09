@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Camera, Check, ImagePlus, Video, X } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { avatarEmojis, coverPresets, toneClass } from '#lib/data.ts';
@@ -39,7 +40,7 @@
 		const file = takeFile(e);
 		if (!file) return;
 		if (file.size > MAX_VIDEO_BYTES) {
-			app.notify('Видео для постера — до 60 МБ. Лучше короткий ролик на 5–15 секунд');
+			app.notify(tr('Видео для постера — до 60 МБ. Лучше короткий ролик на 5–15 секунд'));
 			return;
 		}
 		busy = true;
@@ -76,7 +77,7 @@
 	</div>
 
 	<div class="pt-6">
-		<span class="label">Постер — шаблоны</span>
+		<span class="label">{tr('Постер — шаблоны')}</span>
 		<div class="grid grid-cols-5 gap-2 sm:grid-cols-9">
 			{#each Object.entries(coverPresets) as [id, preset] (id)}
 				<button
@@ -86,7 +87,7 @@
 						: 'border-transparent hover:scale-105'}"
 					style="background: {preset.css}"
 					onclick={() => usePreset(id)}
-					aria-label="Шаблон «{preset.label}»"
+					aria-label={tr('Шаблон «{0}»', preset.label)}
 					title={preset.label}
 				>
 					{#if look.coverPreset === id}<Check
@@ -97,12 +98,13 @@
 		</div>
 		<div class="mt-2 flex flex-wrap gap-2">
 			<label class="btn cursor-pointer btn-ghost py-2 text-sm">
-				<ImagePlus class="size-4" /> Своё фото
+				<ImagePlus class="size-4" />
+				{tr('Своё фото')}
 				<input type="file" accept="image/*" class="sr-only" onchange={coverPhoto} disabled={busy} />
 			</label>
 			<label class="btn cursor-pointer btn-ghost py-2 text-sm">
 				<Video class="size-4" />
-				{busy ? 'Загрузка…' : 'Видео'}
+				{busy ? tr('Загрузка…') : tr('Видео')}
 				<input type="file" accept="video/*" class="sr-only" onchange={coverVideo} disabled={busy} />
 			</label>
 			{#if look.cover || look.coverPreset || look.coverVideoId}
@@ -112,18 +114,19 @@
 					onclick={() =>
 						(look = { ...look, cover: undefined, coverPreset: undefined, coverVideoId: undefined })}
 				>
-					<X class="size-4" /> Без постера
+					<X class="size-4" />
+					{tr('Без постера')}
 				</button>
 			{/if}
 		</div>
 	</div>
 
 	<div>
-		<span class="label">Аватар</span>
+		<span class="label">{tr('Аватар')}</span>
 		<div class="flex flex-wrap gap-1.5">
 			<label
 				class="grid size-11 cursor-pointer place-items-center rounded-2xl bg-accent text-accent-ink"
-				title="Загрузить фото"
+				title={tr('Загрузить фото')}
 			>
 				<Camera class="size-5" />
 				<input type="file" accept="image/*" class="sr-only" onchange={avatarPhoto} />
@@ -136,7 +139,7 @@
 						? 'bg-accent-soft ring-2 ring-accent'
 						: 'bg-surface-2 hover:scale-105'}"
 					onclick={() => (look = { ...look, avatarEmoji: emoji, avatar: undefined })}
-					aria-label="Аватар {emoji}">{emoji}</button
+					aria-label={tr('Аватар {0}', emoji)}>{emoji}</button
 				>
 			{/each}
 			{#if look.avatar || look.avatarEmoji}
@@ -144,7 +147,7 @@
 					type="button"
 					class="grid size-11 place-items-center rounded-2xl bg-surface-2 text-muted"
 					onclick={() => (look = { ...look, avatar: undefined, avatarEmoji: undefined })}
-					aria-label="Убрать аватар"
+					aria-label={tr('Убрать аватар')}
 				>
 					<X class="size-4" />
 				</button>

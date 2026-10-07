@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Film, Heart, Play } from '@lucide/svelte';
 	import { toneClass } from '#lib/data.ts';
 	import type { Post } from '#lib/types.ts';
@@ -47,11 +48,11 @@
 		{/each}
 	</div>
 {:else}
-	<p class="py-10 text-center text-sm text-muted">Публикаций пока нет.</p>
+	<p class="py-10 text-center text-sm text-muted">{tr('Публикаций пока нет.')}</p>
 {/if}
 
 {#if viewing}
-	<Modal title="Публикация" bind:open={() => true, (v) => !v && (viewing = null)}>
+	<Modal title={tr('Публикация')} bind:open={() => true, (v) => !v && (viewing = null)}>
 		<PostCard post={viewing} />
 	</Modal>
 {/if}

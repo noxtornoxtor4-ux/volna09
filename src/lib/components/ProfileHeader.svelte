@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { BadgeCheck } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import type { ProfileLook, Tone } from '#lib/types.ts';
@@ -41,7 +42,7 @@
 			{name}
 			{#if verified}<BadgeCheck
 					class="size-5 text-accent-text"
-					aria-label="Проверенная организация"
+					aria-label={tr('Проверенная организация')}
 				/>{/if}
 		</h1>
 		<p class="text-sm text-muted">{subtitle}</p>

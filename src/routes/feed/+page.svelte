@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Film, Image, LayoutGrid, Plus, Smartphone, Star, Type } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
@@ -15,11 +16,11 @@
 	let composeKind = $state<Post['kind']>('post');
 
 	const formats = [
-		{ id: 'all' as Format, label: 'Всё', icon: LayoutGrid },
-		{ id: 'short' as Format, label: 'Короткие видео', icon: Smartphone },
-		{ id: 'photo' as Format, label: 'Фото', icon: Image },
-		{ id: 'video' as Format, label: 'Видео', icon: Film },
-		{ id: 'text' as Format, label: 'Текст', icon: Type }
+		{ id: 'all' as Format, label: tr('Всё'), icon: LayoutGrid },
+		{ id: 'short' as Format, label: tr('Короткие видео'), icon: Smartphone },
+		{ id: 'photo' as Format, label: tr('Фото'), icon: Image },
+		{ id: 'video' as Format, label: tr('Видео'), icon: Film },
+		{ id: 'text' as Format, label: tr('Текст'), icon: Type }
 	];
 
 	const posts = $derived(
@@ -36,16 +37,17 @@
 	}
 </script>
 
-<svelte:head><title>Лента — Волна</title></svelte:head>
+<svelte:head><title>{tr('Лента — Волна')}</title></svelte:head>
 
 <div class="mx-auto max-w-xl">
 	<div class="mb-5 flex items-center justify-between gap-3">
-		<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Лента</h1>
+		<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{tr('Лента')}</h1>
 		<button
 			class="btn btn-primary"
 			onclick={() => compose(section === 'experience' ? 'review' : 'post')}
 		>
-			<Plus class="size-4" /> Создать
+			<Plus class="size-4" />
+			{tr('Создать')}
 		</button>
 	</div>
 
@@ -56,7 +58,7 @@
 				: 'text-muted'}"
 			onclick={() => (section = 'recommended')}
 		>
-			Рекомендации
+			{tr('Рекомендации')}
 		</button>
 		<button
 			class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 transition {section ===
@@ -65,7 +67,8 @@
 				: 'text-muted'}"
 			onclick={() => (section = 'experience')}
 		>
-			<Star class="size-4" /> Опыт и отзывы
+			<Star class="size-4" />
+			{tr('Опыт и отзывы')}
 		</button>
 	</div>
 
@@ -89,9 +92,9 @@
 		>
 			<Avatar id={app.actorId} />
 			<span class="flex-1 text-sm text-muted"
-				>Расскажите, как прошло волонтёрство: текст, фото или видео…</span
+				>{tr('Расскажите, как прошло волонтёрство: текст, фото или видео…')}</span
 			>
-			<span class="btn btn-soft py-2">Отзыв</span>
+			<span class="btn btn-soft py-2">{tr('Отзыв')}</span>
 		</button>
 	{/if}
 
@@ -99,7 +102,7 @@
 		{#each posts as post (post.id)}
 			<PostCard {post} />
 		{:else}
-			<div class="card p-10 text-center text-muted">Здесь пока пусто.</div>
+			<div class="card p-10 text-center text-muted">{tr('Здесь пока пусто.')}</div>
 		{/each}
 	</div>
 </div>

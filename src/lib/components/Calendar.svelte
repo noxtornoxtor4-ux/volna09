@@ -3,8 +3,10 @@
 </script>
 
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { day } from '#lib/data.ts';
+	import { formatDate, formatDateValue } from '#lib/format.ts';
 
 	let {
 		selected = $bindable(day(0)),
@@ -15,7 +17,7 @@
 	const now = new Date(`${today}T00:00:00`);
 	let cursor = $state(new Date(now.getFullYear(), now.getMonth(), 1));
 
-	const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+	const weekdays = [tr('Пн'), tr('Вт'), tr('Ср'), tr('Чт'), tr('Пт'), tr('Сб'), tr('Вс')];
 	const markClass: Record<Mark, string> = {
 		event: 'bg-pastel-blue-ink',
 		pending: 'bg-pastel-yellow-ink',
@@ -23,13 +25,13 @@
 		photo: 'bg-pastel-peach-ink'
 	};
 	const legend: [Mark, string][] = [
-		['event', 'участие подтверждено'],
-		['pending', 'заявка на рассмотрении'],
-		['done', 'часы подтверждены'],
-		['photo', 'есть фото']
+		['event', tr('участие подтверждено')],
+		['pending', tr('заявка на рассмотрении')],
+		['done', tr('часы подтверждены')],
+		['photo', tr('есть фото')]
 	];
 
-	const title = $derived(cursor.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }));
+	const title = $derived(formatDateValue(cursor, { month: 'long', year: 'numeric' }));
 	const cells = $derived.by(() => {
 		const year = cursor.getFullYear();
 		const month = cursor.getMonth();
@@ -53,13 +55,13 @@
 		<button
 			class="btn size-10 rounded-full btn-ghost p-0"
 			onclick={() => shift(-1)}
-			aria-label="Предыдущий месяц"><ChevronLeft class="size-5" /></button
+			aria-label={tr('Предыдущий месяц')}><ChevronLeft class="size-5" /></button
 		>
 		<span class="text-lg font-extrabold capitalize">{title}</span>
 		<button
 			class="btn size-10 rounded-full btn-ghost p-0"
 			onclick={() => shift(1)}
-			aria-label="Следующий месяц"><ChevronRight class="size-5" /></button
+			aria-label={tr('Следующий месяц')}><ChevronRight class="size-5" /></button
 		>
 	</div>
 	<div class="grid grid-cols-7 gap-1 text-center">
@@ -83,10 +85,7 @@
 						: ''}"
 					onclick={() => (selected = date)}
 					aria-pressed={selected === date}
-					aria-label={new Date(`${date}T00:00:00`).toLocaleDateString('ru-RU', {
-						day: 'numeric',
-						month: 'long'
-					})}
+					aria-label={formatDate(date)}
 				>
 					{Number(date.slice(-2))}
 					{#if dayMarks.length}

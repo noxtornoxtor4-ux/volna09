@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
 	import { ArrowRight, Building, ChevronLeft, HandHeart, Mail, Smartphone } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import InstallApp from '#lib/components/InstallApp.svelte';
+	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import Logo from '#lib/components/Logo.svelte';
 	import OrgPicker from '#lib/components/OrgPicker.svelte';
 	import OtpInput from '#lib/components/OtpInput.svelte';
@@ -122,28 +124,28 @@
 	onDestroy(() => clearInterval(timer));
 </script>
 
-<svelte:head><title>Вход — Волна</title></svelte:head>
+<svelte:head><title>{tr('Вход — Волна')}</title></svelte:head>
 
 <div class="grid min-h-dvh lg:grid-cols-2">
 	<aside class="relative hidden overflow-hidden bg-accent-soft p-12 lg:flex lg:flex-col">
 		<Logo />
 		<div class="my-auto max-w-md">
 			<h1 class="text-4xl leading-tight font-extrabold tracking-tight">
-				Делай добро и собирай портфолио, которое видно всем
+				{tr('Делай добро и собирай портфолио, которое видно всем')}
 			</h1>
 			<ul class="mt-8 space-y-4 text-[15px]">
 				<li class="flex items-center gap-3">
 					<span class="grid size-11 place-items-center rounded-2xl bg-pastel-blue text-xl">🧭</span
-					>Проекты, акции и тренинги рядом с тобой
+					>{tr('Проекты, акции и тренинги рядом с тобой')}
 				</li>
 				<li class="flex items-center gap-3">
 					<span class="grid size-11 place-items-center rounded-2xl bg-pastel-yellow text-xl"
 						>⏱️</span
-					>Часы, которые подтверждают организации
+					>{tr('Часы, которые подтверждают организации')}
 				</li>
 				<li class="flex items-center gap-3">
 					<span class="grid size-11 place-items-center rounded-2xl bg-pastel-green text-xl">🎬</span
-					>Истории и видео от таких же волонтёров
+					>{tr('Истории и видео от таких же волонтёров')}
 				</li>
 			</ul>
 		</div>
@@ -155,19 +157,20 @@
 	<main class="flex flex-col px-5 py-8 sm:px-10">
 		<div class="lg:hidden"><Logo /></div>
 		<div class="mx-auto my-auto w-full max-w-sm py-10">
+			<div class="mb-6"><LanguagePicker /></div>
 			<h2 class="text-2xl font-extrabold tracking-tight">
-				{mode === 'login' ? 'С возвращением!' : 'Создать аккаунт'}
+				{mode === 'login' ? tr('С возвращением!') : tr('Создать аккаунт')}
 			</h2>
 			<p class="mt-1 text-sm text-muted">
 				{mode === 'login'
-					? 'Войдите, чтобы продолжить.'
+					? tr('Войдите, чтобы продолжить.')
 					: role === 'org'
-						? 'Найдите свою организацию или добавьте новую.'
-						: 'Пара шагов — и можно подавать заявки.'}
+						? tr('Найдите свою организацию или добавьте новую.')
+						: tr('Пара шагов — и можно подавать заявки.')}
 			</p>
 
 			<div class="mt-6 grid grid-cols-2 gap-2">
-				{#each [{ id: 'volunteer' as Role, label: 'Я волонтёр', icon: HandHeart }, { id: 'org' as Role, label: 'Я организация', icon: Building }] as r (r.id)}
+				{#each [{ id: 'volunteer' as Role, label: tr('Я волонтёр'), icon: HandHeart }, { id: 'org' as Role, label: tr('Я организация'), icon: Building }] as r (r.id)}
 					<button
 						class="flex flex-col items-center gap-1.5 rounded-3xl border-2 p-3 text-sm font-bold transition {role ===
 						r.id
@@ -189,7 +192,8 @@
 						: 'text-muted'}"
 					onclick={() => (method = 'phone')}
 				>
-					<Smartphone class="size-4" /> Телефон
+					<Smartphone class="size-4" />
+					{tr('Телефон')}
 				</button>
 				<button
 					class="flex items-center justify-center gap-2 rounded-xl py-2.5 {method === 'email'
@@ -206,18 +210,18 @@
 					<OrgPicker bind:selected={orgChoice} bind:draft={newOrg} />
 				{:else}
 					<label class="mt-5 block">
-						<span class="label">Как тебя зовут?</span>
+						<span class="label">{tr('Как тебя зовут?')}</span>
 						<input
 							class="input"
 							autocomplete="name"
-							placeholder="Имя и фамилия"
+							placeholder={tr('Имя и фамилия')}
 							bind:value={name}
 						/>
 					</label>
 				{/if}
 			{:else if mode === 'login' && role === 'org'}
 				<p class="mt-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">
-					Вход в кабинет организации <b class="text-ink">{app.org(app.myOrgId)?.name}</b>
+					{tr('Вход в кабинет организации')} <b class="text-ink">{app.org(app.myOrgId)?.name}</b>
 				</p>
 			{/if}
 
@@ -225,7 +229,7 @@
 				{#if !codeSent}
 					<form class="mt-5 space-y-4" onsubmit={sendCode}>
 						<label class="block">
-							<span class="label">Номер телефона</span>
+							<span class="label">{tr('Номер телефона')}</span>
 							<div class="flex gap-2">
 								<span class="input w-auto shrink-0 font-semibold">🇰🇬 +996</span>
 								<input
@@ -247,7 +251,7 @@
 							class="btn w-full btn-primary py-3"
 							disabled={!phoneValid || !nameOk || sending}
 						>
-							{sending ? 'Отправляем SMS…' : 'Получить код'}
+							{sending ? tr('Отправляем SMS…') : tr('Получить код')}
 							<ArrowRight class="size-4" />
 						</button>
 					</form>
@@ -261,7 +265,7 @@
 							<ChevronLeft class="size-4" /> +996 {phoneDigits.slice(-9)}
 						</button>
 						<div>
-							<span class="label">Код из SMS</span>
+							<span class="label">{tr('Код из SMS')}</span>
 							<OtpInput
 								bind:value={code}
 								length={CODE_LENGTH}
@@ -276,18 +280,21 @@
 							</p>
 						{:else if smsEnabled}
 							<p class="text-sm text-muted">
-								Мы отправили SMS с кодом на +996 {phoneDigits.slice(-9)}
+								{tr('Мы отправили SMS с кодом на +996 {0}', phoneDigits.slice(-9))}
 							</p>
 						{:else}
 							<p class="rounded-2xl bg-pastel-yellow p-3 text-xs text-pastel-yellow-ink">
-								Демо-режим: SMS не отправляется, подойдёт любой код из {CODE_LENGTH} цифр.
+								{tr(
+									'Демо-режим: SMS не отправляется, подойдёт любой код из {0} цифр.',
+									CODE_LENGTH
+								)}
 							</p>
 						{/if}
 						<button
 							class="btn w-full btn-primary py-3"
 							disabled={code.length !== CODE_LENGTH || sending}
 						>
-							{sending ? 'Проверяем…' : 'Подтвердить'}
+							{sending ? tr('Проверяем…') : tr('Подтвердить')}
 						</button>
 						<button
 							type="button"
@@ -295,7 +302,9 @@
 							disabled={resendIn > 0}
 							onclick={() => sendCode()}
 						>
-							{resendIn > 0 ? `Отправить снова через ${resendIn} с` : 'Отправить код ещё раз'}
+							{resendIn > 0
+								? tr('Отправить снова через {0} с', resendIn)
+								: tr('Отправить код ещё раз')}
 						</button>
 					</form>
 				{/if}
@@ -312,12 +321,12 @@
 						/>
 					</label>
 					<label class="block">
-						<span class="label">Пароль</span>
+						<span class="label">{tr('Пароль')}</span>
 						<input
 							class="input"
 							type="password"
 							autocomplete={mode === 'login' ? 'current-password' : 'new-password'}
-							placeholder="Минимум 6 символов"
+							placeholder={tr('Минимум 6 символов')}
 							bind:value={password}
 						/>
 					</label>
@@ -325,7 +334,7 @@
 						class="btn w-full btn-primary py-3"
 						disabled={!emailValid || password.length < 6 || !nameOk}
 					>
-						{mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
+						{mode === 'login' ? tr('Войти') : tr('Зарегистрироваться')}
 					</button>
 					<button
 						type="button"
@@ -333,7 +342,7 @@
 						disabled={!emailValid || !nameOk}
 						onclick={() => (linkSent = true)}
 					>
-						Прислать ссылку для входа
+						{tr('Прислать ссылку для входа')}
 					</button>
 				</form>
 			{:else}
@@ -342,41 +351,45 @@
 						📬
 					</div>
 					<p class="text-sm">
-						Мы отправили ссылку на <b>{email}</b>. Откройте письмо и нажмите «Войти».
+						{tr('Мы отправили ссылку на')} <b>{email}</b>{tr(
+							'. Откройте письмо и нажмите «Войти».'
+						)}
 					</p>
 					<p class="rounded-2xl bg-pastel-yellow p-3 text-xs text-pastel-yellow-ink">
-						Демо-режим: письмо не отправляется.
+						{tr('Демо-режим: письмо не отправляется.')}
 					</p>
 					<button
 						class="btn w-full btn-primary"
 						onclick={() => finish({ method: 'email', contact: email })}
-						>Открыть ссылку из письма</button
+						>{tr('Открыть ссылку из письма')}</button
 					>
 					<button class="text-sm font-semibold text-muted" onclick={() => (linkSent = false)}
-						>Изменить email</button
+						>{tr('Изменить email')}</button
 					>
 				</div>
 			{/if}
 
 			<p class="mt-6 text-center text-sm text-muted">
-				{mode === 'login' ? 'Впервые здесь?' : 'Уже есть аккаунт?'}
+				{mode === 'login' ? tr('Впервые здесь?') : tr('Уже есть аккаунт?')}
 				<button
 					class="font-semibold text-accent-text"
 					onclick={() => (mode = mode === 'login' ? 'signup' : 'login')}
 				>
-					{mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
+					{mode === 'login' ? tr('Зарегистрироваться') : tr('Войти')}
 				</button>
 			</p>
 
 			<div class="mt-8 border-t border-line pt-6">
 				<InstallApp variant="banner" />
-				<p class="mb-2 text-center text-xs font-semibold text-muted">Демо без регистрации</p>
+				<p class="mb-2 text-center text-xs font-semibold text-muted">
+					{tr('Демо без регистрации')}
+				</p>
 				<div class="grid grid-cols-2 gap-2">
 					<button class="btn btn-soft" onclick={() => demo('volunteer')}
-						><HandHeart class="size-4" /> Волонтёр</button
+						><HandHeart class="size-4" /> {tr('Волонтёр')}</button
 					>
 					<button class="btn btn-ghost" onclick={() => demo('org')}
-						><Building class="size-4" /> Организация</button
+						><Building class="size-4" /> {tr('Организация')}</button
 					>
 				</div>
 			</div>

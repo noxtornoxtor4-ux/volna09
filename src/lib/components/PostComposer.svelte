@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Image, ImagePlus, Send, Star, Video, X } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { compressImage, isVerticalVideo, takeFile, videoPoster } from '#lib/files.ts';
@@ -35,7 +36,7 @@
 		const file = takeFile(e);
 		if (!file) return;
 		if (file.size > MAX_VIDEO_BYTES) {
-			app.notify('Видео больше 300 МБ — выберите ролик покороче');
+			app.notify(tr('Видео больше 300 МБ — выберите ролик покороче'));
 			return;
 		}
 		busy = true;
@@ -72,7 +73,7 @@
 				await saveBlob(videoId, videoFile);
 				saved = { ...media, src: undefined, videoId };
 			} catch {
-				app.notify('Не хватило места на устройстве для видео');
+				app.notify(tr('Не хватило места на устройстве для видео'));
 				busy = false;
 				return;
 			}
@@ -94,14 +95,14 @@
 	}
 </script>
 
-<Modal bind:open title={kind === 'review' ? 'Новый отзыв' : 'Новая публикация'}>
+<Modal bind:open title={kind === 'review' ? tr('Новый отзыв') : tr('Новая публикация')}>
 	<form class="space-y-4" onsubmit={publish}>
 		{#if !app.isOrg}
 			<div class="grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
 				<button
 					type="button"
 					class="rounded-xl py-2 {kind === 'post' ? 'bg-surface shadow-sm' : 'text-muted'}"
-					onclick={() => (kind = 'post')}>Публикация</button
+					onclick={() => (kind = 'post')}>{tr('Публикация')}</button
 				>
 				<button
 					type="button"
@@ -110,7 +111,8 @@
 						: 'text-muted'}"
 					onclick={() => (kind = 'review')}
 				>
-					<Star class="size-4" /> Отзыв об опыте
+					<Star class="size-4" />
+					{tr('Отзыв об опыте')}
 				</button>
 			</div>
 		{/if}
@@ -120,8 +122,8 @@
 			<textarea
 				class="min-h-28 flex-1 resize-none bg-transparent py-2 text-[15px] outline-none placeholder:text-muted"
 				placeholder={kind === 'review'
-					? 'Как прошло мероприятие? Что понравилось, что можно улучшить?'
-					: 'Поделитесь историей, фото или видео'}
+					? tr('Как прошло мероприятие? Что понравилось, что можно улучшить?')
+					: tr('Поделитесь историей, фото или видео')}
 				bind:value={text}></textarea>
 		</div>
 
@@ -132,28 +134,33 @@
 					type="button"
 					class="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-black/50 text-white"
 					onclick={clearMedia}
-					aria-label="Убрать вложение"
+					aria-label={tr('Убрать вложение')}
 				>
 					<X class="size-4" />
 				</button>
 			</div>
 			{#if media.type !== 'photo'}
 				<label class="btn w-full cursor-pointer btn-ghost py-2">
-					<ImagePlus class="size-4" /> Сменить обложку видео
+					<ImagePlus class="size-4" />
+					{tr('Сменить обложку видео')}
 					<input type="file" accept="image/*" class="sr-only" onchange={attachPoster} />
 				</label>
 			{/if}
 		{/if}
 
 		<div class="grid gap-2 sm:grid-cols-2">
-			<select class="input py-2.5" bind:value={opportunityId} aria-label="Отметить мероприятие">
-				<option value="">🏷️ Отметить мероприятие</option>
+			<select
+				class="input py-2.5"
+				bind:value={opportunityId}
+				aria-label={tr('Отметить мероприятие')}
+			>
+				<option value="">{tr('🏷️ Отметить мероприятие')}</option>
 				{#each app.opportunities as o (o.id)}
 					<option value={o.id}>{o.emoji} {o.title}</option>
 				{/each}
 			</select>
-			<select class="input py-2.5" bind:value={orgId} aria-label="Отметить организацию">
-				<option value="">🏢 Отметить организацию</option>
+			<select class="input py-2.5" bind:value={orgId} aria-label={tr('Отметить организацию')}>
+				<option value="">{tr('🏢 Отметить организацию')}</option>
 				{#each app.allOrgs as org (org.id)}
 					<option value={org.id}>{org.emoji} {app.org(org.id)?.name}</option>
 				{/each}
@@ -162,15 +169,16 @@
 
 		<div class="flex flex-wrap items-center gap-2 border-t border-line pt-4">
 			<label class="btn cursor-pointer btn-ghost py-2">
-				<Image class="size-4" /> Фото
+				<Image class="size-4" />
+				{tr('Фото')}
 				<input type="file" accept="image/*" class="sr-only" onchange={attachPhoto} />
 			</label>
 			<label
 				class="btn cursor-pointer btn-ghost py-2"
-				title="Вертикальное видео станет Shorts, горизонтальное — длинным видео"
+				title={tr('Вертикальное видео станет Shorts, горизонтальное — длинным видео')}
 			>
 				<Video class="size-4" />
-				{busy ? 'Обработка…' : 'Видео'}
+				{busy ? tr('Обработка…') : tr('Видео')}
 				<input
 					type="file"
 					accept="video/*"
@@ -180,7 +188,7 @@
 				/>
 			</label>
 			<button class="ml-auto btn btn-primary py-2" disabled={!text.trim() || busy}
-				><Send class="size-4" /> Опубликовать</button
+				><Send class="size-4" /> {tr('Опубликовать')}</button
 			>
 		</div>
 	</form>

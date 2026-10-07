@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import {
@@ -41,23 +42,23 @@
 	const folders = $derived([
 		{
 			id: 'applications' as FolderId,
-			label: 'Заявки',
+			label: tr('Заявки'),
 			count: pendingApps.length,
-			hint: 'новых',
+			hint: tr('новых'),
 			tone: 'blue' as const
 		},
 		{
 			id: 'volunteers' as FolderId,
-			label: 'Волонтёры',
+			label: tr('Волонтёры'),
 			count: app.orgVolunteers.length,
-			hint: 'в команде',
+			hint: tr('в команде'),
 			tone: 'green' as const
 		},
 		{
 			id: 'hours' as FolderId,
-			label: 'Подтверждение часов',
+			label: tr('Подтверждение часов'),
 			count: pendingHours.length,
-			hint: 'ждут',
+			hint: tr('ждут'),
 			tone: 'yellow' as const
 		}
 	]);
@@ -67,33 +68,33 @@
 	const answerText = (v: string | string[]) => (Array.isArray(v) ? v.join(', ') : v);
 </script>
 
-<svelte:head><title>Кабинет организации — Волна</title></svelte:head>
+<svelte:head><title>{tr('Кабинет организации — Волна')}</title></svelte:head>
 
 {#if !app.isOrg}
 	<div class="card p-10 text-center">
-		<p class="text-lg font-bold">Кабинет доступен организациям</p>
+		<p class="text-lg font-bold">{tr('Кабинет доступен организациям')}</p>
 		<a href="/settings?s=accounts" class="mt-4 btn btn-primary"
-			>Переключиться на аккаунт организации</a
+			>{tr('Переключиться на аккаунт организации')}</a
 		>
 	</div>
 {:else}
 	<header class="mb-5 flex items-center gap-3">
 		<Avatar id={app.myOrgId} size="lg" />
 		<div class="min-w-0 flex-1">
-			<p class="text-sm font-semibold text-muted">Кабинет организации</p>
+			<p class="text-sm font-semibold text-muted">{tr('Кабинет организации')}</p>
 			<h1 class="truncate text-xl font-extrabold tracking-tight sm:text-2xl">
 				{app.orgProfile.name}
 			</h1>
 		</div>
 		<button class="btn hidden btn-ghost sm:inline-flex" onclick={() => (choosingPromo = true)}
-			><Rocket class="size-4" /> Продвижение</button
+			><Rocket class="size-4" /> {tr('Продвижение')}</button
 		>
 		<!-- Кнопка с плюсиком наверху — публикация мероприятия -->
 		<a
 			href="/cabinet/new"
 			class="btn size-12 shrink-0 rounded-2xl btn-primary p-0 shadow-lg shadow-accent/40"
-			aria-label="Опубликовать мероприятие"
-			title="Опубликовать мероприятие"
+			aria-label={tr('Опубликовать мероприятие')}
+			title={tr('Опубликовать мероприятие')}
 		>
 			<Plus class="size-6" />
 		</a>
@@ -109,7 +110,8 @@
 					>{app.aiTips[0].emoji}</span
 				>
 				<span class="min-w-0 flex-1 text-sm">
-					<span class="flex items-center gap-1 text-xs font-bold text-accent-text">ИИ-помощник</span
+					<span class="flex items-center gap-1 text-xs font-bold text-accent-text"
+						>{tr('ИИ-помощник')}</span
 					>
 					<span class="line-clamp-2">{app.aiTips[0].text}</span>
 				</span>
@@ -143,9 +145,9 @@
 		</div>
 
 		<div class="mb-3 flex items-center justify-between">
-			<h2 class="text-lg font-extrabold">Мои публикации</h2>
+			<h2 class="text-lg font-extrabold">{tr('Мои публикации')}</h2>
 			<button class="btn btn-ghost py-2 text-sm sm:hidden" onclick={() => (choosingPromo = true)}
-				><Rocket class="size-4" /> Продвижение</button
+				><Rocket class="size-4" /> {tr('Продвижение')}</button
 			>
 		</div>
 		<div class="grid gap-3 md:grid-cols-2">
@@ -168,12 +170,17 @@
 							<div class="truncate font-bold">{o.title}</div>
 							<div class="text-xs text-muted">
 								{categories[o.category].label} · {formatDate(o.date)} · {o.date < today
-									? 'прошло'
-									: 'скоро'}
+									? tr('прошло')
+									: tr('скоро')}
 							</div>
 							<div class="mt-1 text-xs font-semibold">
-								{count}
-								{plural(count, 'заявка', 'заявки', 'заявок')} · {app.taken(o.id)}/{o.spots} мест
+								{tr(
+									'{0} {1} · {2}/{3} мест',
+									count,
+									plural(count, 'заявка', 'заявки', 'заявок'),
+									app.taken(o.id),
+									o.spots
+								)}
 							</div>
 						</div>
 					</a>
@@ -181,8 +188,8 @@
 						<button
 							class="btn shrink-0 px-3 {app.isPromoted(o) ? 'btn-soft' : 'btn-ghost'}"
 							onclick={() => (promoting = o.id)}
-							aria-label="Продвигать"
-							title={app.isPromoted(o) ? 'Продвигается' : 'Продвигать'}
+							aria-label={tr('Продвигать')}
+							title={app.isPromoted(o) ? tr('Продвигается') : tr('Продвигать')}
 						>
 							<Rocket class="size-4" />
 						</button>
@@ -197,14 +204,17 @@
 						><Plus class="size-6" /></span
 					>
 					<span
-						><b class="block text-ink">Пока нет публикаций</b>Нажмите «+», чтобы опубликовать первое
-						мероприятие</span
+						><b class="block text-ink">{tr('Пока нет публикаций')}</b>{tr(
+							'Нажмите «+», чтобы опубликовать первое мероприятие'
+						)}</span
 					>
 				</a>
 			{/each}
 		</div>
 	{:else}
-		<a href="/cabinet" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> Все папки</a>
+		<a href="/cabinet" class="mb-4 btn btn-ghost"
+			><ChevronLeft class="size-4" /> {tr('Все папки')}</a
+		>
 		<h2 class="mb-4 flex items-center gap-2 text-xl font-extrabold">
 			<Folder class="size-6 text-accent-text" />
 			{folderInfo?.label}
@@ -212,7 +222,7 @@
 
 		{#if folder === 'applications'}
 			<div class="mb-4 no-scrollbar flex gap-2 overflow-x-auto text-sm">
-				{#each [{ id: 'pending', label: 'Новые' }, { id: 'approved', label: 'Подтверждённые' }, { id: 'declined', label: 'Отклонённые' }, { id: 'all', label: 'Все' }] as f (f.id)}
+				{#each [{ id: 'pending', label: tr('Новые') }, { id: 'approved', label: tr('Подтверждённые') }, { id: 'declined', label: tr('Отклонённые') }, { id: 'all', label: tr('Все') }] as f (f.id)}
 					<button
 						class="chip {appFilter === f.id ? 'border-accent bg-accent text-accent-ink' : ''}"
 						onclick={() => (appFilter = f.id as typeof appFilter)}>{f.label}</button
@@ -231,7 +241,9 @@
 								<div class="font-bold">{p?.name}</div>
 								<div class="text-xs text-muted">
 									{p?.age}
-									{plural(p?.age ?? 0, 'год', 'года', 'лет')} · {p?.city} · {timeAgo(a.createdAt)}
+									{plural(p?.age ?? 0, 'год', 'года', 'лет')} · {tr(p?.city ?? '')} · {timeAgo(
+										a.createdAt
+									)}
 								</div>
 							</div>
 							{#if o}<span
@@ -244,9 +256,8 @@
 								class="mt-3 flex items-center gap-1 text-sm font-semibold text-accent-text"
 								onclick={() => (expanded = expanded === a.id ? null : a.id)}
 							>
-								Анкета <ChevronDown
-									class="size-4 transition {expanded === a.id ? 'rotate-180' : ''}"
-								/>
+								{tr('Анкета')}
+								<ChevronDown class="size-4 transition {expanded === a.id ? 'rotate-180' : ''}" />
 							</button>
 							{#if expanded === a.id}
 								<dl class="mt-2 space-y-2 rounded-2xl bg-surface-2 p-3 text-sm">
@@ -263,36 +274,36 @@
 						<div class="mt-3 flex flex-wrap gap-2">
 							{#if a.status === 'pending'}
 								<button class="btn btn-primary" onclick={() => app.decide(a, 'approved')}
-									><Check class="size-4" /> Подтвердить участие</button
+									><Check class="size-4" /> {tr('Подтвердить участие')}</button
 								>
 								<button class="btn btn-ghost" onclick={() => app.decide(a, 'declined')}
-									><X class="size-4" /> Отклонить</button
+									><X class="size-4" /> {tr('Отклонить')}</button
 								>
 							{:else if a.status === 'approved'}
 								<span class="btn bg-pastel-green text-pastel-green-ink"
-									><CircleCheck class="size-4" /> Участвует</span
+									><CircleCheck class="size-4" /> {tr('Участвует')}</span
 								>
 								{#if o && app.isCredited(a)}
-									<span class="btn btn-ghost text-muted">Часы начислены</span>
+									<span class="btn btn-ghost text-muted">{tr('Часы начислены')}</span>
 								{:else if o && o.date <= today}
 									<button class="btn btn-soft" onclick={() => app.creditHours(a)}
-										><Hourglass class="size-4" /> Начислить {o.hours} ч</button
+										><Hourglass class="size-4" /> {tr('Начислить {0} ч', o.hours)}</button
 									>
 								{:else if o}
 									<span class="btn btn-ghost text-muted"
-										><Hourglass class="size-4" /> Часы — после {formatDate(o.date)}</span
+										><Hourglass class="size-4" /> {tr('Часы — после {0}', formatDate(o.date))}</span
 									>
 								{/if}
 							{:else}
-								<span class="btn btn-ghost text-muted">Отклонена</span>
+								<span class="btn btn-ghost text-muted">{tr('Отклонена')}</span>
 								<button class="btn btn-ghost" onclick={() => app.decide(a, 'pending')}
-									>Вернуть</button
+									>{tr('Вернуть')}</button
 								>
 							{/if}
 						</div>
 					</li>
 				{:else}
-					<li class="card p-10 text-center text-muted">Заявок в этом статусе нет.</li>
+					<li class="card p-10 text-center text-muted">{tr('Заявок в этом статусе нет.')}</li>
 				{/each}
 			</ul>
 		{:else if folder === 'volunteers'}
@@ -309,32 +320,36 @@
 								<div class="truncate font-bold">{p?.name}</div>
 								<div class="text-xs text-muted">
 									{p?.age}
-									{plural(p?.age ?? 0, 'год', 'года', 'лет')} · {p?.city}
+									{plural(p?.age ?? 0, 'год', 'года', 'лет')} · {tr(p?.city ?? '')}
 								</div>
 								<div class="mt-1.5 flex flex-wrap gap-1.5 text-xs font-semibold">
 									<span class="rounded-full bg-pastel-green px-2.5 py-0.5 text-pastel-green-ink"
-										>{v.attended}
-										{plural(v.attended, 'мероприятие', 'мероприятия', 'мероприятий')} посещено</span
+										>{tr(
+											'{0} {1} посещено',
+											v.attended,
+											plural(v.attended, 'мероприятие', 'мероприятия', 'мероприятий')
+										)}</span
 									>
 									{#if v.upcoming}<span
 											class="rounded-full bg-pastel-blue px-2.5 py-0.5 text-pastel-blue-ink"
-											>{v.upcoming} впереди</span
+											>{tr('{0} впереди', v.upcoming)}</span
 										>{/if}
 									<span class="rounded-full bg-surface-2 px-2.5 py-0.5"
-										>{v.hours} ч подтверждено</span
+										>{tr('{0} ч подтверждено', v.hours)}</span
 									>
 								</div>
 							</div>
 						</a>
 					</li>
 				{:else}
-					<li class="p-10 text-center text-muted">Пока нет волонтёров.</li>
+					<li class="p-10 text-center text-muted">{tr('Пока нет волонтёров.')}</li>
 				{/each}
 			</ul>
 		{:else}
 			<p class="mb-4 text-sm text-muted">
-				Волонтёры отправляют заявки на подтверждение часов из портфолио. Подтверждённые часы сразу
-				появятся у них в профиле.
+				{tr(
+					'Волонтёры отправляют заявки на подтверждение часов из портфолио. Подтверждённые часы сразу появятся у них в профиле.'
+				)}
 			</p>
 			<ul class="space-y-3">
 				{#each app.orgHours as h (h.id)}
@@ -342,18 +357,20 @@
 						<Avatar id={h.personId} />
 						<div class="min-w-0 flex-1">
 							<div class="font-bold">{person(h.personId)?.name}</div>
-							<div class="text-sm">{h.title} · <b>{h.hours} ч</b> · {formatDate(h.date)}</div>
+							<div class="text-sm">
+								{h.title} · <b>{tr('{0} ч', h.hours)}</b> · {formatDate(h.date)}
+							</div>
 							{#if h.note}<div class="text-xs text-muted">«{h.note}»</div>{/if}
 						</div>
 						{#if h.status === 'pending'}
 							<div class="flex gap-2">
 								<button class="btn btn-primary" onclick={() => app.verifyHours(h, true)}
-									><Check class="size-4" /> Подтвердить</button
+									><Check class="size-4" /> {tr('Подтвердить')}</button
 								>
 								<button
 									class="btn btn-ghost"
 									onclick={() => app.verifyHours(h, false)}
-									aria-label="Отклонить"><X class="size-4" /></button
+									aria-label={tr('Отклонить')}><X class="size-4" /></button
 								>
 							</div>
 						{:else}
@@ -362,18 +379,18 @@
 									? 'bg-pastel-green text-pastel-green-ink'
 									: 'bg-surface-2 text-muted'}"
 							>
-								{h.status === 'verified' ? 'Подтверждено' : 'Отклонено'}
+								{h.status === 'verified' ? tr('Подтверждено') : tr('Отклонено')}
 							</span>
 						{/if}
 					</li>
 				{:else}
-					<li class="card p-10 text-center text-muted">Нет заявок на подтверждение.</li>
+					<li class="card p-10 text-center text-muted">{tr('Нет заявок на подтверждение.')}</li>
 				{/each}
 			</ul>
 		{/if}
 	{/if}
 
-	<Modal bind:open={choosingPromo} title="Что продвигаем?">
+	<Modal bind:open={choosingPromo} title={tr('Что продвигаем?')}>
 		<ul class="space-y-2">
 			{#each app.orgOpportunities.filter((o) => o.date >= today) as o (o.id)}
 				<li>
@@ -391,7 +408,7 @@
 							<span class="block truncate font-semibold">{o.title}</span>
 							<span class="text-xs text-muted"
 								>{app.isPromoted(o)
-									? `продвигается до ${formatDate(o.promotedUntil!)}`
+									? tr('продвигается до {0}', formatDate(o.promotedUntil!))
 									: formatDate(o.date)}</span
 							>
 						</span>
@@ -400,9 +417,9 @@
 				</li>
 			{:else}
 				<li class="text-sm text-muted">
-					Нет предстоящих мероприятий. <button
-						class="font-semibold text-accent-text"
-						onclick={() => goto('/cabinet/new')}>Создать</button
+					{tr('Нет предстоящих мероприятий.')}
+					<button class="font-semibold text-accent-text" onclick={() => goto('/cabinet/new')}
+						>{tr('Создать')}</button
 					>
 				</li>
 			{/each}

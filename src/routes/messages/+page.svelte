@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
@@ -18,7 +19,7 @@
 	import Modal from '#lib/components/Modal.svelte';
 	import PeoplePicker from '#lib/components/PeoplePicker.svelte';
 	import { toneClass, tones } from '#lib/data.ts';
-	import { plural, timeAgo } from '#lib/format.ts';
+	import { formatTime, plural, timeAgo } from '#lib/format.ts';
 	import type { Conversation, Tone } from '#lib/types.ts';
 
 	type Tab = 'all' | 'dm' | 'group' | 'events';
@@ -53,7 +54,7 @@
 	const emojis = ['💬', '🌳', '🐾', '📚', '🎬', '🤝', '🎨', '⚽', '💡', '🧣', '♻️', '🎉'];
 
 	const title = (c: Conversation) =>
-		c.kind === 'dm' ? app.author(app.partnerOf(c)).name : (c.title ?? 'Группа');
+		c.kind === 'dm' ? app.author(app.partnerOf(c)).name : (c.title ?? tr('Группа'));
 
 	const list = $derived.by(() => {
 		const q = query.trim().toLowerCase();
@@ -104,24 +105,22 @@
 		goto('/messages');
 	}
 
-	const time = (iso: string) =>
-		new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 	const profileHref = (id: string) => (id === app.actorId ? '/profile' : `/u?id=${id}`);
 </script>
 
-<svelte:head><title>Сообщения — Волна</title></svelte:head>
+<svelte:head><title>{tr('Сообщения — Волна')}</title></svelte:head>
 
 {#if !current}
 	<div class="mx-auto max-w-2xl">
 		<div class="mb-5 flex items-center justify-between gap-3">
-			<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Сообщения</h1>
+			<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{tr('Сообщения')}</h1>
 			<div class="flex gap-2">
 				<button class="btn btn-ghost" onclick={() => (newGroup = true)}
-					><Users class="size-4" /> <span class="hidden sm:inline">Группа</span></button
+					><Users class="size-4" /> <span class="hidden sm:inline">{tr('Группа')}</span></button
 				>
 				<button class="btn btn-primary" onclick={() => (newDm = true)}
 					><MessageCirclePlus class="size-4" />
-					<span class="hidden sm:inline">Написать</span></button
+					<span class="hidden sm:inline">{tr('Написать')}</span></button
 				>
 			</div>
 		</div>
@@ -133,13 +132,13 @@
 			<input
 				class="input py-3 pl-12"
 				type="search"
-				placeholder="Поиск по чатам"
+				placeholder={tr('Поиск по чатам')}
 				bind:value={query}
 			/>
 		</label>
 
 		<div class="-mx-4 mb-4 no-scrollbar flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-			{#each [{ id: 'all', label: 'Все' }, { id: 'dm', label: 'Личные' }, { id: 'group', label: 'Группы' }, { id: 'events', label: 'Вопросы по мероприятиям' }] as t (t.id)}
+			{#each [{ id: 'all', label: tr('Все') }, { id: 'dm', label: tr('Личные') }, { id: 'group', label: tr('Группы') }, { id: 'events', label: tr('Вопросы по мероприятиям') }] as t (t.id)}
 				<button
 					class="chip {tab === t.id ? 'border-accent bg-accent text-accent-ink' : ''}"
 					onclick={() => (tab = t.id as Tab)}>{t.label}</button
@@ -167,12 +166,14 @@
 							</div>
 							{#if app.isOrg && app.isUnanswered(t)}<span
 									class="rounded-full bg-pastel-peach px-2 py-0.5 text-xs font-bold text-pastel-peach-ink"
-									>ждёт ответа</span
+									>{tr('ждёт ответа')}</span
 								>{/if}
 						</a>
 					</li>
 				{:else}
-					<li class="p-8 text-center text-sm text-muted">Вопросов по мероприятиям пока нет.</li>
+					<li class="p-8 text-center text-sm text-muted">
+						{tr('Вопросов по мероприятиям пока нет.')}
+					</li>
 				{/each}
 			</ul>
 		{:else}
@@ -196,12 +197,12 @@
 								<div class="truncate text-sm {unread ? 'font-semibold text-ink' : 'text-muted'}">
 									{#if last}
 										{last.from === app.actorId
-											? 'Вы: '
+											? tr('Вы: ')
 											: c.kind === 'group'
 												? `${app.author(last.from).name.split(' ')[0]}: `
 												: ''}{last.text}
 									{:else}
-										Нет сообщений
+										{tr('Нет сообщений')}
 									{/if}
 								</div>
 							</div>
@@ -217,8 +218,8 @@
 				{:else}
 					<li class="p-8 text-center text-sm text-muted">
 						{query
-							? 'Ничего не нашли'
-							: 'Чатов пока нет. Напишите волонтёру или создайте группу проекта.'}
+							? tr('Ничего не нашли')
+							: tr('Чатов пока нет. Напишите волонтёру или создайте группу проекта.')}
 					</li>
 				{/each}
 			</ul>
@@ -226,8 +227,8 @@
 	</div>
 {:else if !isMember}
 	<div class="card p-10 text-center">
-		<p class="text-lg font-bold">Вы не участник этого чата</p>
-		<a href="/messages" class="mt-4 btn btn-primary">К сообщениям</a>
+		<p class="text-lg font-bold">{tr('Вы не участник этого чата')}</p>
+		<a href="/messages" class="mt-4 btn btn-primary">{tr('К сообщениям')}</a>
 	</div>
 {:else}
 	{@const o = current.opportunityId ? app.opportunity(current.opportunityId) : undefined}
@@ -235,7 +236,7 @@
 		class="mx-auto flex h-[calc(100dvh-11rem)] max-w-2xl flex-col overflow-hidden card lg:h-[calc(100dvh-5rem)]"
 	>
 		<header class="flex items-center gap-3 border-b border-line p-3">
-			<a href="/messages" class="btn size-10 rounded-full btn-ghost p-0" aria-label="Назад"
+			<a href="/messages" class="btn size-10 rounded-full btn-ghost p-0" aria-label={tr('Назад')}
 				><ChevronLeft class="size-5" /></a
 			>
 			<a
@@ -252,7 +253,9 @@
 								? ` · ${o.emoji} ${o.title}`
 								: ''}
 						{:else}
-							{app.author(app.partnerOf(current)).isOrg ? 'Организация' : 'Личные сообщения'}
+							{app.author(app.partnerOf(current)).isOrg
+								? tr('Организация')
+								: tr('Личные сообщения')}
 						{/if}
 					</div>
 				</div>
@@ -261,7 +264,7 @@
 				<button
 					class="btn size-10 rounded-full btn-ghost p-0"
 					onclick={() => (info = true)}
-					aria-label="О группе"><Info class="size-5" /></button
+					aria-label={tr('О группе')}><Info class="size-5" /></button
 				>
 			{/if}
 		</header>
@@ -288,19 +291,19 @@
 								{app.author(m.from).name}
 							</div>{/if}
 						{m.text}
-						<div class="mt-0.5 text-right text-[10px] opacity-60">{time(m.at)}</div>
+						<div class="mt-0.5 text-right text-[10px] opacity-60">{formatTime(m.at)}</div>
 					</div>
 				</div>
 			{:else}
 				<p class="pt-10 text-center text-sm text-muted">
-					Начните разговор — напишите первое сообщение.
+					{tr('Начните разговор — напишите первое сообщение.')}
 				</p>
 			{/each}
 		</div>
 
 		<form class="flex gap-2 border-t border-line p-3" onsubmit={send}>
-			<input class="input" placeholder="Сообщение…" bind:value={draft} />
-			<button class="btn btn-primary px-4" disabled={!draft.trim()} aria-label="Отправить"
+			<input class="input" placeholder={tr('Сообщение…')} bind:value={draft} />
+			<button class="btn btn-primary px-4" disabled={!draft.trim()} aria-label={tr('Отправить')}
 				><Send class="size-4" /></button
 			>
 		</form>
@@ -311,20 +314,20 @@
 			<div class="mb-4 flex items-center gap-3">
 				<ChatAvatar conversation={current} size="lg" />
 				<div class="text-sm text-muted">
-					Создал(а): {app.author(current.createdBy).name}
+					{tr('Создал(а): {0}', app.author(current.createdBy).name)}
 					{#if o}<br /><a href="/o?id={o.id}" class="font-semibold text-accent-text"
 							>{o.emoji} {o.title}</a
 						>{/if}
 				</div>
 			</div>
 			<div class="mb-2 flex items-center justify-between">
-				<span class="label mb-0">Участники · {current.members.length}</span>
+				<span class="label mb-0">{tr('Участники · {0}', current.members.length)}</span>
 				<button
 					class="text-sm font-semibold text-accent-text"
 					onclick={() => {
 						toAdd = [];
 						adding = true;
-					}}><UserPlus class="mr-1 inline size-4" />Добавить</button
+					}}><UserPlus class="mr-1 inline size-4" />{tr('Добавить')}</button
 				>
 			</div>
 			<ul class="mb-4 max-h-64 space-y-1 overflow-y-auto">
@@ -336,19 +339,20 @@
 						>
 							<Avatar {id} size="sm" />
 							<span class="flex-1 text-sm font-semibold"
-								>{app.author(id).name}{id === app.actorId ? ' (вы)' : ''}</span
+								>{app.author(id).name}{id === app.actorId ? tr(' (вы)') : ''}</span
 							>
-							{#if id === current.createdBy}<span class="text-xs text-muted">создатель</span>{/if}
+							{#if id === current.createdBy}<span class="text-xs text-muted">{tr('создатель')}</span
+								>{/if}
 						</a>
 					</li>
 				{/each}
 			</ul>
 			<button class="btn w-full btn-ghost text-pastel-peach-ink" onclick={leave}
-				><LogOut class="size-4" /> Выйти из группы</button
+				><LogOut class="size-4" /> {tr('Выйти из группы')}</button
 			>
 		</Modal>
 
-		<Modal bind:open={adding} title="Добавить участников">
+		<Modal bind:open={adding} title={tr('Добавить участников')}>
 			<PeoplePicker bind:selected={toAdd} exclude={current.members} />
 			<button
 				class="mt-4 btn w-full btn-primary"
@@ -358,13 +362,13 @@
 					adding = false;
 				}}
 			>
-				Добавить · {toAdd.length}
+				{tr('Добавить · {0}', toAdd.length)}
 			</button>
 		</Modal>
 	{/if}
 {/if}
 
-<Modal bind:open={newDm} title="Новое сообщение">
+<Modal bind:open={newDm} title={tr('Новое сообщение')}>
 	<PeoplePicker
 		multiple={false}
 		onpick={(id) => {
@@ -374,7 +378,7 @@
 	/>
 </Modal>
 
-<Modal bind:open={newGroup} title="Новый групповой чат">
+<Modal bind:open={newGroup} title={tr('Новый групповой чат')}>
 	<form class="space-y-4" onsubmit={createGroup}>
 		<div class="flex items-center gap-3">
 			<span
@@ -385,7 +389,7 @@
 				class="input"
 				required
 				maxlength="40"
-				placeholder="Название: например, Команда эко-марафона"
+				placeholder={tr('Название: например, Команда эко-марафона')}
 				bind:value={group.title}
 			/>
 		</div>
@@ -408,25 +412,25 @@
 						? 'border-ink'
 						: 'border-transparent'}"
 					onclick={() => (group.tone = t)}
-					aria-label="Цвет {t}"
+					aria-label={tr('Цвет {0}', t)}
 				></button>
 			{/each}
 		</div>
 		<label class="block">
-			<span class="label">Проект (необязательно)</span>
+			<span class="label">{tr('Проект (необязательно)')}</span>
 			<select class="input" bind:value={group.opportunityId}>
-				<option value="">Без проекта</option>
+				<option value="">{tr('Без проекта')}</option>
 				{#each app.opportunities as op (op.id)}
 					<option value={op.id}>{op.emoji} {op.title}</option>
 				{/each}
 			</select>
 		</label>
 		<div>
-			<span class="label">Участники · {group.members.length}</span>
+			<span class="label">{tr('Участники · {0}', group.members.length)}</span>
 			<PeoplePicker bind:selected={group.members} />
 		</div>
 		<button class="btn w-full btn-primary" disabled={!group.title.trim() || !group.members.length}
-			>Создать группу</button
+			>{tr('Создать группу')}</button
 		>
 	</form>
 </Modal>

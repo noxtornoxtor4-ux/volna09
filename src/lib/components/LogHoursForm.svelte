@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { app } from '#lib/app.svelte.ts';
 	import { day } from '#lib/data.ts';
 
@@ -43,7 +44,7 @@
 
 <form class="space-y-4" onsubmit={submit}>
 	<label class="block">
-		<span class="label">Организация</span>
+		<span class="label">{tr('Организация')}</span>
 		<select class="input" bind:value={form.orgId} onchange={() => (form.opportunityId = '')}>
 			{#each app.allOrgs as org (org.id)}
 				<option value={org.id}>{org.emoji} {org.name}</option>
@@ -52,9 +53,9 @@
 	</label>
 	{#if events.length}
 		<label class="block">
-			<span class="label">Мероприятие (необязательно)</span>
+			<span class="label">{tr('Мероприятие (необязательно)')}</span>
 			<select class="input" bind:value={form.opportunityId} onchange={pickEvent}>
-				<option value="">Другое / регулярная помощь</option>
+				<option value="">{tr('Другое / регулярная помощь')}</option>
 				{#each events as o (o.id)}
 					<option value={o.id}>{o.emoji} {o.title}</option>
 				{/each}
@@ -62,28 +63,33 @@
 		</label>
 	{/if}
 	<label class="block">
-		<span class="label">Что делали</span>
-		<input class="input" required placeholder="Например: выгул собак" bind:value={form.title} />
+		<span class="label">{tr('Что делали')}</span>
+		<input
+			class="input"
+			required
+			placeholder={tr('Например: выгул собак')}
+			bind:value={form.title}
+		/>
 	</label>
 	<div class="grid grid-cols-2 gap-3">
 		<label class="block">
-			<span class="label">Дата</span>
+			<span class="label">{tr('Дата')}</span>
 			<input class="input" type="date" required max={day(0)} bind:value={form.date} />
 		</label>
 		<label class="block">
-			<span class="label">Часов</span>
+			<span class="label">{tr('Часов')}</span>
 			<input class="input" type="number" required min="1" max="12" bind:value={form.hours} />
 		</label>
 	</div>
 	<label class="block">
-		<span class="label">Комментарий для куратора</span>
+		<span class="label">{tr('Комментарий для куратора')}</span>
 		<textarea
 			class="min-h-20 input"
-			placeholder="Кто может подтвердить, что вы делали"
+			placeholder={tr('Кто может подтвердить, что вы делали')}
 			bind:value={form.note}></textarea>
 	</label>
 	<p class="rounded-2xl bg-pastel-yellow p-3 text-sm text-pastel-yellow-ink">
-		Часы попадут в портфолио после подтверждения куратором организации.
+		{tr('Часы попадут в портфолио после подтверждения куратором организации.')}
 	</p>
-	<button class="btn w-full btn-primary">Отправить на подтверждение</button>
+	<button class="btn w-full btn-primary">{tr('Отправить на подтверждение')}</button>
 </form>

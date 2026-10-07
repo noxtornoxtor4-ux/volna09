@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { Check, Plus, Upload } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import AwardItem from '#lib/components/AwardItem.svelte';
@@ -28,7 +29,7 @@
 			: file.size <= MAX_FILE_BYTES
 				? await readDataUrl(file)
 				: undefined;
-		if (!src) app.notify('Файл больше 1,5 МБ: сохраним только название');
+		if (!src) app.notify(tr('Файл больше 1,5 МБ: сохраним только название'));
 		upload = {
 			open: true,
 			title: file.name.replace(/\.[^.]+$/, ''),
@@ -42,7 +43,7 @@
 		e.preventDefault();
 		app.uploadCertificate({
 			title: upload.title.trim(),
-			description: upload.description.trim() || 'Загружено волонтёром',
+			description: upload.description.trim() || tr('Загружено волонтёром'),
 			fileName: upload.fileName,
 			src: upload.src
 		});
@@ -95,24 +96,25 @@
 	}
 </script>
 
-<svelte:head><title>Кабинет наград — Волна</title></svelte:head>
+<svelte:head><title>{tr('Кабинет наград — Волна')}</title></svelte:head>
 
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
 	<div>
-		<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Кабинет наград</h1>
+		<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{tr('Кабинет наград')}</h1>
 		<p class="text-sm text-muted">
 			{app.isOrg
-				? 'Награды, которые ваша организация вручила волонтёрам'
-				: 'Медали, кубки и сертификаты за добрые дела'}
+				? tr('Награды, которые ваша организация вручила волонтёрам')
+				: tr('Медали, кубки и сертификаты за добрые дела')}
 		</p>
 	</div>
 	{#if app.isOrg}
 		<button class="btn btn-primary" onclick={() => (creating = true)}
-			><Plus class="size-4" /> Создать награду</button
+			><Plus class="size-4" /> {tr('Создать награду')}</button
 		>
 	{:else}
 		<label class="btn cursor-pointer btn-soft">
-			<Upload class="size-4" /> Загрузить сертификат
+			<Upload class="size-4" />
+			{tr('Загрузить сертификат')}
 			<input type="file" accept="image/*,application/pdf" class="sr-only" onchange={chooseFile} />
 		</label>
 	{/if}
@@ -132,42 +134,42 @@
 
 <AwardShelves {awards} showRecipient={app.isOrg} removable={!app.isOrg} />
 
-<Modal bind:open={upload.open} title="Новый сертификат">
+<Modal bind:open={upload.open} title={tr('Новый сертификат')}>
 	<form class="space-y-4" onsubmit={saveUpload}>
 		{#if upload.src?.startsWith('data:image')}
 			<img src={upload.src} alt="" class="max-h-48 w-full rounded-2xl object-contain" />
 		{/if}
-		<p class="text-sm text-muted">Файл: {upload.fileName}</p>
+		<p class="text-sm text-muted">{tr('Файл: {0}', upload.fileName)}</p>
 		<label class="block"
-			><span class="label">Название</span><input
+			><span class="label">{tr('Название')}</span><input
 				class="input"
 				required
 				bind:value={upload.title}
 			/></label
 		>
 		<label class="block"
-			><span class="label">За что и кто выдал</span><input
+			><span class="label">{tr('За что и кто выдал')}</span><input
 				class="input"
-				placeholder="Например: Фонд «Тёплые руки», за помощь пожилым"
+				placeholder={tr('Например: Фонд «Тёплые руки», за помощь пожилым')}
 				bind:value={upload.description}
 			/></label
 		>
-		<button class="btn w-full btn-primary">Поставить на полку</button>
+		<button class="btn w-full btn-primary">{tr('Поставить на полку')}</button>
 	</form>
 </Modal>
 
-<Modal bind:open={creating} title="Создать награду" wide>
+<Modal bind:open={creating} title={tr('Создать награду')} wide>
 	<form class="grid gap-5 sm:grid-cols-[180px_1fr]" onsubmit={grant}>
 		<div class="flex flex-col items-center gap-2 rounded-3xl bg-surface-2 p-4">
 			<AwardItem award={preview} />
-			<span class="text-center text-sm font-bold">{draft.title || 'Название'}</span>
+			<span class="text-center text-sm font-bold">{draft.title || tr('Название')}</span>
 			<span class="text-xs text-muted"
 				>{awardTypes[draft.type].label} · {awardTiers[draft.tier].label}</span
 			>
 		</div>
 		<div class="space-y-4">
 			<div>
-				<span class="label">Тип</span>
+				<span class="label">{tr('Тип')}</span>
 				<div class="flex flex-wrap gap-2">
 					{#each Object.entries(awardTypes) as [type, info] (type)}
 						<button
@@ -181,7 +183,7 @@
 				</div>
 			</div>
 			<div>
-				<span class="label">Уровень</span>
+				<span class="label">{tr('Уровень')}</span>
 				<div class="flex gap-2">
 					{#each Object.entries(awardTiers) as [tier, info] (tier)}
 						<button
@@ -197,23 +199,23 @@
 				</div>
 			</div>
 			<label class="block"
-				><span class="label">Название</span><input
+				><span class="label">{tr('Название')}</span><input
 					class="input"
 					required
-					placeholder="Например: Герой субботника"
+					placeholder={tr('Например: Герой субботника')}
 					bind:value={draft.title}
 				/></label
 			>
 			<label class="block"
-				><span class="label">За что</span><textarea
+				><span class="label">{tr('За что')}</span><textarea
 					class="min-h-16 input"
-					placeholder="Короткое описание заслуги"
+					placeholder={tr('Короткое описание заслуги')}
 					bind:value={draft.description}></textarea></label
 			>
 			<label class="block">
-				<span class="label">Мероприятие</span>
+				<span class="label">{tr('Мероприятие')}</span>
 				<select class="input" bind:value={draft.opportunityId} onchange={() => (recipients = [])}>
-					<option value="">Все волонтёры организации</option>
+					<option value="">{tr('Все волонтёры организации')}</option>
 					{#each app.orgOpportunities as o (o.id)}
 						<option value={o.id}>{o.emoji} {o.title}</option>
 					{/each}
@@ -221,7 +223,7 @@
 			</label>
 			<div>
 				<div class="mb-1.5 flex items-center justify-between">
-					<span class="label mb-0">Кого наградить · {recipients.length}</span>
+					<span class="label mb-0">{tr('Кого наградить · {0}', recipients.length)}</span>
 					{#if candidates.length}
 						<button
 							type="button"
@@ -229,7 +231,7 @@
 							onclick={() =>
 								(recipients = recipients.length === candidates.length ? [] : [...candidates])}
 						>
-							{recipients.length === candidates.length ? 'Снять всех' : 'Выбрать всех'}
+							{recipients.length === candidates.length ? tr('Снять всех') : tr('Выбрать всех')}
 						</button>
 					{/if}
 				</div>
@@ -255,13 +257,15 @@
 							</button>
 						</li>
 					{:else}
-						<li class="text-sm text-muted">У мероприятия пока нет подтверждённых участников.</li>
+						<li class="text-sm text-muted">
+							{tr('У мероприятия пока нет подтверждённых участников.')}
+						</li>
 					{/each}
 				</ul>
 			</div>
 			<button
 				class="btn w-full btn-primary py-3"
-				disabled={!recipients.length || !draft.title.trim()}>Вручить награду</button
+				disabled={!recipients.length || !draft.title.trim()}>{tr('Вручить награду')}</button
 			>
 		</div>
 	</form>

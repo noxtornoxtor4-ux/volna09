@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { CalendarDays, Hourglass, MapPin, Send } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { toneClass } from '#lib/data.ts';
@@ -44,7 +45,7 @@
 	}
 </script>
 
-<Modal title="Анкета участника" bind:open={() => !!o, (v) => !v && (app.applyingId = null)}>
+<Modal title={tr('Анкета участника')} bind:open={() => !!o, (v) => !v && (app.applyingId = null)}>
 	{#if o}
 		<div class="mb-5 flex items-center gap-3 rounded-3xl p-3 {toneClass[o.tone].bg}">
 			<span class="grid size-14 shrink-0 place-items-center rounded-2xl bg-surface/70 text-3xl"
@@ -57,7 +58,9 @@
 						><CalendarDays class="size-3.5" />{formatDate(o.date)}</span
 					>
 					<span class="flex items-center gap-1"><MapPin class="size-3.5" />{o.place}</span>
-					<span class="flex items-center gap-1"><Hourglass class="size-3.5" />+{o.hours} ч</span>
+					<span class="flex items-center gap-1"
+						><Hourglass class="size-3.5" />{tr('+{0} ч', o.hours)}</span
+					>
 				</div>
 			</div>
 		</div>
@@ -65,7 +68,7 @@
 		<form class="space-y-4" onsubmit={submit}>
 			{#each o.questions as q (q.id)}
 				<div>
-					<span class="label">{q.label}{q.required ? ' *' : ''}</span>
+					<span class="label">{tr(q.label)}{q.required ? ' *' : ''}</span>
 					{#if q.type === 'text'}
 						<input class="input" bind:value={answers[q.id]} />
 					{:else if q.type === 'textarea'}
@@ -79,7 +82,7 @@
 										? 'border-accent bg-accent-soft text-accent-text'
 										: ''}"
 									onclick={() => (answers[q.id] = option)}
-									aria-pressed={answers[q.id] === option}>{option}</button
+									aria-pressed={answers[q.id] === option}>{tr(option)}</button
 								>
 							{/each}
 						</div>
@@ -91,7 +94,7 @@
 									type="button"
 									class="chip {on ? 'border-accent bg-accent-soft text-accent-text' : ''}"
 									onclick={() => toggleMulti(q, option)}
-									aria-pressed={on}>{option}</button
+									aria-pressed={on}>{tr(option)}</button
 								>
 							{/each}
 						</div>
@@ -99,11 +102,13 @@
 				</div>
 			{/each}
 			<p class="text-xs text-muted">
-				Анкету увидит только организатор. Ответ придёт в уведомления.
+				{tr('Анкету увидит только организатор. Ответ придёт в уведомления.')}
 			</p>
 			<button class="btn w-full btn-primary py-3" disabled={missing.length > 0}>
 				<Send class="size-4" />
-				{missing.length ? `Заполните обязательные поля (${missing.length})` : 'Отправить анкету'}
+				{missing.length
+					? tr('Заполните обязательные поля ({0})', missing.length)
+					: tr('Отправить анкету')}
 			</button>
 		</form>
 	{/if}

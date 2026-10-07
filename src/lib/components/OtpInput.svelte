@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	let {
 		value = $bindable(''),
 		length = 6,
@@ -56,7 +57,7 @@
 		autocomplete="one-time-code"
 		pattern="[0-9]*"
 		maxlength={length}
-		aria-label="Код из SMS"
+		aria-label={tr('Код из SMS')}
 		{value}
 		{disabled}
 		oninput={input}

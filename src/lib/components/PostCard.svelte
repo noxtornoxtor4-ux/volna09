@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { BadgeCheck, Heart, MessageCircle, Send, Share2, Star } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { ME, toneClass } from '#lib/data.ts';
@@ -40,18 +41,19 @@
 				{author.name}
 				{#if author.verified}<BadgeCheck
 						class="size-4 shrink-0 text-accent-text"
-						aria-label="Проверенная организация"
+						aria-label={tr('Проверенная организация')}
 					/>{/if}
 			</a>
 			<div class="text-xs text-muted">
-				{author.isOrg ? 'Организация' : 'Волонтёр'} · {timeAgo(post.createdAt)}
+				{author.isOrg ? tr('Организация') : tr('Волонтёр')} · {timeAgo(post.createdAt)}
 			</div>
 		</div>
 		{#if post.kind === 'review'}
 			<span
 				class="inline-flex items-center gap-1 rounded-full bg-pastel-yellow px-2.5 py-1 text-[11px] font-bold text-pastel-yellow-ink"
 			>
-				<Star class="size-3 fill-current" /> Отзыв
+				<Star class="size-3 fill-current" />
+				{tr('Отзыв')}
 			</span>
 		{/if}
 	</header>
@@ -98,7 +100,7 @@
 				: ''}"
 			onclick={() => app.toggleLike(post)}
 			aria-pressed={post.liked}
-			aria-label="Нравится"
+			aria-label={tr('Нравится')}
 		>
 			<Heart class="size-5 transition {post.liked ? 'scale-110 fill-current' : ''}" />
 			{post.likes}
@@ -109,7 +111,7 @@
 				: ''}"
 			onclick={() => (showComments = !showComments)}
 			aria-expanded={showComments}
-			aria-label="Комментарии"
+			aria-label={tr('Комментарии')}
 		>
 			<MessageCircle class="size-5" />
 			{post.comments.length}
@@ -117,7 +119,7 @@
 		<button
 			class="flex items-center gap-1.5 rounded-xl px-3 py-2 transition hover:bg-surface-2"
 			onclick={() => app.share(post)}
-			aria-label="Поделиться"
+			aria-label={tr('Поделиться')}
 		>
 			<Share2 class="size-5" />
 			{post.shares}
@@ -138,14 +140,14 @@
 					</div>
 				</div>
 			{:else}
-				<p class="text-sm text-muted">Будьте первым, кто оставит комментарий.</p>
+				<p class="text-sm text-muted">{tr('Будьте первым, кто оставит комментарий.')}</p>
 			{/each}
 			<form class="flex gap-2" onsubmit={comment}>
-				<input class="input py-2.5" placeholder="Написать комментарий…" bind:value={draft} />
+				<input class="input py-2.5" placeholder={tr('Написать комментарий…')} bind:value={draft} />
 				<button
 					class="btn btn-primary px-3"
 					disabled={!draft.trim()}
-					aria-label="Отправить комментарий"><Send class="size-4" /></button
+					aria-label={tr('Отправить комментарий')}><Send class="size-4" /></button
 				>
 			</form>
 		</div>

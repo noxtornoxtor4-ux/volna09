@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { ArrowRight, Globe, Megaphone, Plus, Send } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { toneClass } from '#lib/data.ts';
@@ -46,7 +47,8 @@
 					banner.tone
 				].text}"
 			>
-				<Megaphone class="size-3.5" /> Важно
+				<Megaphone class="size-3.5" />
+				{tr('Важно')}
 			</span>
 			<h2 class="mt-3 text-xl leading-tight font-extrabold sm:text-2xl">{banner.title}</h2>
 			<p class="mt-1 max-w-xl text-[15px]">{banner.text}</p>
@@ -62,10 +64,10 @@
 {#if recruitments.length || canEdit}
 	<section class="mt-5">
 		<div class="mb-3 flex items-center justify-between">
-			<h2 class="text-lg font-extrabold">Наборы волонтёров</h2>
+			<h2 class="text-lg font-extrabold">{tr('Наборы волонтёров')}</h2>
 			{#if canEdit}
 				<a href="/cabinet/new?category=recruitment" class="btn btn-soft py-2 text-sm"
-					><Plus class="size-4" /> Опубликовать набор</a
+					><Plus class="size-4" /> {tr('Опубликовать набор')}</a
 				>
 			{/if}
 		</div>
@@ -77,11 +79,17 @@
 					>
 					<div class="mt-2 line-clamp-2 font-bold">{o.title}</div>
 					<div class="mt-1 text-xs text-muted">
-						{o.city} · до {formatDate(o.deadline ?? o.date)} · {app.taken(o.id)}/{o.spots}
+						{tr(
+							'{0} · до {1} · {2}/{3}',
+							tr(o.city),
+							formatDate(o.deadline ?? o.date),
+							app.taken(o.id),
+							o.spots
+						)}
 					</div>
 				</a>
 			{:else}
-				<p class="text-sm text-muted">Открытых наборов пока нет.</p>
+				<p class="text-sm text-muted">{tr('Открытых наборов пока нет.')}</p>
 			{/each}
 		</div>
 	</section>
@@ -89,7 +97,7 @@
 
 {#if profile?.announcements?.length}
 	<section class="mt-5">
-		<h2 class="mb-3 text-lg font-extrabold">Анонсы</h2>
+		<h2 class="mb-3 text-lg font-extrabold">{tr('Анонсы')}</h2>
 		<ul class="space-y-2">
 			{#each profile.announcements as news (news.id)}
 				<li class="card p-4">

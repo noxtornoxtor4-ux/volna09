@@ -1,3 +1,4 @@
+import { tr } from './i18n.ts';
 import {
 	FIREBASE_API_KEY,
 	FIREBASE_APP_ID,
@@ -61,16 +62,16 @@ export function smsError(error: unknown) {
 	const message = (error as { message?: string })?.message ?? '';
 	// Регион номера запрещён в SMS region policy проекта Firebase
 	if (message.includes('region'))
-		return 'Отправка SMS на номера этой страны пока не включена. Войдите по email';
-	if (code.includes('invalid-phone-number')) return 'Проверьте номер телефона';
+		return tr('Отправка SMS на номера этой страны пока не включена. Войдите по email');
+	if (code.includes('invalid-phone-number')) return tr('Проверьте номер телефона');
 	if (code.includes('invalid-verification-code'))
-		return 'Неверный код. Проверьте SMS и попробуйте ещё раз';
-	if (code.includes('code-expired')) return 'Код устарел — отправьте новый';
-	if (code.includes('too-many-requests')) return 'Слишком много попыток. Попробуйте позже';
-	if (code.includes('billing')) return 'SMS пока недоступны для этого номера. Войдите по email';
-	if (code.includes('quota-exceeded')) return 'Лимит SMS на сегодня исчерпан. Войдите по email';
-	if (code.includes('operation-not-allowed')) return 'Вход по телефону не включён в Firebase';
+		return tr('Неверный код. Проверьте SMS и попробуйте ещё раз');
+	if (code.includes('code-expired')) return tr('Код устарел — отправьте новый');
+	if (code.includes('too-many-requests')) return tr('Слишком много попыток. Попробуйте позже');
+	if (code.includes('billing')) return tr('SMS пока недоступны для этого номера. Войдите по email');
+	if (code.includes('quota-exceeded')) return tr('Лимит SMS на сегодня исчерпан. Войдите по email');
+	if (code.includes('operation-not-allowed')) return tr('Вход по телефону не включён в Firebase');
 	if (code.includes('captcha') || code.includes('network'))
-		return 'Не удалось проверить, что вы не робот. Проверьте интернет';
-	return 'Не удалось отправить SMS. Попробуйте ещё раз';
+		return tr('Не удалось проверить, что вы не робот. Проверьте интернет');
+	return tr('Не удалось отправить SMS. Попробуйте ещё раз');
 }

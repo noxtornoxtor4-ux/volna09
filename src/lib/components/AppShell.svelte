@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tr } from '#lib/i18n.ts';
 	import { page } from '$app/state';
 	import {
 		Award,
@@ -24,26 +25,26 @@
 
 	const main = $derived([
 		app.isOrg
-			? { href: '/cabinet', label: 'Кабинет', icon: Briefcase }
-			: { href: '/', label: 'Главная', icon: Compass },
-		{ href: '/feed', label: 'Лента', icon: MessagesSquare },
-		{ href: '/calendar', label: 'Календарь', icon: CalendarDays },
-		{ href: '/notifications', label: 'Уведомления', icon: Bell },
-		{ href: '/profile', label: 'Профиль', icon: UserRound }
+			? { href: '/cabinet', label: tr('Кабинет'), icon: Briefcase }
+			: { href: '/', label: tr('Главная'), icon: Compass },
+		{ href: '/feed', label: tr('Лента'), icon: MessagesSquare },
+		{ href: '/calendar', label: tr('Календарь'), icon: CalendarDays },
+		{ href: '/notifications', label: tr('Уведомления'), icon: Bell },
+		{ href: '/profile', label: tr('Профиль'), icon: UserRound }
 	]);
 
 	/** Боковое меню: основные разделы плюс «Сообщения», которых нет в нижней панели */
 	const sidebar = $derived([
 		...main.slice(0, 4),
-		{ href: '/messages', label: 'Сообщения', icon: MessageCircle },
+		{ href: '/messages', label: tr('Сообщения'), icon: MessageCircle },
 		main[4]
 	]);
 
 	const extra = $derived([
-		{ href: '/search', label: 'Поиск', icon: Search },
-		{ href: '/awards', label: 'Кабинет наград', icon: Award },
-		...(app.isOrg ? [] : [{ href: '/portfolio', label: 'Портфолио', icon: FolderOpen }]),
-		{ href: '/settings', label: 'Настройки', icon: Settings }
+		{ href: '/search', label: tr('Поиск'), icon: Search },
+		{ href: '/awards', label: tr('Кабинет наград'), icon: Award },
+		...(app.isOrg ? [] : [{ href: '/portfolio', label: tr('Портфолио'), icon: FolderOpen }]),
+		{ href: '/settings', label: tr('Настройки'), icon: Settings }
 	]);
 
 	const isActive = (href: string) =>
@@ -113,7 +114,7 @@
 				<div class="min-w-0 text-sm">
 					<div class="truncate font-bold">{app.author(app.actorId).name}</div>
 					<div class="text-xs text-muted">
-						{app.isOrg ? 'Организация · сменить' : 'Волонтёр · сменить'}
+						{app.isOrg ? tr('Организация · сменить') : tr('Волонтёр · сменить')}
 					</div>
 				</div>
 			</a>
@@ -126,21 +127,25 @@
 			class="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-bg/85 px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 backdrop-blur-lg lg:hidden"
 		>
 			<Logo />
-			<a href="/search" class="ml-auto btn size-10 rounded-full btn-ghost p-0" aria-label="Поиск"
-				><Search class="size-5" /></a
+			<a
+				href="/search"
+				class="ml-auto btn size-10 rounded-full btn-ghost p-0"
+				aria-label={tr('Поиск')}><Search class="size-5" /></a
 			>
 			<a
 				href="/messages"
 				class="relative btn size-10 rounded-full btn-ghost p-0"
-				aria-label="Сообщения"
+				aria-label={tr('Сообщения')}
 				><MessageCircle class="size-5" />
 				{#if messagesBadge}<span
 						class="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-pastel-peach-ink px-1 text-[10px] leading-4 text-white"
 						>{messagesBadge}</span
 					>{/if}</a
 			>
-			<a href="/settings" class="btn size-10 rounded-full btn-ghost p-0" aria-label="Настройки"
-				><Settings class="size-5" /></a
+			<a
+				href="/settings"
+				class="btn size-10 rounded-full btn-ghost p-0"
+				aria-label={tr('Настройки')}><Settings class="size-5" /></a
 			>
 		</header>
 

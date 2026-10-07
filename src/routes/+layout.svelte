@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getLocale, tr } from '#lib/i18n.ts';
 	import './layout.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -14,6 +15,7 @@
 	$effect(() => {
 		document.documentElement.dataset.accent = app.accent;
 		document.documentElement.dataset.mode = app.mode;
+		document.documentElement.lang = getLocale();
 		document
 			.querySelector('meta[name="theme-color"]')
 			?.setAttribute('content', app.mode === 'dark' ? '#111319' : '#f6f8fc');
@@ -26,10 +28,12 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>Волна — платформа для подростков-волонтёров</title>
+	<title>{tr('Волна — платформа для подростков-волонтёров')}</title>
 	<meta
 		name="description"
-		content="Находи волонтёрские проекты, делись опытом, считай часы и собирай подтверждённое диджитал-портфолио."
+		content={tr(
+			'Находи волонтёрские проекты, делись опытом, считай часы и собирай подтверждённое диджитал-портфолио.'
+		)}
 	/>
 </svelte:head>
 
