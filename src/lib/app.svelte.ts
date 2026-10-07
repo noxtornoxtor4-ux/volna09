@@ -26,6 +26,7 @@ import {
 import { formatDate, plural } from './format.ts';
 import type {
 	Accent,
+	CustomTheme,
 	Alert,
 	Announcement,
 	Answers,
@@ -46,6 +47,7 @@ import type {
 	Session,
 	Thread,
 	Tone,
+	ThemeMode,
 	Topic
 } from './types.ts';
 
@@ -55,7 +57,9 @@ const SCHEMA = 3;
 interface Snapshot {
 	session: Session | null;
 	accent: Accent;
-	mode: 'light' | 'dark';
+	mode: ThemeMode;
+	/** Своя палитра интерфейса на этом устройстве; null — стандартная тема */
+	customTheme: CustomTheme | null;
 	profile: Profile;
 	orgProfile: OrgProfile;
 	topics: Topic[];
@@ -88,6 +92,7 @@ function fresh(): Snapshot {
 		session: null,
 		accent: 'wave',
 		mode: 'light',
+		customTheme: null,
 		profile: seedProfile,
 		orgProfile: seedOrgProfile,
 		topics: seedTopics,
@@ -155,7 +160,10 @@ export interface Author {
 class AppState {
 	session = $state<Session | null>(null);
 	accent = $state<Accent>('wave');
-	mode = $state<'light' | 'dark'>('light');
+	mode = $state<ThemeMode>('light');
+	customTheme = $state<CustomTheme | null>(null);
+	/** Тёмная ли тема в системе — для режима «Системная» */
+	systemDark = $state(false);
 	profile = $state<Profile>(seedProfile);
 	orgProfile = $state<OrgProfile>(seedOrgProfile);
 	topics = $state<Topic[]>([]);
@@ -193,6 +201,7 @@ class AppState {
 		this.session = s.session;
 		this.accent = s.accent;
 		this.mode = s.mode;
+		this.customTheme = s.customTheme;
 		this.profile = s.profile;
 		this.orgProfile = s.orgProfile;
 		this.topics = s.topics;
@@ -220,6 +229,7 @@ class AppState {
 			session: this.session,
 			accent: this.accent,
 			mode: this.mode,
+			customTheme: this.customTheme,
 			profile: this.profile,
 			orgProfile: this.orgProfile,
 			topics: this.topics,
@@ -343,8 +353,19 @@ class AppState {
 		this.#save();
 	}
 
-	setMode(mode: 'light' | 'dark') {
+	setMode(mode: ThemeMode) {
 		this.mode = mode;
+		this.#save();
+	}
+
+	/** Итоговая тема с учётом режима «Системная» */
+	get isDark() {
+		return this.mode === 'system' ? this.systemDark : this.mode === 'dark';
+	}
+
+	/** Своя палитра применяется сразу на всех экранах и хранится на устройстве */
+	setCustomTheme(theme: CustomTheme | null) {
+		this.customTheme = theme;
 		this.#save();
 	}
 

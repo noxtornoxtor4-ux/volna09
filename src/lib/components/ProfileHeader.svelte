@@ -2,6 +2,8 @@
 	import { tr } from '#lib/i18n.ts';
 	import { BadgeCheck } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
+	import { app } from '#lib/app.svelte.ts';
+	import { accentVars } from '#lib/color.ts';
 	import type { ProfileLook, Tone } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
 	import ProfileCover from './ProfileCover.svelte';
@@ -29,13 +31,17 @@
 	} = $props();
 </script>
 
-<section class="overflow-hidden card">
+<!-- Оттенок профиля перекрашивает шапку, обводку аватара, кнопки и значки -->
+<section
+	class="overflow-hidden card"
+	style={look.tint ? accentVars(look.tint, app.isDark ? 'dark' : 'light') : undefined}
+>
 	<!-- Постер профиля: шаблон, фото или видео -->
 	<ProfileCover {look} {tone} class="h-36 sm:h-52" />
 
 	<div class="px-4 pb-5 sm:px-6">
 		<div class="relative z-10 -mt-14 flex items-end justify-between gap-3 sm:-mt-16">
-			<Avatar {id} size="2xl" ring />
+			<Avatar {id} size="2xl" ring={look.tint ? 'accent' : true} />
 			<div class="flex gap-2 pb-1">{@render actions?.()}</div>
 		</div>
 		<h1 class="mt-3 flex items-center gap-1.5 text-2xl font-extrabold tracking-tight">

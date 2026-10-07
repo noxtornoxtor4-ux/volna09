@@ -6,7 +6,12 @@
 		id,
 		size = 'md',
 		ring = false
-	}: { id: string; size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'; ring?: boolean } = $props();
+	}: {
+		id: string;
+		size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+		/** Обводка: цвет карточки или оттенок профиля (accent) */
+		ring?: boolean | 'accent';
+	} = $props();
 
 	const author = $derived(app.author(id));
 	const initials = $derived(
@@ -30,9 +35,8 @@
 <span
 	class="grid shrink-0 place-items-center overflow-hidden font-bold {author.isOrg
 		? 'rounded-[30%]'
-		: 'rounded-full'} {sizes[size]} {toneClass[author.tone].bg} {toneClass[author.tone].text} {ring
-		? 'ring-4 ring-surface'
-		: ''}"
+		: 'rounded-full'} {sizes[size]} {toneClass[author.tone].bg} {toneClass[author.tone]
+		.text} {ring === 'accent' ? 'ring-4 ring-accent' : ring ? 'ring-4 ring-surface' : ''}"
 	aria-hidden="true"
 >
 	{#if author.avatar}

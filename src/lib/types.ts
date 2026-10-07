@@ -235,6 +235,8 @@ export interface ProfileLook {
 	coverPreset?: string;
 	/** Видео-постер, хранится в IndexedDB */
 	coverVideoId?: string;
+	/** Оттенок профиля (#rrggbb): шапка, обводка аватара, кнопки и значки. Виден всем */
+	tint?: string;
 }
 
 export interface Profile extends ProfileLook {
@@ -304,4 +306,26 @@ export interface Conversation {
 	messages: Message[];
 	/** Когда участник последний раз читал чат: id участника → ISO-время */
 	lastRead: Record<string, string>;
+}
+
+export type ThemeMode = 'light' | 'dark' | 'system';
+
+/** Своя палитра интерфейса (цвета #rrggbb), настраивается в «Стиль приложения» */
+export interface CustomTheme {
+	/** Основной фон экранов */
+	bg: string;
+	/** Карточки, списки, диалоги */
+	surface: string;
+	/** Основной текст и заголовки */
+	ink: string;
+	/** Второстепенный текст */
+	muted: string;
+	/** Кнопка в активном состоянии */
+	button: string;
+	/** Текст на кнопке */
+	buttonInk: string;
+	/** Кнопка при нажатии */
+	buttonPressed: string;
+	/** Акцентные элементы: переключатели, иконки меню, индикаторы */
+	accent: string;
 }

@@ -4,6 +4,7 @@
 	import { ChevronLeft, Megaphone, Plus, Trash } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import LookPicker from '#lib/components/LookPicker.svelte';
+	import TintEditor from '#lib/components/TintEditor.svelte';
 	import { cities, day, toneClass, tones } from '#lib/data.ts';
 	import { formatDate } from '#lib/format.ts';
 	import type { OrgBanner, Profile, OrgProfile } from '#lib/types.ts';
@@ -93,6 +94,17 @@
 					{/each}
 				</div>
 			</div>
+		</section>
+
+		<section class="card p-5">
+			<h2 class="mb-4 text-lg font-extrabold">{tr('Оттенок профиля')}</h2>
+			<TintEditor
+				bind:tint={orgForm.tint}
+				look={orgForm}
+				tone={orgForm.tone ?? app.myOrg.tone}
+				name={orgForm.name}
+				id={app.myOrgId}
+			/>
 		</section>
 
 		<section class="space-y-4 card p-5">
@@ -272,6 +284,17 @@
 		<section class="card p-5">
 			<h2 class="mb-4 text-lg font-extrabold">{tr('Постер и аватар')}</h2>
 			<LookPicker bind:look={form} tone={form.tone} fallback={initials(form.name)} />
+		</section>
+
+		<section class="card p-5">
+			<h2 class="mb-4 text-lg font-extrabold">{tr('Оттенок профиля')}</h2>
+			<TintEditor
+				bind:tint={form.tint}
+				look={form}
+				tone={form.tone}
+				name={form.name}
+				id={app.actorId}
+			/>
 		</section>
 
 		<section class="space-y-4 card p-5">

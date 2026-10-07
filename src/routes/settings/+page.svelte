@@ -11,6 +11,7 @@
 		Languages,
 		Lock,
 		LogOut,
+		MonitorSmartphone,
 		Moon,
 		Palette,
 		Plus,
@@ -24,9 +25,10 @@
 	import Avatar from '#lib/components/Avatar.svelte';
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
+	import ThemeEditor from '#lib/components/ThemeEditor.svelte';
 	import { ME, accents, toneClass } from '#lib/data.ts';
 	import { formatDate } from '#lib/format.ts';
-	import type { Accent, Privacy, Role } from '#lib/types.ts';
+	import type { Accent, Privacy, Role, ThemeMode } from '#lib/types.ts';
 
 	type Section =
 		'language' | 'install' | 'guide' | 'account' | 'accounts' | 'style' | 'archive' | 'privacy';
@@ -317,19 +319,16 @@
 				<p class="mt-2 text-sm font-semibold">{accents[app.accent].label}</p>
 
 				<span class="mt-5 label">{tr('Тема')}</span>
-				<div class="grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
-					<button
-						class="flex items-center justify-center gap-2 rounded-xl py-2.5 {app.mode === 'light'
-							? 'bg-surface shadow-sm'
-							: 'text-muted'}"
-						onclick={() => app.setMode('light')}><Sun class="size-4" /> {tr('Светлая')}</button
-					>
-					<button
-						class="flex items-center justify-center gap-2 rounded-xl py-2.5 {app.mode === 'dark'
-							? 'bg-surface shadow-sm'
-							: 'text-muted'}"
-						onclick={() => app.setMode('dark')}><Moon class="size-4" /> {tr('Тёмная')}</button
-					>
+				<div class="grid grid-cols-3 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
+					{#each [{ id: 'light' as ThemeMode, label: tr('Светлая'), icon: Sun }, { id: 'dark' as ThemeMode, label: tr('Тёмная'), icon: Moon }, { id: 'system' as ThemeMode, label: tr('Системная'), icon: MonitorSmartphone }] as m (m.id)}
+						<button
+							class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 {app.mode === m.id
+								? 'bg-surface shadow-sm'
+								: 'text-muted'}"
+							aria-pressed={app.mode === m.id}
+							onclick={() => app.setMode(m.id)}><m.icon class="size-4" /> {m.label}</button
+						>
+					{/each}
 				</div>
 
 				<div class="mt-5 rounded-3xl bg-surface-2 p-4">
@@ -341,6 +340,7 @@
 					</div>
 				</div>
 			</section>
+			<div class="mt-4"><ThemeEditor /></div>
 		{:else if section === 'archive'}
 			<ul class="space-y-2">
 				{#each app.archive as o (o.id)}

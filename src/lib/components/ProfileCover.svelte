@@ -3,7 +3,7 @@
 	import { blobUrl } from '#lib/media-db.ts';
 	import type { ProfileLook, Tone } from '#lib/types.ts';
 
-	/** Постер профиля: видео → фото → шаблон → мягкий фон цвета профиля */
+	/** Постер профиля: видео → фото → шаблон → оттенок профиля → мягкий фон цвета профиля */
 	let {
 		look,
 		tone,
@@ -18,11 +18,21 @@
 	});
 
 	const preset = $derived(look.coverPreset ? coverPresets[look.coverPreset] : undefined);
+	/** Без своего постера шапка окрашивается в оттенок профиля */
+	const background = $derived(
+		look.cover || videoUrl
+			? undefined
+			: preset
+				? preset.css
+				: look.tint
+					? `linear-gradient(135deg, color-mix(in srgb, ${look.tint} 45%, var(--surface)), ${look.tint})`
+					: undefined
+	);
 </script>
 
 <div
 	class="relative overflow-hidden {toneClass[tone].bg} {className}"
-	style={preset && !look.cover && !videoUrl ? `background: ${preset.css}` : undefined}
+	style={background ? `background: ${background}` : undefined}
 >
 	{#if videoUrl}
 		<video
@@ -35,7 +45,7 @@
 		></video>
 	{:else if look.cover}
 		<img src={look.cover} alt="" class="absolute inset-0 size-full object-cover" />
-	{:else if !preset}
+	{:else if !preset && !look.tint}
 		<div class="absolute -top-10 left-1/4 size-60 rounded-full bg-surface/40 blur-3xl"></div>
 		<div class="absolute -right-10 -bottom-16 size-60 rounded-full bg-accent/40 blur-3xl"></div>
 	{/if}

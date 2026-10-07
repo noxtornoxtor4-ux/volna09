@@ -129,6 +129,55 @@ export const coverPresets: Record<string, { label: string; css: string }> = {
 	night: { label: tr('Ночь'), css: 'linear-gradient(135deg, #1f2633, #5b62e8 70%, #cdb8ff)' }
 };
 
+/** Фирменная палитра: оттенки профиля и цвета своей темы */
+export const brandPalette = [
+	'#7692ff',
+	'#091540',
+	'#abd2fa',
+	'#3d518c',
+	'#1b2cc1',
+	'#375299',
+	'#051f45',
+	'#93abd9',
+	'#bfc4ff',
+	'#695d9e',
+	'#362c75',
+	'#3a345b',
+	'#2d1c42',
+	'#999aae',
+	'#e7bef8',
+	'#f4adef',
+	'#ecd0ec',
+	'#ba71a2',
+	'#d183a9',
+	'#71557a',
+	'#502450',
+	'#461d3a',
+	'#4b1535',
+	'#7e2a53',
+	'#bf1e62',
+	'#cd5782',
+	'#e27396',
+	'#f2619c',
+	'#eb9ab2',
+	'#f8b6bf',
+	'#f2c4cd',
+	'#f3c8dd',
+	'#efcfe3',
+	'#ffe7ff',
+	'#fef0f4',
+	'#f0eef3',
+	'#95d5d1',
+	'#b2f9e7',
+	'#c7dad8',
+	'#e5f4f4',
+	'#ecf2d8',
+	'#ede986',
+	'#fffabf',
+	'#f2e5bd',
+	'#dcd3aa'
+];
+
 /** Готовые аватары-эмодзи */
 export const avatarEmojis = [
 	'🦊',
