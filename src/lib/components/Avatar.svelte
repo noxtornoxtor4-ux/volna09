@@ -37,6 +37,8 @@
 >
 	{#if author.avatar}
 		<img src={author.avatar} alt="" class="size-full object-cover" />
+	{:else if author.avatarEmoji}
+		<span class="text-[1.6em] leading-none">{author.avatarEmoji}</span>
 	{:else}
 		{author.emoji ?? initials}
 	{/if}

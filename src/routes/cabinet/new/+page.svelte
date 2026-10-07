@@ -1,18 +1,31 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { ChevronLeft, ImagePlus, Plus, Trash, X } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import QuestionnaireBuilder from '#lib/components/QuestionnaireBuilder.svelte';
-	import { categories, day, defaultQuestions, toneClass, tones } from '#lib/data.ts';
+	import {
+		ONLINE,
+		categories,
+		cities,
+		day,
+		defaultQuestions,
+		toneClass,
+		tones
+	} from '#lib/data.ts';
 	import { compressImage, takeFile } from '#lib/files.ts';
 	import type { Category, Opportunity } from '#lib/types.ts';
 
+	// ?category=recruitment — быстрый переход «Опубликовать набор» из профиля организации
+	const startCategory = page.url.searchParams.get('category') as Category | null;
+
 	let draft = $state<Omit<Opportunity, 'id' | 'orgId'>>({
-		category: 'action',
+		category: startCategory && startCategory in categories ? startCategory : 'action',
 		title: '',
 		date: day(7),
 		time: '10:00–13:00',
+		city: cities.includes(app.orgProfile.city) ? app.orgProfile.city : cities[0],
 		place: '',
 		spots: 20,
 		hours: 3,
@@ -170,7 +183,13 @@
 							bind:value={draft.time}
 						/></label
 					>
-					<label class="block sm:col-span-2"
+					<label class="block">
+						<span class="label">Город</span>
+						<select class="input" bind:value={draft.city}>
+							{#each [...cities, ONLINE] as c (c)}<option value={c}>{c}</option>{/each}
+						</select>
+					</label>
+					<label class="block"
 						><span class="label">Место</span><input
 							class="input"
 							required

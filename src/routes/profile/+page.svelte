@@ -2,6 +2,7 @@
 	import { Award, Briefcase, FolderOpen, Pencil, Plus, Settings } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import PostComposer from '#lib/components/PostComposer.svelte';
+	import OrgShowcase from '#lib/components/OrgShowcase.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
 	import { ME, toneClass } from '#lib/data.ts';
@@ -23,7 +24,7 @@
 		name={app.orgProfile.name}
 		subtitle="Организация · {app.orgProfile.city}"
 		bio={app.orgProfile.about}
-		cover={app.orgProfile.cover}
+		look={app.orgProfile}
 		tone={app.myOrg.tone}
 		verified={app.myOrg.verified}
 		stats={[
@@ -45,6 +46,8 @@
 			>
 		{/snippet}
 	</ProfileHeader>
+
+	<OrgShowcase orgId={app.myOrgId} />
 
 	<div class="mt-4 grid grid-cols-2 gap-3">
 		<a href="/cabinet" class="flex items-center gap-3 card p-4 transition hover:border-accent">
@@ -76,7 +79,7 @@
 		subtitle="{app.profile.age} {plural(app.profile.age, 'год', 'года', 'лет')} · {app.profile
 			.city}"
 		bio={app.profile.bio}
-		cover={app.profile.cover}
+		look={app.profile}
 		tone={app.profile.tone}
 		stats={[
 			{ label: 'подписчиков', value: app.followersCount(ME), href: '/profile/followers' },

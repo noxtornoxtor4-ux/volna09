@@ -1,6 +1,7 @@
 import {
 	ME,
 	MY_ORG,
+	ONLINE,
 	day,
 	organizations,
 	people,
@@ -48,6 +49,7 @@ import type {
 } from './types.ts';
 
 const STORAGE_KEY = 'volna:state:v2';
+const SCHEMA = 3;
 
 interface Snapshot {
 	session: Session | null;
@@ -72,6 +74,10 @@ interface Snapshot {
 	privacy: Privacy;
 	/** Организация, которой управляет аккаунт организации */
 	myOrgId: string;
+	/** Город, по которому фильтруется лента возможностей; all — все города */
+	viewCity: string;
+	/** Версия формата данных — для однократных миграций */
+	schema: number;
 	/** Организации, добавленные пользователями при регистрации */
 	customOrgs: Organization[];
 }
@@ -99,17 +105,37 @@ function fresh(): Snapshot {
 		following: seedFollowing,
 		privacy: { publicProfile: true, showHours: true, searchable: true, messages: 'all' },
 		myOrgId: MY_ORG,
-		customOrgs: []
+		customOrgs: [],
+		viewCity: seedProfile.city,
+		schema: SCHEMA
 	});
 }
 
 function load(): Snapshot {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
-		return raw ? { ...fresh(), ...JSON.parse(raw) } : fresh();
+		return raw ? migrate({ ...fresh(), ...JSON.parse(raw) }) : fresh();
 	} catch {
 		return fresh();
 	}
+}
+
+/** Дополняет данные, сохранённые старыми версиями приложения */
+function migrate(s: Snapshot): Snapshot {
+	if ((s.schema ?? 0) < 3) {
+		// Витрина демо-организации (баннер, анонсы, ссылки) появилась в версии 3
+		if (s.myOrgId === MY_ORG) s.orgProfile = { ...seedOrgProfile, ...s.orgProfile };
+		s.schema = 3;
+	}
+	const seeds = new Map(seedOpportunities.map((o) => [o.id, o]));
+	// Раньше у мероприятий не было города — без него они пропали бы из ленты
+	for (const o of s.opportunities) o.city ??= seeds.get(o.id)?.city ?? seedProfile.city;
+	// Новые демо-мероприятия появляются и у тех, кто уже открывал приложение
+	const known = new Set(s.opportunities.map((o) => o.id));
+	for (const seed of seedOpportunities) {
+		if (!known.has(seed.id)) s.opportunities.push(structuredClone(seed));
+	}
+	return s;
 }
 
 const uid = () => crypto.randomUUID().slice(0, 8);
@@ -120,6 +146,7 @@ export interface Author {
 	tone: Tone;
 	emoji?: string;
 	avatar?: string;
+	avatarEmoji?: string;
 	isOrg: boolean;
 	verified?: boolean;
 }
@@ -158,6 +185,7 @@ class AppState {
 		messages: 'all'
 	});
 	myOrgId = $state<string>(MY_ORG);
+	viewCity = $state<string>(seedProfile.city);
 	customOrgs = $state<Organization[]>([]);
 	toast = $state<{ id: number; text: string } | null>(null);
 	/** Мероприятие, анкету на которое сейчас заполняет волонтёр */
@@ -189,6 +217,7 @@ class AppState {
 		this.following = s.following;
 		this.privacy = s.privacy;
 		this.myOrgId = s.myOrgId;
+		this.viewCity = s.viewCity;
 		this.customOrgs = s.customOrgs;
 	}
 
@@ -218,6 +247,8 @@ class AppState {
 			following: this.following,
 			privacy: this.privacy,
 			myOrgId: this.myOrgId,
+			viewCity: this.viewCity,
+			schema: SCHEMA,
 			customOrgs: this.customOrgs
 		});
 		try {
@@ -327,6 +358,8 @@ class AppState {
 	}
 
 	updateProfile(profile: Profile) {
+		// Сменили город в профиле — лента сразу показывает возможности этого города
+		if (profile.city !== this.profile.city) this.viewCity = profile.city;
 		this.profile = profile;
 		this.#save();
 		this.notify('Профиль сохранён');
@@ -361,7 +394,8 @@ class AppState {
 			...org,
 			name: this.orgProfile.name,
 			city: this.orgProfile.city,
-			about: this.orgProfile.about
+			about: this.orgProfile.about,
+			tone: this.orgProfile.tone ?? org.tone
 		};
 	}
 
@@ -379,6 +413,7 @@ class AppState {
 				name: this.profile.name,
 				tone: this.profile.tone,
 				avatar: this.profile.avatar,
+				avatarEmoji: this.profile.avatarEmoji,
 				isOrg: false
 			};
 		}
@@ -389,6 +424,7 @@ class AppState {
 				tone: org.tone,
 				emoji: org.emoji,
 				avatar: id === this.myOrgId ? this.orgProfile.avatar : undefined,
+				avatarEmoji: id === this.myOrgId ? this.orgProfile.avatarEmoji : undefined,
 				isOrg: true,
 				verified: org.verified
 			};
@@ -428,8 +464,19 @@ class AppState {
 			);
 	}
 
+	/** Предстоящие мероприятия выбранного города (онлайн видны везде) */
+	get localUpcoming() {
+		if (this.viewCity === 'all') return this.upcoming;
+		return this.upcoming.filter((o) => o.city === this.viewCity || o.city === ONLINE);
+	}
+
+	setViewCity(city: string) {
+		this.viewCity = city;
+		this.#save();
+	}
+
 	byTopic(topicId: string) {
-		return this.upcoming.filter((o) => o.tags.includes(topicId));
+		return this.localUpcoming.filter((o) => o.tags.includes(topicId));
 	}
 
 	/** Темы для сторисов: сначала интересы пользователя, затем остальные с мероприятиями */
@@ -700,7 +747,7 @@ class AppState {
 
 	get recommendations() {
 		const mine = new Set(this.profile.interests);
-		return this.upcoming
+		return this.localUpcoming
 			.map((o) => ({ o, score: o.tags.filter((t) => mine.has(t)).length }))
 			.filter((r) => r.score > 0)
 			.sort((a, b) => b.score - a.score)

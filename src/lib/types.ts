@@ -60,6 +60,8 @@ export interface Opportunity {
 	/** Дата в формате YYYY-MM-DD */
 	date: string;
 	time: string;
+	/** Город проведения или «Онлайн» — по нему фильтруется лента волонтёра */
+	city: string;
 	place: string;
 	spots: number;
 	hours: number;
@@ -215,23 +217,52 @@ export interface DayPhoto {
 	src: string;
 }
 
-export interface Profile {
+/** Оформление профиля: постер (шаблон, фото или видео) и аватар (фото или эмодзи) */
+export interface ProfileLook {
+	avatar?: string;
+	avatarEmoji?: string;
+	cover?: string;
+	coverPreset?: string;
+	/** Видео-постер, хранится в IndexedDB */
+	coverVideoId?: string;
+}
+
+export interface Profile extends ProfileLook {
 	name: string;
 	age: number;
 	city: string;
 	bio: string;
 	interests: string[];
 	tone: Tone;
-	avatar?: string;
-	cover?: string;
 }
 
-export interface OrgProfile {
+/** Баннер на странице организации: набор, акция или важное объявление */
+export interface OrgBanner {
+	title: string;
+	text: string;
+	ctaLabel?: string;
+	/** Ссылка кнопки: мероприятие организации или внешний адрес */
+	ctaHref?: string;
+	tone: Tone;
+}
+
+export interface OrgNews {
+	id: string;
+	title: string;
+	text: string;
+	date: string;
+}
+
+export interface OrgProfile extends ProfileLook {
 	name: string;
 	city: string;
 	about: string;
-	avatar?: string;
-	cover?: string;
+	/** Цвет страницы организации */
+	tone?: Tone;
+	website?: string;
+	telegram?: string;
+	banner?: OrgBanner;
+	announcements?: OrgNews[];
 }
 
 export interface Privacy {

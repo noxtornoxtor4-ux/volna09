@@ -1,35 +1,57 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { Camera, ChevronLeft, ImagePlus, Trash } from '@lucide/svelte';
+	import { ChevronLeft, Megaphone, Plus, Trash } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import Avatar from '#lib/components/Avatar.svelte';
-	import { toneClass, tones } from '#lib/data.ts';
-	import { compressImage, takeFile } from '#lib/files.ts';
+	import LookPicker from '#lib/components/LookPicker.svelte';
+	import { cities, day, toneClass, tones } from '#lib/data.ts';
+	import { formatDate } from '#lib/format.ts';
+	import type { OrgBanner, Profile, OrgProfile } from '#lib/types.ts';
 
-	let form = $state($state.snapshot(app.profile));
-	let orgForm = $state($state.snapshot(app.orgProfile));
+	let form = $state<Profile>($state.snapshot(app.profile));
+	let orgForm = $state<OrgProfile>($state.snapshot(app.orgProfile));
+	let news = $state({ title: '', text: '' });
 
-	const cover = $derived(app.isOrg ? orgForm.cover : form.cover);
-	const avatar = $derived(app.isOrg ? orgForm.avatar : form.avatar);
-	const tone = $derived(app.isOrg ? app.myOrg.tone : form.tone);
+	/** Город может быть не из списка (старые данные) — тогда он тоже доступен в выборе */
+	const cityOptions = $derived([...new Set([...cities, form.city, orgForm.city])].filter(Boolean));
+	const initials = (name: string) =>
+		name
+			.replace(/[«»"]/g, '')
+			.split(' ')
+			.slice(0, 2)
+			.map((w) => w[0])
+			.join('');
 
-	async function pick(e: Event, field: 'avatar' | 'cover') {
-		const file = takeFile(e);
-		if (!file) return;
-		const src = await compressImage(file, field === 'avatar' ? 400 : 1400, 0.8);
-		if (app.isOrg) orgForm[field] = src;
-		else form[field] = src;
-	}
-
-	function clear(field: 'avatar' | 'cover') {
-		if (app.isOrg) orgForm[field] = undefined;
-		else form[field] = undefined;
-	}
+	const orgEvents = $derived(app.orgOpportunities.filter((o) => o.date >= day(0)));
 
 	function toggleInterest(id: string) {
 		form.interests = form.interests.includes(id)
 			? form.interests.filter((x) => x !== id)
 			: [...form.interests, id];
+	}
+
+	function enableBanner() {
+		const banner: OrgBanner = {
+			title: '',
+			text: '',
+			ctaLabel: 'Подробнее',
+			ctaHref: '',
+			tone: orgForm.tone ?? app.myOrg.tone
+		};
+		orgForm.banner = banner;
+	}
+
+	function addNews() {
+		if (!news.title.trim() || !news.text.trim()) return;
+		orgForm.announcements = [
+			{
+				id: crypto.randomUUID().slice(0, 8),
+				title: news.title.trim(),
+				text: news.text.trim(),
+				date: day(0)
+			},
+			...(orgForm.announcements ?? [])
+		];
+		news = { title: '', text: '' };
 	}
 
 	function save(e: SubmitEvent) {
@@ -45,55 +67,35 @@
 <a href="/profile" class="mb-4 btn btn-ghost"><ChevronLeft class="size-4" /> Профиль</a>
 
 <form class="mx-auto max-w-2xl space-y-5" onsubmit={save}>
-	<section class="overflow-hidden card">
-		<!-- Постер -->
-		<div class="relative h-40 sm:h-52 {toneClass[tone].bg}">
-			{#if cover}<img src={cover} alt="" class="size-full object-cover" />{/if}
-			<div class="absolute right-3 bottom-3 flex gap-2">
-				{#if cover}
-					<button type="button" class="btn bg-surface/90 py-2" onclick={() => clear('cover')}
-						><Trash class="size-4" /></button
-					>
-				{/if}
-				<label class="btn cursor-pointer bg-surface/90 py-2">
-					<ImagePlus class="size-4" /> Постер
-					<input type="file" accept="image/*" class="sr-only" onchange={(e) => pick(e, 'cover')} />
-				</label>
+	{#if app.isOrg}
+		<section class="card p-5">
+			<h2 class="mb-4 text-lg font-extrabold">Оформление страницы</h2>
+			<LookPicker
+				bind:look={orgForm}
+				tone={orgForm.tone ?? app.myOrg.tone}
+				round={false}
+				fallback={app.myOrg.emoji}
+			/>
+			<div class="mt-5">
+				<span class="label">Цвет страницы</span>
+				<div class="flex gap-2">
+					{#each tones as t (t)}
+						<button
+							type="button"
+							class="size-9 rounded-full border-2 {toneClass[t].bg} {(orgForm.tone ??
+								app.myOrg.tone) === t
+								? 'border-ink'
+								: 'border-transparent'}"
+							onclick={() => (orgForm.tone = t)}
+							aria-label="Цвет {t}"
+						></button>
+					{/each}
+				</div>
 			</div>
-		</div>
-		<div class="flex items-end gap-4 px-5 pb-5">
-			<div class="relative -mt-12">
-				{#if avatar}
-					<img
-						src={avatar}
-						alt=""
-						class="size-24 object-cover ring-4 ring-surface {app.isOrg
-							? 'rounded-[30%]'
-							: 'rounded-full'}"
-					/>
-				{:else}
-					<Avatar id={app.actorId} size="xl" ring />
-				{/if}
-				<label
-					class="absolute -right-1 -bottom-1 grid size-9 cursor-pointer place-items-center rounded-full bg-accent text-accent-ink shadow"
-					title="Загрузить аватар"
-				>
-					<Camera class="size-4" />
-					<input type="file" accept="image/*" class="sr-only" onchange={(e) => pick(e, 'avatar')} />
-				</label>
-			</div>
-			{#if avatar}
-				<button
-					type="button"
-					class="text-sm font-semibold text-muted hover:text-ink"
-					onclick={() => clear('avatar')}>Убрать фото</button
-				>
-			{/if}
-		</div>
-	</section>
+		</section>
 
-	<section class="space-y-4 card p-5">
-		{#if app.isOrg}
+		<section class="space-y-4 card p-5">
+			<h2 class="text-lg font-extrabold">Информация</h2>
 			<label class="block"
 				><span class="label">Название организации</span><input
 					class="input"
@@ -101,23 +103,174 @@
 					bind:value={orgForm.name}
 				/></label
 			>
-			<label class="block"
-				><span class="label">Город</span><input
-					class="input"
-					required
-					bind:value={orgForm.city}
-				/></label
-			>
+			<label class="block">
+				<span class="label">Город</span>
+				<select class="input" bind:value={orgForm.city}>
+					{#each cityOptions as c (c)}<option value={c}>{c}</option>{/each}
+				</select>
+			</label>
 			<label class="block"
 				><span class="label">О нас</span><textarea
 					class="min-h-24 input"
 					maxlength="240"
 					bind:value={orgForm.about}></textarea></label
 			>
+			<div class="grid gap-3 sm:grid-cols-2">
+				<label class="block"
+					><span class="label">Сайт</span><input
+						class="input"
+						placeholder="example.kg"
+						bind:value={orgForm.website}
+					/></label
+				>
+				<label class="block"
+					><span class="label">Telegram</span><input
+						class="input"
+						placeholder="@club"
+						bind:value={orgForm.telegram}
+					/></label
+				>
+			</div>
 			{#if app.myOrg.verified}<p class="text-xs text-muted">
 					✓ Организация проверена платформой
 				</p>{/if}
-		{:else}
+		</section>
+
+		<section class="space-y-4 card p-5">
+			<div class="flex items-center justify-between">
+				<h2 class="flex items-center gap-2 text-lg font-extrabold">
+					<Megaphone class="size-5 text-accent-text" /> Баннер
+				</h2>
+				{#if orgForm.banner}
+					<button
+						type="button"
+						class="text-sm font-semibold text-muted hover:text-ink"
+						onclick={() => (orgForm.banner = undefined)}>Убрать</button
+					>
+				{/if}
+			</div>
+			{#if orgForm.banner}
+				<div class="rounded-3xl p-4 {toneClass[orgForm.banner.tone].bg}">
+					<div class="font-extrabold">{orgForm.banner.title || 'Заголовок баннера'}</div>
+					<p class="text-sm">
+						{orgForm.banner.text || 'Текст: набор волонтёров, акция или важное объявление'}
+					</p>
+					{#if orgForm.banner.ctaLabel}<span class="mt-3 btn bg-ink py-2 text-sm text-bg"
+							>{orgForm.banner.ctaLabel}</span
+						>{/if}
+				</div>
+				<label class="block"
+					><span class="label">Заголовок</span><input
+						class="input"
+						maxlength="60"
+						bind:value={orgForm.banner.title}
+					/></label
+				>
+				<label class="block"
+					><span class="label">Текст</span><textarea
+						class="min-h-16 input"
+						maxlength="160"
+						bind:value={orgForm.banner.text}></textarea></label
+				>
+				<div class="grid gap-3 sm:grid-cols-2">
+					<label class="block"
+						><span class="label">Текст кнопки</span><input
+							class="input"
+							maxlength="24"
+							bind:value={orgForm.banner.ctaLabel}
+						/></label
+					>
+					<label class="block">
+						<span class="label">Куда ведёт кнопка</span>
+						<select class="input" bind:value={orgForm.banner.ctaHref}>
+							<option value="">Без кнопки</option>
+							{#each orgEvents as o (o.id)}<option value="/o?id={o.id}">{o.emoji} {o.title}</option
+								>{/each}
+							<option value="/cabinet/new?category=recruitment">Форма нового набора</option>
+						</select>
+					</label>
+				</div>
+				<div class="flex gap-2">
+					{#each tones as t (t)}
+						<button
+							type="button"
+							class="size-8 rounded-full border-2 {toneClass[t].bg} {orgForm.banner.tone === t
+								? 'border-ink'
+								: 'border-transparent'}"
+							onclick={() => orgForm.banner && (orgForm.banner.tone = t)}
+							aria-label="Цвет баннера {t}"
+						></button>
+					{/each}
+				</div>
+			{:else}
+				<p class="text-sm text-muted">
+					Большой баннер вверху страницы: набор волонтёров, акция или важное объявление.
+				</p>
+				<button type="button" class="btn btn-soft" onclick={enableBanner}
+					><Plus class="size-4" /> Добавить баннер</button
+				>
+			{/if}
+		</section>
+
+		<section class="space-y-3 card p-5">
+			<h2 class="text-lg font-extrabold">Анонсы</h2>
+			<div class="space-y-2 rounded-3xl bg-surface-2 p-3">
+				<input
+					class="input bg-surface"
+					placeholder="Заголовок анонса"
+					maxlength="60"
+					bind:value={news.title}
+				/>
+				<textarea
+					class="min-h-16 input bg-surface"
+					placeholder="Что важно знать волонтёрам"
+					maxlength="240"
+					bind:value={news.text}></textarea>
+				<button
+					type="button"
+					class="btn btn-soft"
+					disabled={!news.title.trim() || !news.text.trim()}
+					onclick={addNews}><Plus class="size-4" /> Добавить анонс</button
+				>
+			</div>
+			{#each orgForm.announcements ?? [] as item (item.id)}
+				<div class="flex items-start gap-3 rounded-2xl border border-line p-3">
+					<div class="min-w-0 flex-1">
+						<div class="font-semibold">
+							{item.title}
+							<span class="text-xs font-normal text-muted">· {formatDate(item.date)}</span>
+						</div>
+						<p class="text-sm text-muted">{item.text}</p>
+					</div>
+					<button
+						type="button"
+						class="text-muted hover:text-pastel-peach-ink"
+						onclick={() =>
+							(orgForm.announcements = orgForm.announcements?.filter((a) => a.id !== item.id))}
+						aria-label="Удалить анонс"
+					>
+						<Trash class="size-4" />
+					</button>
+				</div>
+			{/each}
+		</section>
+
+		<section class="flex flex-wrap items-center justify-between gap-3 card p-5">
+			<div>
+				<h2 class="text-lg font-extrabold">Наборы волонтёров</h2>
+				<p class="text-sm text-muted">Открытые наборы показываются на странице организации.</p>
+			</div>
+			<a href="/cabinet/new?category=recruitment" class="btn btn-soft"
+				><Plus class="size-4" /> Опубликовать набор</a
+			>
+		</section>
+	{:else}
+		<section class="card p-5">
+			<h2 class="mb-4 text-lg font-extrabold">Постер и аватар</h2>
+			<LookPicker bind:look={form} tone={form.tone} fallback={initials(form.name)} />
+		</section>
+
+		<section class="space-y-4 card p-5">
 			<label class="block"
 				><span class="label">ФИО</span><input
 					class="input"
@@ -136,14 +289,16 @@
 						bind:value={form.age}
 					/></label
 				>
-				<label class="block"
-					><span class="label">Город</span><input
-						class="input"
-						required
-						bind:value={form.city}
-					/></label
-				>
+				<label class="block">
+					<span class="label">Город</span>
+					<select class="input" bind:value={form.city}>
+						{#each cityOptions as c (c)}<option value={c}>{c}</option>{/each}
+					</select>
+				</label>
 			</div>
+			<p class="-mt-2 text-xs text-muted">
+				По городу подбираются мероприятия, наборы и активности на главной.
+			</p>
 			<label class="block"
 				><span class="label">О себе</span><textarea
 					class="min-h-20 input"
@@ -179,8 +334,8 @@
 					{/each}
 				</div>
 			</div>
-		{/if}
-	</section>
+		</section>
+	{/if}
 
 	<button class="btn w-full btn-primary py-3">Сохранить</button>
 </form>

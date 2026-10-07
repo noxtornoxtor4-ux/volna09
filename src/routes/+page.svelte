@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Bell, Search } from '@lucide/svelte';
+	import { Bell, ChevronDown, MapPin, Search } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import StoriesBar from '#lib/components/StoriesBar.svelte';
-	import { categories } from '#lib/data.ts';
+	import { categories, cities } from '#lib/data.ts';
 	import type { Category } from '#lib/types.ts';
 
 	type Filter = Category | 'all' | 'saved';
@@ -21,7 +21,7 @@
 	];
 
 	const list = $derived(
-		app.upcoming.filter((o) =>
+		app.localUpcoming.filter((o) =>
 			filter === 'saved' ? app.isReminded(o.id) : filter === 'all' || o.category === filter
 		)
 	);
@@ -37,6 +37,24 @@
 		<h1 class="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">
 			Чем поможем миру сегодня?
 		</h1>
+		<!-- Город: лента показывает мероприятия выбранного города и онлайн -->
+		<label
+			class="relative mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent-soft py-1.5 pr-8 pl-3 text-sm font-bold text-accent-text"
+		>
+			<MapPin class="size-4" />
+			{app.viewCity === 'all' ? 'Все города' : app.viewCity}
+			<ChevronDown class="pointer-events-none absolute right-2.5 size-4" />
+			<select
+				class="absolute inset-0 cursor-pointer opacity-0"
+				value={app.viewCity}
+				onchange={(e) => app.setViewCity(e.currentTarget.value)}
+				aria-label="Город"
+			>
+				<option value="all">Все города</option>
+				{#each [...new Set([...cities, app.profile.city])] as c (c)}<option value={c}>{c}</option
+					>{/each}
+			</select>
+		</label>
 	</div>
 	<!-- Поиск — иконкой в углу -->
 	<a
@@ -96,6 +114,13 @@
 	<div class="card p-10 text-center text-muted">
 		{filter === 'saved'
 			? 'Нажмите «Напомнить позже» на карточке, и она появится здесь.'
-			: 'Пока ничего нет в этой категории.'}
+			: app.viewCity !== 'all'
+				? `В городе ${app.viewCity} пока нет таких мероприятий.`
+				: 'Пока ничего нет в этой категории.'}
+		{#if app.viewCity !== 'all'}
+			<button class="mt-4 btn btn-soft" onclick={() => app.setViewCity('all')}
+				>Показать все города</button
+			>
+		{/if}
 	</div>
 {/if}

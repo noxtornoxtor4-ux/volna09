@@ -85,6 +85,61 @@ export const toneClass: Record<Tone, { bg: string; text: string; ring: string }>
 	peach: { bg: 'bg-pastel-peach', text: 'text-pastel-peach-ink', ring: 'ring-pastel-peach-ink' }
 };
 
+/** Города для фильтра возможностей; «Онлайн» видно во всех городах */
+export const ONLINE = 'Онлайн';
+export const cities = [
+	'Бишкек',
+	'Ош',
+	'Каракол',
+	'Джалал-Абад',
+	'Нарын',
+	'Талас',
+	'Баткен',
+	'Токмок',
+	'Чолпон-Ата',
+	'Кара-Балта'
+];
+
+/** Готовые шаблоны постеров профиля */
+export const coverPresets: Record<string, { label: string; css: string }> = {
+	dawn: { label: 'Рассвет', css: 'linear-gradient(135deg, #ffd6e0, #ffe7ba 50%, #c6f1ff)' },
+	sky: { label: 'Небо', css: 'linear-gradient(160deg, #a9d4ff, #bfc4ff 55%, #f4adef)' },
+	mint: { label: 'Мята', css: 'linear-gradient(135deg, #b2f9e7, #a9d4ff)' },
+	forest: { label: 'Лес', css: 'linear-gradient(135deg, #a8e6c4, #daf5e6 60%, #fff4c7)' },
+	sun: {
+		label: 'Солнце',
+		css: 'radial-gradient(circle at 20% 30%, #fffabf, transparent 45%), linear-gradient(135deg, #ffe08a, #ffc4a8)'
+	},
+	lavender: { label: 'Лаванда', css: 'linear-gradient(135deg, #cdb8ff, #ffe7ff)' },
+	dots: {
+		label: 'Горошек',
+		css: 'radial-gradient(#ffffff99 2.5px, transparent 2.5px) 0 0 / 22px 22px, linear-gradient(135deg, #a9d4ff, #cdb8ff)'
+	},
+	stripes: {
+		label: 'Полоски',
+		css: 'repeating-linear-gradient(45deg, #ffffff55 0 12px, transparent 12px 24px), linear-gradient(135deg, #ffc4a8, #f4adef)'
+	},
+	night: { label: 'Ночь', css: 'linear-gradient(135deg, #1f2633, #5b62e8 70%, #cdb8ff)' }
+};
+
+/** Готовые аватары-эмодзи */
+export const avatarEmojis = [
+	'🦊',
+	'🐼',
+	'🐨',
+	'🦁',
+	'🐯',
+	'🐸',
+	'🐧',
+	'🦄',
+	'🌻',
+	'🌈',
+	'⭐',
+	'🚀',
+	'🌳',
+	'💙'
+];
+
 export const tones: Tone[] = ['blue', 'yellow', 'green', 'lilac', 'peach'];
 
 export const awardTypes: Record<AwardType, { label: string; plural: string; emoji: string }> = {
@@ -244,7 +299,31 @@ export const seedProfile: Profile = {
 export const seedOrgProfile: OrgProfile = {
 	name: organizations[0].name,
 	city: organizations[0].city,
-	about: organizations[0].about
+	about: organizations[0].about,
+	coverPreset: 'forest',
+	website: 'zelenyi-gorod.kg',
+	telegram: '@zelenyi_gorod',
+	banner: {
+		title: 'Набираем команду на эко-марафон',
+		text: '6 недель, 5 школ и раздельный сбор отходов. Нужны 16 волонтёров 14+.',
+		ctaLabel: 'Подать заявку',
+		ctaHref: '/o?id=o8',
+		tone: 'green'
+	},
+	announcements: [
+		{
+			id: 'an1',
+			title: 'Итоги осени',
+			text: 'Посадили 120 деревьев и убрали 3 парка. Спасибо каждому!',
+			date: day(-3)
+		},
+		{
+			id: 'an2',
+			title: 'Новый партнёр',
+			text: 'Кофейня «Зерно» угощает волонтёров после субботников ☕',
+			date: day(-9)
+		}
+	]
 };
 
 const q = defaultQuestions;
@@ -257,6 +336,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'eco',
 		date: day(4),
 		time: '10:00–14:00',
+		city: 'Бишкек',
 		place: 'Бишкек, парк Ататюрка',
 		spots: 30,
 		hours: 4,
@@ -281,6 +361,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'paws',
 		date: day(9),
 		time: 'по выходным',
+		city: 'Бишкек',
 		place: 'Приют «Лапа помощи»',
 		spots: 12,
 		hours: 3,
@@ -314,6 +395,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'media',
 		date: day(6),
 		time: '16:00–18:00',
+		city: 'Онлайн',
 		place: 'Онлайн, Zoom',
 		spots: 50,
 		hours: 2,
@@ -337,6 +419,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'school',
 		date: day(14),
 		time: '3 месяца',
+		city: 'Бишкек',
 		place: 'Бишкек + выезды',
 		spots: 20,
 		hours: 24,
@@ -360,6 +443,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'eco',
 		date: day(11),
 		time: '18:00–20:00',
+		city: 'Бишкек',
 		place: 'Коворкинг «Платформа»',
 		spots: 40,
 		hours: 1,
@@ -378,6 +462,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'care',
 		date: day(2),
 		time: '12:00–17:00',
+		city: 'Бишкек',
 		place: 'ТЦ «Вефа», 1 этаж',
 		spots: 15,
 		hours: 5,
@@ -396,6 +481,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'school',
 		date: day(8),
 		time: '11:00–15:00',
+		city: 'Бишкек',
 		place: 'Школа волонтёров',
 		spots: 25,
 		hours: 4,
@@ -418,6 +504,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'eco',
 		date: day(18),
 		time: '6 недель',
+		city: 'Бишкек',
 		place: 'Школы Бишкека',
 		spots: 16,
 		hours: 18,
@@ -441,6 +528,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'care',
 		date: day(20),
 		time: '08:00–12:00',
+		city: 'Бишкек',
 		place: 'Бишкек, Южная магистраль',
 		spots: 60,
 		hours: 4,
@@ -459,6 +547,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'school',
 		date: day(13),
 		time: '15:00–19:00',
+		city: 'Бишкек',
 		place: 'Технопарк, ауд. 204',
 		spots: 30,
 		hours: 4,
@@ -483,6 +572,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'care',
 		date: day(16),
 		time: '11:00–16:00',
+		city: 'Бишкек',
 		place: 'Площадь Ала-Тоо',
 		spots: 25,
 		hours: 5,
@@ -495,6 +585,72 @@ export const seedOpportunities: Opportunity[] = [
 		tone: 'peach',
 		questions: q()
 	},
+	{
+		id: 'o14',
+		category: 'action',
+		title: 'Уборка берега Иссык-Куля в Караколе',
+		orgId: 'eco',
+		date: day(5),
+		time: '09:00–13:00',
+		city: 'Каракол',
+		place: 'Каракол, пристань',
+		spots: 25,
+		hours: 4,
+		tags: ['ecology'],
+		description: 'Очищаем пляж и прибрежную полосу перед зимой. Мешки и перчатки выдаём на месте.',
+		tasks: [
+			'Собрать мусор на пляже',
+			'Рассортировать пластик и стекло',
+			'Сфотографировать результат'
+		],
+		requirements: ['Возраст от 13 лет', 'Тёплая одежда'],
+		emoji: '🏞️',
+		tone: 'blue',
+		deadline: day(4),
+		questions: q()
+	},
+	{
+		id: 'o15',
+		category: 'project',
+		title: 'Громкие чтения в детской библиотеке Оша',
+		orgId: 'school',
+		date: day(7),
+		time: 'по субботам, 11:00',
+		city: 'Ош',
+		place: 'Ош, центральная детская библиотека',
+		spots: 10,
+		hours: 8,
+		tags: ['education', 'culture'],
+		description: 'Читаем детям 6–9 лет сказки на кыргызском и русском, устраиваем мини-спектакли.',
+		tasks: [
+			'Подготовить книгу и вопросы',
+			'Провести чтение 40 минут',
+			'Помочь с поделкой по сказке'
+		],
+		requirements: ['Возраст от 14 лет', 'Любовь к детям'],
+		emoji: '📖',
+		tone: 'yellow',
+		questions: q()
+	},
+	{
+		id: 'o16',
+		category: 'action',
+		title: 'Помощь в доме престарелых Каракола',
+		orgId: 'care',
+		date: day(10),
+		time: '14:00–17:00',
+		city: 'Каракол',
+		place: 'Каракол, ул. Торекулова 12',
+		spots: 12,
+		hours: 3,
+		tags: ['charity', 'health'],
+		description: 'Пьём чай с бабушками и дедушками, читаем газеты, помогаем с уборкой комнат.',
+		tasks: ['Провести время с подопечными', 'Помочь с уборкой', 'Подготовить небольшой концерт'],
+		requirements: ['Возраст от 14 лет'],
+		emoji: '🫖',
+		tone: 'peach',
+		questions: q()
+	},
 	// Прошедшие события — для истории участия и архива
 	{
 		id: 'o10',
@@ -503,6 +659,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'eco',
 		date: day(-20),
 		time: '09:00–15:00',
+		city: 'Чолпон-Ата',
 		place: 'Иссык-Куль, Чолпон-Ата',
 		spots: 25,
 		hours: 6,
@@ -521,6 +678,7 @@ export const seedOpportunities: Opportunity[] = [
 		orgId: 'paws',
 		date: day(-35),
 		time: '1 месяц',
+		city: 'Бишкек',
 		place: 'Приют «Лапа помощи»',
 		spots: 6,
 		hours: 12,

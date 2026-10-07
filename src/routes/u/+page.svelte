@@ -5,6 +5,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import AwardShelves from '#lib/components/AwardShelves.svelte';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
+	import OrgShowcase from '#lib/components/OrgShowcase.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
 	import { ME, toneClass } from '#lib/data.ts';
@@ -48,7 +49,7 @@
 		name={org.name}
 		subtitle="Организация · {org.city}"
 		bio={org.about}
-		cover={org.id === app.myOrgId ? app.orgProfile.cover : undefined}
+		look={org.id === app.myOrgId ? app.orgProfile : {}}
 		tone={org.tone}
 		verified={org.verified}
 		stats={[
@@ -59,6 +60,7 @@
 		]}
 		actions={follow}
 	/>
+	<OrgShowcase orgId={org.id} />
 	<div class="mt-5 mb-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-bold">
 		<button
 			class="rounded-xl py-2.5 {tab !== 'events' ? 'bg-surface shadow-sm' : 'text-muted'}"
@@ -86,7 +88,7 @@
 		name={person.name}
 		subtitle="{person.age} {plural(person.age, 'год', 'года', 'лет')} · {person.city}"
 		bio={person.bio}
-		cover={person.id === ME ? app.profile.cover : undefined}
+		look={person.id === ME ? app.profile : {}}
 		tone={person.tone}
 		stats={[
 			{ label: 'подписчиков', value: app.followersCount(person.id) },

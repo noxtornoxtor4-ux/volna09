@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { BadgeCheck } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
-	import { toneClass } from '#lib/data.ts';
-	import type { Tone } from '#lib/types.ts';
+	import type { ProfileLook, Tone } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
+	import ProfileCover from './ProfileCover.svelte';
 
 	let {
 		id,
 		name,
 		subtitle,
 		bio,
-		cover,
+		look = {},
 		tone,
 		verified = false,
 		stats,
@@ -20,7 +20,7 @@
 		name: string;
 		subtitle: string;
 		bio?: string;
-		cover?: string;
+		look?: ProfileLook;
 		tone: Tone;
 		verified?: boolean;
 		stats: { label: string; value: number | string; href?: string }[];
@@ -29,15 +29,8 @@
 </script>
 
 <section class="overflow-hidden card">
-	<!-- Постер профиля -->
-	<div class="relative h-36 sm:h-52 {toneClass[tone].bg}">
-		{#if cover}
-			<img src={cover} alt="" class="size-full object-cover" />
-		{:else}
-			<div class="absolute -top-10 left-1/4 size-60 rounded-full bg-surface/40 blur-3xl"></div>
-			<div class="absolute -right-10 -bottom-16 size-60 rounded-full bg-accent/40 blur-3xl"></div>
-		{/if}
-	</div>
+	<!-- Постер профиля: шаблон, фото или видео -->
+	<ProfileCover {look} {tone} class="h-36 sm:h-52" />
 
 	<div class="px-4 pb-5 sm:px-6">
 		<div class="relative z-10 -mt-14 flex items-end justify-between gap-3 sm:-mt-16">
