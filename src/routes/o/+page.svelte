@@ -21,14 +21,14 @@
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import PromoteSheet from '#lib/components/PromoteSheet.svelte';
-	import { ME, MY_ORG, categories, toneClass } from '#lib/data.ts';
+	import { ME, categories, toneClass } from '#lib/data.ts';
 	import { formatDate, hoursLabel, relativeDay } from '#lib/format.ts';
 
 	const id = $derived(page.url.searchParams.get('id') ?? '');
 	const o = $derived(app.opportunity(id));
 	const org = $derived(o ? app.org(o.orgId) : undefined);
 	const mine = $derived(o ? app.myApplication(o.id) : undefined);
-	const owner = $derived(app.isOrg && o?.orgId === MY_ORG);
+	const owner = $derived(app.isOrg && o?.orgId === app.myOrgId);
 	const participants = $derived(o ? app.participants(o.id) : []);
 	const questions = $derived(o ? app.threadsFor(o.id) : []);
 	let promoting = $state<string | null>(null);

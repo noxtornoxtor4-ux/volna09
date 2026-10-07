@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { BadgeCheck, Heart, MessageCircle, Send, Share2, Star } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { ME, MY_ORG, toneClass } from '#lib/data.ts';
+	import { ME, toneClass } from '#lib/data.ts';
 	import { timeAgo } from '#lib/format.ts';
 	import type { Post } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
@@ -18,7 +18,8 @@
 		post.opportunityId ? app.opportunity(post.opportunityId) : undefined
 	);
 	const org = $derived(post.orgId ? app.org(post.orgId) : undefined);
-	const profileHref = (id: string) => (id === ME || id === MY_ORG ? '/profile' : `/u?id=${id}`);
+	const profileHref = (id: string) =>
+		id === ME || id === app.myOrgId ? '/profile' : `/u?id=${id}`;
 
 	function comment(e: SubmitEvent) {
 		e.preventDefault();

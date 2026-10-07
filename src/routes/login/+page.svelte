@@ -5,12 +5,15 @@
 	import { app } from '#lib/app.svelte.ts';
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import Logo from '#lib/components/Logo.svelte';
+	import OrgPicker from '#lib/components/OrgPicker.svelte';
 	import type { Role, Session } from '#lib/types.ts';
 
 	let mode = $state<'login' | 'signup'>('login');
 	let method = $state<Session['method']>('phone');
 	let role = $state<Role>('volunteer');
 	let name = $state('');
+	let orgChoice = $state('');
+	let newOrg = $state({ name: '', city: '', about: '' });
 
 	let phone = $state('');
 	let code = $state('');
@@ -25,10 +28,28 @@
 	const phoneDigits = $derived(phone.replace(/\D/g, ''));
 	const phoneValid = $derived(phoneDigits.length >= 9);
 	const emailValid = $derived(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
-	const nameOk = $derived(mode === 'login' || name.trim().length > 1);
+	const orgOk = $derived(
+		!!orgChoice && (orgChoice !== 'new' || (newOrg.name.trim().length > 1 && !!newOrg.city.trim()))
+	);
+	/** Для регистрации: имя волонтёра или выбранная организация */
+	const nameOk = $derived(mode === 'login' || (role === 'org' ? orgOk : name.trim().length > 1));
 
 	function finish(session: Omit<Session, 'role'>) {
-		app.login({ ...session, role }, mode === 'signup' ? name.trim() : undefined);
+		if (mode === 'signup' && role === 'org') {
+			const orgId =
+				orgChoice === 'new'
+					? app.createOrg({
+							name: newOrg.name.trim(),
+							city: newOrg.city.trim(),
+							about: newOrg.about.trim()
+						})
+					: orgChoice;
+			app.chooseOrg(orgId);
+		}
+		app.login(
+			{ ...session, role },
+			mode === 'signup' && role === 'volunteer' ? name.trim() : undefined
+		);
 		goto(role === 'org' ? '/cabinet' : '/', { replaceState: true });
 	}
 
@@ -56,6 +77,8 @@
 	}
 
 	function demo(demoRole: Role) {
+		// Демо-организация — клуб с заполненными заявками, часами и мероприятиями
+		if (demoRole === 'org') app.chooseOrg('eco');
 		app.login({
 			method: 'email',
 			contact: demoRole === 'org' ? 'eco@volna.kg' : 'demo@volna.kg',
@@ -104,7 +127,11 @@
 				{mode === 'login' ? 'С возвращением!' : 'Создать аккаунт'}
 			</h2>
 			<p class="mt-1 text-sm text-muted">
-				{mode === 'login' ? 'Войдите, чтобы продолжить.' : 'Пара шагов — и можно подавать заявки.'}
+				{mode === 'login'
+					? 'Войдите, чтобы продолжить.'
+					: role === 'org'
+						? 'Найдите свою организацию или добавьте новую.'
+						: 'Пара шагов — и можно подавать заявки.'}
 			</p>
 
 			<div class="mt-6 grid grid-cols-2 gap-2">
@@ -143,15 +170,23 @@
 			</div>
 
 			{#if mode === 'signup' && !(method === 'phone' && codeSent) && !linkSent}
-				<label class="mt-5 block">
-					<span class="label">{role === 'org' ? 'Название организации' : 'Как тебя зовут?'}</span>
-					<input
-						class="input"
-						autocomplete="name"
-						placeholder={role === 'org' ? 'Например: Эко-клуб' : 'Имя и фамилия'}
-						bind:value={name}
-					/>
-				</label>
+				{#if role === 'org'}
+					<OrgPicker bind:selected={orgChoice} bind:draft={newOrg} />
+				{:else}
+					<label class="mt-5 block">
+						<span class="label">Как тебя зовут?</span>
+						<input
+							class="input"
+							autocomplete="name"
+							placeholder="Имя и фамилия"
+							bind:value={name}
+						/>
+					</label>
+				{/if}
+			{:else if mode === 'login' && role === 'org'}
+				<p class="mt-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">
+					Вход в кабинет организации <b class="text-ink">{app.org(app.myOrgId)?.name}</b>
+				</p>
 			{/if}
 
 			{#if method === 'phone'}

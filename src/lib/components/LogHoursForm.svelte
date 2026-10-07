@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { app } from '#lib/app.svelte.ts';
-	import { day, organizations } from '#lib/data.ts';
+	import { day } from '#lib/data.ts';
 
 	let { date = day(0), ondone }: { date?: string; ondone: () => void } = $props();
 
 	// Форма открывается заново на каждый день, поэтому начальная дата берётся один раз
 	// svelte-ignore state_referenced_locally
 	let form = $state({
-		orgId: organizations[0].id,
+		orgId: app.allOrgs[0].id,
 		opportunityId: '',
 		title: '',
 		date,
@@ -45,7 +45,7 @@
 	<label class="block">
 		<span class="label">Организация</span>
 		<select class="input" bind:value={form.orgId} onchange={() => (form.opportunityId = '')}>
-			{#each organizations as org (org.id)}
+			{#each app.allOrgs as org (org.id)}
 				<option value={org.id}>{org.emoji} {org.name}</option>
 			{/each}
 		</select>

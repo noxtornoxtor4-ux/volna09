@@ -6,13 +6,13 @@
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
-	import { ME, MY_ORG, toneClass } from '#lib/data.ts';
+	import { ME, toneClass } from '#lib/data.ts';
 	import { plural } from '#lib/format.ts';
 
 	const id = $derived(page.url.searchParams.get('id') ?? '');
 	const org = $derived(app.org(id));
 	const person = $derived(org ? undefined : app.person(id));
-	const isSelf = $derived(id === ME || id === MY_ORG);
+	const isSelf = $derived(id === ME || id === app.myOrgId);
 	let tab = $state<'posts' | 'awards' | 'events'>('posts');
 </script>
 
@@ -42,7 +42,7 @@
 		name={org.name}
 		subtitle="Организация · {org.city}"
 		bio={org.about}
-		cover={org.id === MY_ORG ? app.orgProfile.cover : undefined}
+		cover={org.id === app.myOrgId ? app.orgProfile.cover : undefined}
 		tone={org.tone}
 		verified={org.verified}
 		stats={[

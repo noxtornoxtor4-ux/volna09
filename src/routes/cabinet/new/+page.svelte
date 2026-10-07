@@ -4,7 +4,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import QuestionnaireBuilder from '#lib/components/QuestionnaireBuilder.svelte';
-	import { MY_ORG, categories, day, defaultQuestions, toneClass, tones } from '#lib/data.ts';
+	import { categories, day, defaultQuestions, toneClass, tones } from '#lib/data.ts';
 	import { compressImage, takeFile } from '#lib/files.ts';
 	import type { Category, Opportunity } from '#lib/types.ts';
 
@@ -300,6 +300,6 @@
 
 	<div class="lg:sticky lg:top-10 lg:self-start">
 		<p class="label">Так карточку увидят волонтёры</p>
-		<OpportunityCard opportunity={{ ...draft, id: 'preview', orgId: MY_ORG }} preview />
+		<OpportunityCard opportunity={{ ...draft, id: 'preview', orgId: app.myOrgId }} preview />
 	</div>
 </div>

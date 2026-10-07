@@ -17,7 +17,7 @@
 	import Avatar from '#lib/components/Avatar.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import PromoteSheet from '#lib/components/PromoteSheet.svelte';
-	import { MY_ORG, categories, day, toneClass } from '#lib/data.ts';
+	import { categories, day, toneClass } from '#lib/data.ts';
 	import { formatDate, plural, timeAgo } from '#lib/format.ts';
 	import type { ApplicationStatus } from '#lib/types.ts';
 
@@ -78,7 +78,7 @@
 	</div>
 {:else}
 	<header class="mb-5 flex items-center gap-3">
-		<Avatar id={MY_ORG} size="lg" />
+		<Avatar id={app.myOrgId} size="lg" />
 		<div class="min-w-0 flex-1">
 			<p class="text-sm font-semibold text-muted">Кабинет организации</p>
 			<h1 class="truncate text-xl font-extrabold tracking-tight sm:text-2xl">
@@ -188,6 +188,19 @@
 						</button>
 					{/if}
 				</div>
+			{:else}
+				<a
+					href="/cabinet/new"
+					class="flex items-center gap-3 card border-dashed p-5 text-muted transition hover:border-accent md:col-span-2"
+				>
+					<span class="grid size-12 place-items-center rounded-2xl bg-accent text-accent-ink"
+						><Plus class="size-6" /></span
+					>
+					<span
+						><b class="block text-ink">Пока нет публикаций</b>Нажмите «+», чтобы опубликовать первое
+						мероприятие</span
+					>
+				</a>
 			{/each}
 		</div>
 	{:else}

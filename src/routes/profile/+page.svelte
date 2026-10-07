@@ -3,7 +3,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
-	import { ME, MY_ORG, toneClass } from '#lib/data.ts';
+	import { ME, toneClass } from '#lib/data.ts';
 	import { plural } from '#lib/format.ts';
 
 	const certificates = $derived(app.myAwards.filter((a) => a.type === 'certificate').length);
@@ -16,7 +16,7 @@
 
 {#if app.isOrg}
 	<ProfileHeader
-		id={MY_ORG}
+		id={app.myOrgId}
 		name={app.orgProfile.name}
 		subtitle="Организация · {app.orgProfile.city}"
 		bio={app.orgProfile.about}
@@ -24,7 +24,7 @@
 		tone={app.myOrg.tone}
 		verified={app.myOrg.verified}
 		stats={[
-			{ label: 'подписчиков', value: app.followersCount(MY_ORG), href: '/profile/followers' },
+			{ label: 'подписчиков', value: app.followersCount(app.myOrgId), href: '/profile/followers' },
 			{ label: 'мероприятий', value: app.orgOpportunities.length, href: '/cabinet' },
 			{ label: 'волонтёров', value: app.orgVolunteers.length, href: '/cabinet?folder=volunteers' },
 			{ label: 'часов выдано', value: issuedHours, href: '/cabinet?folder=hours' }
@@ -57,7 +57,7 @@
 	</div>
 
 	<h2 class="mt-6 mb-3 text-lg font-extrabold">Публикации</h2>
-	<PostGrid posts={app.postsBy(MY_ORG)} />
+	<PostGrid posts={app.postsBy(app.myOrgId)} />
 {:else}
 	<ProfileHeader
 		id={ME}

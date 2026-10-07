@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Image, Send, Star, Video, X } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { organizations } from '#lib/data.ts';
 	import { compressImage, isVerticalVideo, takeFile } from '#lib/files.ts';
 	import type { Media, Post } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
@@ -113,7 +112,7 @@
 			</select>
 			<select class="input py-2.5" bind:value={orgId} aria-label="Отметить организацию">
 				<option value="">🏢 Отметить организацию</option>
-				{#each organizations as org (org.id)}
+				{#each app.allOrgs as org (org.id)}
 					<option value={org.id}>{org.emoji} {app.org(org.id)?.name}</option>
 				{/each}
 			</select>

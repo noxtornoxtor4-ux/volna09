@@ -21,7 +21,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import InstallApp from '#lib/components/InstallApp.svelte';
-	import { ME, MY_ORG, accents, toneClass } from '#lib/data.ts';
+	import { ME, accents, toneClass } from '#lib/data.ts';
 	import { formatDate } from '#lib/format.ts';
 	import type { Accent, Privacy, Role } from '#lib/types.ts';
 
@@ -240,7 +240,7 @@
 				Переключайтесь между личным аккаунтом и аккаунтом организации без повторного входа.
 			</p>
 			<ul class="space-y-3">
-				{#each [{ role: 'volunteer' as Role, id: ME, label: 'Волонтёр' }, { role: 'org' as Role, id: MY_ORG, label: 'Организация' }] as acc (acc.role)}
+				{#each [{ role: 'volunteer' as Role, id: ME, label: 'Волонтёр' }, { role: 'org' as Role, id: app.myOrgId, label: 'Организация' }] as acc (acc.role)}
 					{@const active = app.role === acc.role}
 					<li
 						class="flex items-center gap-3 card p-4 {active
