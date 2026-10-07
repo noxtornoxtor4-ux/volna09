@@ -29,13 +29,15 @@
 </script>
 
 <article
-	class="group flex flex-col overflow-hidden card transition hover:shadow-xl hover:shadow-black/5"
+	class="group relative flex flex-col overflow-hidden card transition {preview
+		? ''
+		: 'cursor-pointer hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/5'}"
 >
-	<a
-		{href}
-		class="relative block aspect-[16/10] overflow-hidden {toneClass[o.tone].bg}"
-		aria-label={o.title}
-	>
+	<!-- Вся карточка — ссылка на мероприятие; кнопки действий лежат поверх неё (z-10) -->
+	{#if href}
+		<a {href} class="absolute inset-0 z-[1] rounded-[inherit]" aria-label={o.title}></a>
+	{/if}
+	<div class="relative block aspect-[16/10] overflow-hidden {toneClass[o.tone].bg}">
 		{#if o.poster}
 			<img
 				src={o.poster}
@@ -73,13 +75,13 @@
 				⏳ заявки до {formatDate(o.deadline, { day: 'numeric', month: 'short' })}
 			</span>
 		{/if}
-	</a>
+	</div>
 
 	<div class="flex flex-1 flex-col gap-3 p-4 sm:p-5">
 		<div>
-			<a {href} class="text-lg leading-snug font-extrabold tracking-tight hover:underline"
-				>{o.title || 'Название мероприятия'}</a
-			>
+			<h3 class="text-lg leading-snug font-extrabold tracking-tight group-hover:underline">
+				{o.title || 'Название мероприятия'}
+			</h3>
 			{#if org}
 				<div class="mt-1.5 flex items-center gap-1.5 text-sm text-muted">
 					<Avatar id={o.orgId} size="xs" />
@@ -117,7 +119,7 @@
 			</li>
 		</ul>
 
-		<div class="mt-auto flex gap-2 pt-1">
+		<div class="relative z-10 mt-auto flex gap-2 pt-1">
 			{#if mine}
 				<a
 					{href}

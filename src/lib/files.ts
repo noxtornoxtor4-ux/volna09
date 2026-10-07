@@ -55,3 +55,26 @@ export function isVerticalVideo(src: string): Promise<boolean> {
 
 export const isImage = (src?: string) => !!src && src.startsWith('data:image');
 export const isPdf = (src?: string) => !!src && src.startsWith('data:application/pdf');
+
+/** Делает превью видео: кадр с первой секунды, уменьшенный и сжатый в JPEG */
+export function videoPoster(src: string, maxSide = 720): Promise<string | undefined> {
+	return new Promise((resolve) => {
+		const video = document.createElement('video');
+		video.muted = true;
+		video.playsInline = true;
+		video.preload = 'auto';
+		video.onloadedmetadata = () => {
+			video.currentTime = Math.min(1, video.duration / 4 || 0);
+		};
+		video.onseeked = () => {
+			const scale = Math.min(1, maxSide / Math.max(video.videoWidth, video.videoHeight));
+			const canvas = document.createElement('canvas');
+			canvas.width = Math.round(video.videoWidth * scale);
+			canvas.height = Math.round(video.videoHeight * scale);
+			canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
+			resolve(canvas.toDataURL('image/jpeg', 0.75));
+		};
+		video.onerror = () => resolve(undefined);
+		video.src = src;
+	});
+}

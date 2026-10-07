@@ -86,7 +86,7 @@
 	{/if}
 
 	{#if post.media}
-		<div class="mt-3"><PostMedia media={post.media} /></div>
+		<div class="mt-3"><PostMedia media={post.media} onlike={() => app.likePost(post)} /></div>
 	{/if}
 
 	<footer

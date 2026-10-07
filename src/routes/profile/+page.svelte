@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { Award, Briefcase, FolderOpen, Pencil, Settings } from '@lucide/svelte';
+	import { Award, Briefcase, FolderOpen, Pencil, Plus, Settings } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import PostComposer from '#lib/components/PostComposer.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
 	import { ME, toneClass } from '#lib/data.ts';
@@ -10,6 +11,8 @@
 	const issuedHours = $derived(
 		app.orgHours.filter((h) => h.status === 'verified').reduce((s, h) => s + h.hours, 0)
 	);
+
+	let composing = $state(false);
 </script>
 
 <svelte:head><title>Профиль — Волна</title></svelte:head>
@@ -31,6 +34,9 @@
 		]}
 	>
 		{#snippet actions()}
+			<button class="btn btn-primary" onclick={() => (composing = true)}
+				><Plus class="size-4" /> <span class="hidden sm:inline">Создать</span></button
+			>
 			<a href="/profile/edit" class="btn btn-ghost"
 				><Pencil class="size-4" /> <span class="hidden sm:inline">Редактировать</span></a
 			>
@@ -56,7 +62,12 @@
 		</a>
 	</div>
 
-	<h2 class="mt-6 mb-3 text-lg font-extrabold">Публикации</h2>
+	<div class="mt-6 mb-3 flex items-center justify-between">
+		<h2 class="text-lg font-extrabold">Публикации</h2>
+		<button class="btn btn-soft py-2 text-sm" onclick={() => (composing = true)}
+			><Plus class="size-4" /> Фото или видео</button
+		>
+	</div>
 	<PostGrid posts={app.postsBy(app.myOrgId)} />
 {:else}
 	<ProfileHeader
@@ -75,6 +86,9 @@
 		]}
 	>
 		{#snippet actions()}
+			<button class="btn btn-primary" onclick={() => (composing = true)}
+				><Plus class="size-4" /> <span class="hidden sm:inline">Создать</span></button
+			>
 			<a href="/profile/edit" class="btn btn-ghost"
 				><Pencil class="size-4" /> <span class="hidden sm:inline">Редактировать</span></a
 			>
@@ -117,6 +131,13 @@
 		</a>
 	</div>
 
-	<h2 class="mt-6 mb-3 text-lg font-extrabold">Публикации</h2>
+	<div class="mt-6 mb-3 flex items-center justify-between">
+		<h2 class="text-lg font-extrabold">Публикации</h2>
+		<button class="btn btn-soft py-2 text-sm" onclick={() => (composing = true)}
+			><Plus class="size-4" /> Фото или видео</button
+		>
+	</div>
 	<PostGrid posts={app.postsBy(ME)} />
 {/if}
+
+<PostComposer bind:open={composing} />

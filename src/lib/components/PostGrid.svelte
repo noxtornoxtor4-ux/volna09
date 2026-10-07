@@ -21,6 +21,8 @@
 			>
 				{#if post.media?.src && post.media.type === 'photo'}
 					<img src={post.media.src} alt="" class="size-full object-cover" />
+				{:else if post.media?.poster}
+					<img src={post.media.poster} alt="" class="size-full object-cover" />
 				{:else if post.media}
 					<span class="grid size-full place-items-center text-4xl sm:text-5xl" aria-hidden="true"
 						>{post.media.emoji}</span

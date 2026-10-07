@@ -727,6 +727,14 @@ class AppState {
 		this.#save();
 	}
 
+	/** Лайк по двойному тапу: только ставит отметку, снять её можно кнопкой */
+	likePost(post: Post) {
+		if (post.liked) return;
+		post.liked = true;
+		post.likes += 1;
+		this.#save();
+	}
+
 	addComment(post: Post, text: string) {
 		post.comments.push({ id: uid(), authorId: this.actorId, text, createdAt: now() });
 		this.#save();
