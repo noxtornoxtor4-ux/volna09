@@ -246,3 +246,21 @@ export interface Session {
 	contact: string;
 	role: Role;
 }
+
+/** Личный диалог или групповой чат. Участники — волонтёры и организации */
+export interface Conversation {
+	id: string;
+	kind: 'dm' | 'group';
+	/** Название и иконка группы; у личного диалога берутся из профиля собеседника */
+	title?: string;
+	emoji?: string;
+	tone?: Tone;
+	/** Проект, который обсуждает группа */
+	opportunityId?: string;
+	members: string[];
+	createdBy: string;
+	createdAt: string;
+	messages: Message[];
+	/** Когда участник последний раз читал чат: id участника → ISO-время */
+	lastRead: Record<string, string>;
+}

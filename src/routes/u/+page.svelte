@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { ChevronLeft } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
+	import { ChevronLeft, MessageCircle } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import AwardShelves from '#lib/components/AwardShelves.svelte';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
@@ -23,6 +24,11 @@
 >
 
 {#snippet follow()}
+	{#if !isSelf}
+		<button class="btn btn-ghost" onclick={() => goto(`/messages?c=${app.startDm(id)}`)}>
+			<MessageCircle class="size-4" /> <span class="hidden sm:inline">Написать</span>
+		</button>
+	{/if}
 	{#if !isSelf && !app.isOrg}
 		<button
 			class="btn {app.isFollowing(id) ? 'btn-ghost' : 'btn-primary'}"

@@ -18,6 +18,7 @@ import type {
 	Post,
 	Profile,
 	Thread,
+	Conversation,
 	Tone,
 	Topic
 } from './types.ts';
@@ -1109,3 +1110,69 @@ export const seedAlerts: Alert[] = [
 export const seedFollowing = ['eco', 'paws', 'p2'];
 export const seedFollowers = ['p1', 'p2', 'p4', 'p6', 'p5'];
 export const seedOrgFollowers = ['p1', 'p3', 'p4', 'p5', 'p6'];
+
+/** Личные и групповые чаты для раздела «Сообщения» */
+export const seedConversations: Conversation[] = [
+	{
+		id: 'dm-p2',
+		kind: 'dm',
+		members: [ME, 'p2'],
+		createdBy: 'p2',
+		createdAt: ago(60 * 26),
+		messages: [
+			{ id: 'cm1', from: 'p2', text: 'Привет! Пойдёшь в субботу в приют?', at: ago(60 * 26) },
+			{ id: 'cm2', from: ME, text: 'Да, конечно! Возьму поводок и вкусняшки', at: ago(60 * 25) },
+			{ id: 'cm3', from: 'p2', text: 'Тогда встречаемся у входа в 10:50 🐶', at: ago(40) }
+		],
+		lastRead: { [ME]: ago(60 * 25), p2: ago(40) }
+	},
+	{
+		id: 'g-cleanup',
+		kind: 'group',
+		title: 'Субботник: координация',
+		emoji: '🌳',
+		tone: 'green',
+		opportunityId: 'o1',
+		members: ['eco', ME, 'p1', 'p5', 'p6'],
+		createdBy: 'eco',
+		createdAt: ago(60 * 30),
+		messages: [
+			{
+				id: 'cm4',
+				from: 'eco',
+				text: 'Всем привет! Здесь координируем субботник в парке 🌳',
+				at: ago(60 * 30)
+			},
+			{
+				id: 'cm5',
+				from: 'p6',
+				text: 'Я возьму фотоаппарат и сниму ролик для клуба',
+				at: ago(60 * 8)
+			},
+			{ id: 'cm6', from: 'p1', text: 'Могу привезти ещё 2 пары перчаток', at: ago(60 * 3) },
+			{ id: 'cm7', from: 'eco', text: 'Отлично! Сбор у фонтана в 9:45', at: ago(25) }
+		],
+		lastRead: { [ME]: ago(60 * 8), eco: ago(25) }
+	},
+	{
+		id: 'g-media',
+		kind: 'group',
+		title: 'Медиа-команда волонтёров',
+		emoji: '🎬',
+		tone: 'lilac',
+		members: [ME, 'p2', 'p6'],
+		createdBy: 'p6',
+		createdAt: ago(60 * 24 * 3),
+		messages: [
+			{
+				id: 'cm8',
+				from: 'p6',
+				text: 'Кто хочет снять ролик про благотворительную ярмарку?',
+				at: ago(60 * 24 * 2)
+			},
+			{ id: 'cm9', from: 'p2', text: 'Я! Могу смонтировать в CapCut', at: ago(60 * 24 * 2) },
+			{ id: 'cm10', from: ME, text: 'И я в деле 🙌', at: ago(60 * 24) }
+		],
+		lastRead: { [ME]: ago(60 * 24) }
+	}
+];

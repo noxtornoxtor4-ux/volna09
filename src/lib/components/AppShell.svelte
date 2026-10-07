@@ -7,6 +7,7 @@
 		CalendarDays,
 		Compass,
 		FolderOpen,
+		MessageCircle,
 		MessagesSquare,
 		Search,
 		Settings,
@@ -31,6 +32,13 @@
 		{ href: '/profile', label: 'Профиль', icon: UserRound }
 	]);
 
+	/** Боковое меню: основные разделы плюс «Сообщения», которых нет в нижней панели */
+	const sidebar = $derived([
+		...main.slice(0, 4),
+		{ href: '/messages', label: 'Сообщения', icon: MessageCircle },
+		main[4]
+	]);
+
 	const extra = $derived([
 		{ href: '/search', label: 'Поиск', icon: Search },
 		{ href: '/awards', label: 'Кабинет наград', icon: Award },
@@ -41,6 +49,7 @@
 	const isActive = (href: string) =>
 		href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href);
 	const badge = $derived(app.unread);
+	const messagesBadge = $derived(app.unreadMessages);
 </script>
 
 <div class="min-h-dvh">
@@ -58,7 +67,7 @@
 		>
 			<div class="px-2"><Logo /></div>
 			<nav class="flex flex-col gap-1">
-				{#each main as link (link.href)}
+				{#each sidebar as link (link.href)}
 					<a
 						href={link.href}
 						class="flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition {isActive(
@@ -71,6 +80,10 @@
 						<span class="flex-1">{link.label}</span>
 						{#if link.href === '/notifications' && badge}
 							<span class="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-ink">{badge}</span
+							>
+						{:else if link.href === '/messages' && messagesBadge}
+							<span class="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-ink"
+								>{messagesBadge}</span
 							>
 						{/if}
 					</a>
@@ -115,6 +128,16 @@
 			<Logo />
 			<a href="/search" class="ml-auto btn size-10 rounded-full btn-ghost p-0" aria-label="Поиск"
 				><Search class="size-5" /></a
+			>
+			<a
+				href="/messages"
+				class="relative btn size-10 rounded-full btn-ghost p-0"
+				aria-label="Сообщения"
+				><MessageCircle class="size-5" />
+				{#if messagesBadge}<span
+						class="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-pastel-peach-ink px-1 text-[10px] leading-4 text-white"
+						>{messagesBadge}</span
+					>{/if}</a
 			>
 			<a href="/settings" class="btn size-10 rounded-full btn-ghost p-0" aria-label="Настройки"
 				><Settings class="size-5" /></a

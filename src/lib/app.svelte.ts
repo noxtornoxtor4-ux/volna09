@@ -18,6 +18,7 @@ import {
 	seedPosts,
 	seedProfile,
 	seedThreads,
+	seedConversations,
 	seedTopics
 } from './data.ts';
 import { formatDate, plural } from './format.ts';
@@ -29,6 +30,7 @@ import type {
 	Application,
 	ApplicationStatus,
 	Award,
+	Conversation,
 	DayPhoto,
 	HoursEntry,
 	Membership,
@@ -62,6 +64,7 @@ interface Snapshot {
 	awards: Award[];
 	memberships: Membership[];
 	threads: Thread[];
+	conversations: Conversation[];
 	announcements: Announcement[];
 	alerts: Alert[];
 	dayPhotos: DayPhoto[];
@@ -89,6 +92,7 @@ function fresh(): Snapshot {
 		awards: seedAwards,
 		memberships: seedMemberships,
 		threads: seedThreads,
+		conversations: seedConversations,
 		announcements: seedAnnouncements,
 		alerts: seedAlerts,
 		dayPhotos: [],
@@ -142,6 +146,7 @@ class AppState {
 	awards = $state<Award[]>([]);
 	memberships = $state<Membership[]>([]);
 	threads = $state<Thread[]>([]);
+	conversations = $state<Conversation[]>([]);
 	announcements = $state<Announcement[]>([]);
 	alerts = $state<Alert[]>([]);
 	dayPhotos = $state<DayPhoto[]>([]);
@@ -177,6 +182,7 @@ class AppState {
 		this.awards = s.awards;
 		this.memberships = s.memberships;
 		this.threads = s.threads;
+		this.conversations = s.conversations;
 		this.announcements = s.announcements;
 		this.alerts = s.alerts;
 		this.dayPhotos = s.dayPhotos;
@@ -205,6 +211,7 @@ class AppState {
 			awards: this.awards,
 			memberships: this.memberships,
 			threads: this.threads,
+			conversations: this.conversations,
 			announcements: this.announcements,
 			alerts: this.alerts,
 			dayPhotos: this.dayPhotos,
@@ -698,6 +705,116 @@ class AppState {
 			.filter((r) => r.score > 0)
 			.sort((a, b) => b.score - a.score)
 			.map((r) => r.o);
+	}
+
+	// ───────── Личные и групповые чаты ─────────
+
+	/** Чаты текущего аккаунта, свежие сверху */
+	get myConversations() {
+		const me = this.actorId;
+		return this.conversations
+			.filter((c) => c.members.includes(me))
+			.sort((a, b) =>
+				(b.messages.at(-1)?.at ?? b.createdAt).localeCompare(a.messages.at(-1)?.at ?? a.createdAt)
+			);
+	}
+
+	conversation(id: string) {
+		return this.conversations.find((c) => c.id === id);
+	}
+
+	/** Собеседник в личном диалоге */
+	partnerOf(conversation: Conversation) {
+		return conversation.members.find((m) => m !== this.actorId) ?? this.actorId;
+	}
+
+	unreadIn(conversation: Conversation) {
+		const me = this.actorId;
+		const since = conversation.lastRead[me] ?? '';
+		return conversation.messages.filter((m) => m.from !== me && m.at > since).length;
+	}
+
+	get unreadMessages() {
+		return this.myConversations.reduce((sum, c) => sum + this.unreadIn(c), 0);
+	}
+
+	markConversationRead(conversation: Conversation) {
+		if (!this.unreadIn(conversation)) return;
+		conversation.lastRead[this.actorId] = now();
+		this.#save();
+	}
+
+	/** Открывает существующий личный диалог или создаёт новый */
+	startDm(personId: string) {
+		const me = this.actorId;
+		const existing = this.conversations.find(
+			(c) => c.kind === 'dm' && c.members.includes(me) && c.members.includes(personId)
+		);
+		if (existing) return existing.id;
+		const id = `dm-${uid()}`;
+		this.conversations.push({
+			id,
+			kind: 'dm',
+			members: [me, personId],
+			createdBy: me,
+			createdAt: now(),
+			messages: [],
+			lastRead: { [me]: now() }
+		});
+		this.#save();
+		return id;
+	}
+
+	createGroup(group: {
+		title: string;
+		emoji: string;
+		tone: Tone;
+		opportunityId?: string;
+		members: string[];
+	}) {
+		const me = this.actorId;
+		const id = `g-${uid()}`;
+		this.conversations.push({
+			...group,
+			id,
+			kind: 'group',
+			members: [me, ...group.members.filter((m) => m !== me)],
+			createdBy: me,
+			createdAt: now(),
+			messages: [],
+			lastRead: { [me]: now() }
+		});
+		this.#save();
+		this.notify('Групповой чат создан');
+		return id;
+	}
+
+	addMembers(conversation: Conversation, members: string[]) {
+		conversation.members = [...new Set([...conversation.members, ...members])];
+		this.#save();
+	}
+
+	leaveConversation(conversation: Conversation) {
+		conversation.members = conversation.members.filter((m) => m !== this.actorId);
+		this.#save();
+		this.notify('Вы вышли из чата');
+	}
+
+	sendToConversation(conversation: Conversation, text: string) {
+		const me = this.actorId;
+		conversation.messages.push({ id: uid(), from: me, text, at: now() });
+		conversation.lastRead[me] = now();
+		this.#save();
+	}
+
+	/** Вопросы по мероприятиям, где участвует текущий аккаунт */
+	get myEventThreads() {
+		const mine = this.isOrg
+			? this.threads.filter((t) => this.opportunity(t.opportunityId)?.orgId === this.myOrgId)
+			: this.threads.filter((t) => t.personId === ME);
+		return mine
+			.filter((t) => t.messages.length)
+			.sort((a, b) => (b.messages.at(-1)?.at ?? '').localeCompare(a.messages.at(-1)?.at ?? ''));
 	}
 
 	// ───────── Лента ─────────
