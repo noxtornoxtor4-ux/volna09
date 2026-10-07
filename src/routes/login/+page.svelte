@@ -6,6 +6,8 @@
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import Logo from '#lib/components/Logo.svelte';
 	import OrgPicker from '#lib/components/OrgPicker.svelte';
+	import OtpInput from '#lib/components/OtpInput.svelte';
+	import { CODE_LENGTH, confirmSms, sendSms, smsEnabled, smsError } from '#lib/sms.ts';
 	import type { Role, Session } from '#lib/types.ts';
 
 	let mode = $state<'login' | 'signup'>('login');
@@ -19,6 +21,8 @@
 	let code = $state('');
 	let codeSent = $state(false);
 	let resendIn = $state(0);
+	let sending = $state(false);
+	let smsProblem = $state('');
 	let timer: ReturnType<typeof setInterval> | undefined;
 
 	let email = $state('');
@@ -53,9 +57,23 @@
 		goto(role === 'org' ? '/cabinet' : '/', { replaceState: true });
 	}
 
-	function sendCode(e?: SubmitEvent) {
+	const fullPhone = $derived(`+996${phoneDigits.slice(-9)}`);
+
+	async function sendCode(e?: SubmitEvent) {
 		e?.preventDefault();
-		if (!phoneValid || !nameOk) return;
+		if (!phoneValid || !nameOk || sending) return;
+		smsProblem = '';
+		if (smsEnabled) {
+			sending = true;
+			try {
+				await sendSms(fullPhone, 'recaptcha');
+			} catch (error) {
+				smsProblem = smsError(error);
+				return;
+			} finally {
+				sending = false;
+			}
+		}
 		codeSent = true;
 		code = '';
 		resendIn = 30;
@@ -66,9 +84,23 @@
 		}, 1000);
 	}
 
-	function verifyCode(e: SubmitEvent) {
-		e.preventDefault();
-		if (code.length === 4) finish({ method: 'phone', contact: `+996 ${phoneDigits.slice(-9)}` });
+	async function verifyCode(e?: SubmitEvent) {
+		e?.preventDefault();
+		if (code.length !== CODE_LENGTH || sending) return;
+		smsProblem = '';
+		if (smsEnabled) {
+			sending = true;
+			try {
+				await confirmSms(code);
+			} catch (error) {
+				smsProblem = smsError(error);
+				code = '';
+				return;
+			} finally {
+				sending = false;
+			}
+		}
+		finish({ method: 'phone', contact: `+996 ${phoneDigits.slice(-9)}` });
 	}
 
 	function emailLogin(e: SubmitEvent) {
@@ -206,9 +238,18 @@
 								/>
 							</div>
 						</label>
-						<button class="btn w-full btn-primary py-3" disabled={!phoneValid || !nameOk}
-							>Получить код <ArrowRight class="size-4" /></button
+						{#if smsProblem}<p
+								class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink"
+							>
+								{smsProblem}
+							</p>{/if}
+						<button
+							class="btn w-full btn-primary py-3"
+							disabled={!phoneValid || !nameOk || sending}
 						>
+							{sending ? 'Отправляем SMS…' : 'Получить код'}
+							<ArrowRight class="size-4" />
+						</button>
 					</form>
 				{:else}
 					<form class="mt-5 space-y-4" onsubmit={verifyCode}>
@@ -219,23 +260,35 @@
 						>
 							<ChevronLeft class="size-4" /> +996 {phoneDigits.slice(-9)}
 						</button>
-						<label class="block">
+						<div>
 							<span class="label">Код из SMS</span>
-							<input
-								class="input text-center text-2xl font-bold tracking-[0.6em]"
-								inputmode="numeric"
-								autocomplete="one-time-code"
-								maxlength="4"
-								placeholder="••••"
-								bind:value={() => code, (v) => (code = v.replace(/\D/g, '').slice(0, 4))}
+							<OtpInput
+								bind:value={code}
+								length={CODE_LENGTH}
+								disabled={sending}
+								invalid={!!smsProblem}
+								oncomplete={() => verifyCode()}
 							/>
-						</label>
-						<p class="rounded-2xl bg-pastel-yellow p-3 text-xs text-pastel-yellow-ink">
-							Демо-режим: SMS не отправляется, подойдёт любой код из 4 цифр.
-						</p>
-						<button class="btn w-full btn-primary py-3" disabled={code.length !== 4}
-							>Подтвердить</button
+						</div>
+						{#if smsProblem}
+							<p class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
+								{smsProblem}
+							</p>
+						{:else if smsEnabled}
+							<p class="text-sm text-muted">
+								Мы отправили SMS с кодом на +996 {phoneDigits.slice(-9)}
+							</p>
+						{:else}
+							<p class="rounded-2xl bg-pastel-yellow p-3 text-xs text-pastel-yellow-ink">
+								Демо-режим: SMS не отправляется, подойдёт любой код из {CODE_LENGTH} цифр.
+							</p>
+						{/if}
+						<button
+							class="btn w-full btn-primary py-3"
+							disabled={code.length !== CODE_LENGTH || sending}
 						>
+							{sending ? 'Проверяем…' : 'Подтвердить'}
+						</button>
 						<button
 							type="button"
 							class="w-full text-sm font-semibold text-muted disabled:opacity-60"
@@ -328,5 +381,6 @@
 				</div>
 			</div>
 		</div>
+		<div id="recaptcha"></div>
 	</main>
 </div>
