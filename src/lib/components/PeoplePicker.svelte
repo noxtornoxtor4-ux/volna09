@@ -2,7 +2,6 @@
 	import { tr } from '#lib/i18n.ts';
 	import { Check, Search } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { people } from '#lib/data.ts';
 	import Avatar from './Avatar.svelte';
 
 	/** multiple — выбор нескольких участников (группа); иначе один собеседник */
@@ -22,9 +21,10 @@
 
 	const candidates = $derived.by(() => {
 		const q = query.trim().toLowerCase();
-		const ids = [...people.map((p) => p.id), ...app.allOrgs.map((o) => o.id)].filter(
-			(id) => id !== app.actorId && !exclude.includes(id)
-		);
+		const ids = [
+			...app.people.filter((p) => p.name).map((p) => p.id),
+			...app.allOrgs.map((o) => o.id)
+		].filter((id) => id !== app.actorId && !exclude.includes(id));
 		return ids.filter((id) => !q || app.author(id).name.toLowerCase().includes(q));
 	});
 

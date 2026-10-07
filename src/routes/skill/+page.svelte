@@ -21,14 +21,14 @@
 	import MediaViewer from '#lib/components/MediaViewer.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import SkillForm from '#lib/components/SkillForm.svelte';
-	import { ME, skillLevels } from '#lib/data.ts';
+	import { skillLevels } from '#lib/data.ts';
 	import { compressImage, takeFile, videoPoster } from '#lib/files.ts';
 	import { formatDate, plural } from '#lib/format.ts';
 	import { blobUrl, saveBlob } from '#lib/media-db.ts';
 	import type { Award, SkillMaterial } from '#lib/types.ts';
 
 	const skill = $derived(app.skill(page.url.searchParams.get('id') ?? ''));
-	const mine = $derived(!!skill && skill.personId === ME && !app.isOrg);
+	const mine = $derived(!!skill && skill.personId === app.me && !app.isOrg);
 	const materials = $derived(skill ? app.materialsOf(skill.id) : []);
 	const works = $derived(materials.filter((m) => m.kind !== 'text'));
 	const texts = $derived(materials.filter((m) => m.kind === 'text'));
@@ -54,7 +54,7 @@
 			app.addMaterial({
 				skillId: skill.id,
 				kind: 'photo',
-				src: await compressImage(file, 1600, 0.85)
+				src: await compressImage(file, 1400, 0.82)
 			});
 		}
 		busy = false;
@@ -129,7 +129,7 @@
 				<div class="min-w-0 flex-1">
 					<h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{skill.title}</h1>
 					<a
-						href={skill.personId === ME ? '/profile' : `/u?id=${skill.personId}`}
+						href={skill.personId === app.me ? '/profile' : `/u?id=${skill.personId}`}
 						class="text-sm text-muted hover:text-ink">{app.author(skill.personId).name}</a
 					>
 					<div class="mt-2 flex flex-wrap gap-1.5">

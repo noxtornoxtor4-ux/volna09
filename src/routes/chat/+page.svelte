@@ -5,7 +5,7 @@
 	import { ChevronLeft, Megaphone, Send } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
-	import { ME, toneClass } from '#lib/data.ts';
+	import { toneClass } from '#lib/data.ts';
 	import { formatDate, formatTime } from '#lib/format.ts';
 
 	const id = $derived(page.url.searchParams.get('id') ?? '');
@@ -13,7 +13,7 @@
 	const o = $derived(app.opportunity(opportunityId ?? ''));
 	const thread = $derived(app.thread(id));
 	/** Волонтёр видит только свои переписки, организация — по своим мероприятиям */
-	const allowed = $derived(!!o && (app.isOrg ? o.orgId === app.myOrgId : personId === ME));
+	const allowed = $derived(!!o && (app.isOrg ? o.orgId === app.myOrgId : personId === app.me));
 	const partnerId = $derived(app.isOrg ? personId : (o?.orgId ?? ''));
 
 	type Item =

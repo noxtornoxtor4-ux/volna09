@@ -2,7 +2,7 @@
 	import { tr } from '#lib/i18n.ts';
 	import { BadgeCheck, Heart, MessageCircle, Send, Share2, Star } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { ME, toneClass } from '#lib/data.ts';
+	import { toneClass } from '#lib/data.ts';
 	import { timeAgo } from '#lib/format.ts';
 	import type { Post } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
@@ -20,7 +20,7 @@
 	);
 	const org = $derived(post.orgId ? app.org(post.orgId) : undefined);
 	const profileHref = (id: string) =>
-		id === ME || id === app.myOrgId ? '/profile' : `/u?id=${id}`;
+		id === app.me || id === app.myOrgId ? '/profile' : `/u?id=${id}`;
 
 	function comment(e: SubmitEvent) {
 		e.preventDefault();
@@ -95,15 +95,17 @@
 		class="mt-3 flex items-center gap-1 border-t border-line pt-2 text-sm font-semibold text-muted"
 	>
 		<button
-			class="flex items-center gap-1.5 rounded-xl px-3 py-2 transition hover:bg-surface-2 {post.liked
+			class="flex items-center gap-1.5 rounded-xl px-3 py-2 transition hover:bg-surface-2 {app.isLiked(
+				post
+			)
 				? 'text-pastel-peach-ink'
 				: ''}"
 			onclick={() => app.toggleLike(post)}
-			aria-pressed={post.liked}
+			aria-pressed={app.isLiked(post)}
 			aria-label={tr('Нравится')}
 		>
-			<Heart class="size-5 transition {post.liked ? 'scale-110 fill-current' : ''}" />
-			{post.likes}
+			<Heart class="size-5 transition {app.isLiked(post) ? 'scale-110 fill-current' : ''}" />
+			{post.likedBy.length}
 		</button>
 		<button
 			class="flex items-center gap-1.5 rounded-xl px-3 py-2 transition hover:bg-surface-2 {showComments

@@ -12,7 +12,7 @@
 		Users
 	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { ME, categories, toneClass } from '#lib/data.ts';
+	import { categories, toneClass } from '#lib/data.ts';
 	import { formatDate, hoursLabel, relativeDay } from '#lib/format.ts';
 	import type { Opportunity } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
@@ -160,7 +160,7 @@
 				>
 			</button>
 			<a
-				href={preview ? undefined : `/chat?id=${app.threadId(o.id, ME)}`}
+				href={preview ? undefined : `/chat?id=${app.threadId(o.id, app.me)}`}
 				class="btn btn-ghost px-3"
 				aria-label={tr('Задать вопрос организатору')}
 				title={tr('Задать вопрос организатору')}

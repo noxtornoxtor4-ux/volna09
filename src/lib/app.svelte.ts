@@ -1,33 +1,11 @@
 import { tr } from './i18n.ts';
-import {
-	ME,
-	MY_ORG,
-	ONLINE,
-	day,
-	organizations,
-	people,
-	seedAlerts,
-	seedAnnouncements,
-	seedApplications,
-	seedAwards,
-	seedFollowers,
-	seedFollowing,
-	seedHours,
-	seedMemberships,
-	seedOpportunities,
-	seedOrgFollowers,
-	seedOrgProfile,
-	seedPosts,
-	seedProfile,
-	seedThreads,
-	seedConversations,
-	seedTopics
-} from './data.ts';
+import { ONLINE, builtinTopics, day } from './data.ts';
+import { firebaseAuth, firebaseEnabled } from './firebase.ts';
 import { formatDate, plural } from './format.ts';
 import { deleteBlob } from './media-db.ts';
+import { getOne, listen, push, type Doc, type Filter, type Remote } from './sync.ts';
 import type {
 	Accent,
-	CustomTheme,
 	Alert,
 	Announcement,
 	Answers,
@@ -35,12 +13,14 @@ import type {
 	ApplicationStatus,
 	Award,
 	Conversation,
+	CustomTheme,
 	DayPhoto,
 	HoursEntry,
 	Membership,
 	Opportunity,
 	OrgProfile,
 	Organization,
+	Person,
 	Post,
 	Privacy,
 	Profile,
@@ -48,111 +28,130 @@ import type {
 	Session,
 	Skill,
 	SkillMaterial,
+	ThemeMode,
 	Thread,
 	Tone,
-	ThemeMode,
 	Topic
 } from './types.ts';
 
-const STORAGE_KEY = 'volna:state:v2';
-const SCHEMA = 3;
+/** Настройки этого устройства. Общие данные живут в Firestore */
+const PREFS_KEY = 'volna:prefs:v3';
+/** Демо-данные прошлых версий — удаляем при первом запуске */
+const LEGACY_KEYS = ['volna:state:v2'];
 
-interface Snapshot {
+interface Prefs {
 	session: Session | null;
 	accent: Accent;
 	mode: ThemeMode;
 	/** Своя палитра интерфейса на этом устройстве; null — стандартная тема */
 	customTheme: CustomTheme | null;
-	profile: Profile;
-	orgProfile: OrgProfile;
-	topics: Topic[];
-	opportunities: Opportunity[];
-	applications: Application[];
-	reminders: string[];
-	hours: HoursEntry[];
-	posts: Post[];
-	awards: Award[];
-	skills: Skill[];
-	skillMaterials: SkillMaterial[];
-	memberships: Membership[];
-	threads: Thread[];
-	conversations: Conversation[];
-	announcements: Announcement[];
-	alerts: Alert[];
-	dayPhotos: DayPhoto[];
-	following: string[];
-	privacy: Privacy;
-	/** Организация, которой управляет аккаунт организации */
-	myOrgId: string;
 	/** Город, по которому фильтруется лента возможностей; all — все города */
 	viewCity: string;
-	/** Версия формата данных — для однократных миграций */
-	schema: number;
-	/** Организации, добавленные пользователями при регистрации */
-	customOrgs: Organization[];
+	/** Мероприятия из «Напомнить позже» */
+	reminders: string[];
 }
 
-function fresh(): Snapshot {
-	return structuredClone({
-		session: null,
-		accent: 'wave',
-		mode: 'light',
-		customTheme: null,
-		profile: seedProfile,
-		orgProfile: seedOrgProfile,
-		topics: seedTopics,
-		opportunities: seedOpportunities,
-		applications: seedApplications,
-		reminders: ['o7', 'o4'],
-		hours: seedHours,
-		posts: seedPosts,
-		awards: seedAwards,
-		skills: [],
-		skillMaterials: [],
-		memberships: seedMemberships,
-		threads: seedThreads,
-		conversations: seedConversations,
-		announcements: seedAnnouncements,
-		alerts: seedAlerts,
-		dayPhotos: [],
-		following: seedFollowing,
-		privacy: { publicProfile: true, showHours: true, searchable: true, messages: 'all' },
-		myOrgId: MY_ORG,
-		customOrgs: [],
-		viewCity: seedProfile.city,
-		schema: SCHEMA
-	});
-}
+const defaultPrefs = (): Prefs => ({
+	session: null,
+	accent: 'wave',
+	mode: 'light',
+	customTheme: null,
+	viewCity: 'all',
+	reminders: []
+});
 
-function load(): Snapshot {
+function loadPrefs(): Prefs {
 	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		return raw ? migrate({ ...fresh(), ...JSON.parse(raw) }) : fresh();
+		for (const key of LEGACY_KEYS) localStorage.removeItem(key);
+		const raw = localStorage.getItem(PREFS_KEY);
+		return raw ? { ...defaultPrefs(), ...JSON.parse(raw) } : defaultPrefs();
 	} catch {
-		return fresh();
+		return defaultPrefs();
 	}
 }
 
-/** Дополняет данные, сохранённые старыми версиями приложения */
-function migrate(s: Snapshot): Snapshot {
-	if ((s.schema ?? 0) < 3) {
-		// Витрина демо-организации (баннер, анонсы, ссылки) появилась в версии 3
-		if (s.myOrgId === MY_ORG) s.orgProfile = { ...seedOrgProfile, ...s.orgProfile };
-		s.schema = 3;
-	}
-	const seeds = new Map(seedOpportunities.map((o) => [o.id, o]));
-	// Раньше у мероприятий не было города — без него они пропали бы из ленты
-	for (const o of s.opportunities) o.city ??= seeds.get(o.id)?.city ?? seedProfile.city;
-	// Новые демо-мероприятия появляются и у тех, кто уже открывал приложение
-	const known = new Set(s.opportunities.map((o) => o.id));
-	for (const seed of seedOpportunities) {
-		if (!known.has(seed.id)) s.opportunities.push(structuredClone(seed));
-	}
-	return s;
-}
+/** Синхронизируемые коллекции: поле хранилища → коллекция Firestore */
+const COLLECTIONS = {
+	people: 'people',
+	orgs: 'orgs',
+	customTopics: 'topics',
+	opportunities: 'opportunities',
+	applications: 'applications',
+	hours: 'hours',
+	posts: 'posts',
+	awards: 'awards',
+	skills: 'skills',
+	skillMaterials: 'skillMaterials',
+	threads: 'threads',
+	conversations: 'conversations',
+	announcements: 'announcements',
+	alerts: 'alerts',
+	dayPhotos: 'dayPhotos'
+} as const;
 
-const uid = () => crypto.randomUUID().slice(0, 8);
+type Field = keyof typeof COLLECTIONS;
+const FIELDS = Object.keys(COLLECTIONS) as Field[];
+
+/** Личные коллекции загружаются только для своих аккаунтов (волонтёр и его организация) */
+const SCOPED: Partial<Record<Field, (ids: string[]) => Filter>> = {
+	alerts: (ids) => ({ field: 'to', op: 'in', value: ids }),
+	conversations: (ids) => ({ field: 'members', op: 'array-contains-any', value: ids }),
+	threads: (ids) => ({ field: 'members', op: 'array-contains-any', value: ids }),
+	dayPhotos: (ids) => ({ field: 'ownerId', op: 'in', value: ids })
+};
+const SCOPED_FIELDS = Object.keys(SCOPED) as Field[];
+
+const byNewest =
+	<T>(key: (item: T) => string) =>
+	(a: T, b: T) =>
+		key(b).localeCompare(key(a));
+
+const ORDER: Partial<Record<Field, (a: never, b: never) => number>> = {
+	posts: byNewest<Post>((p) => p.createdAt),
+	alerts: byNewest<Alert>((a) => a.at),
+	awards: byNewest<Award>((a) => a.date)
+};
+
+const uid = () => crypto.randomUUID().replace(/-/g, '').slice(0, 16);
 const now = () => new Date().toISOString();
+const TONES: Tone[] = ['blue', 'yellow', 'green', 'lilac', 'peach'];
+
+/** Поля, которые меняет форма профиля (подписки и организация не затрагиваются) */
+const LOOK_KEYS = [
+	'avatar',
+	'avatarEmoji',
+	'cover',
+	'coverPreset',
+	'coverVideoId',
+	'tint'
+] as const;
+const PROFILE_KEYS = [...LOOK_KEYS, 'name', 'age', 'city', 'bio', 'interests', 'tone'] as const;
+const ORG_KEYS = [
+	...LOOK_KEYS,
+	'name',
+	'city',
+	'about',
+	'tone',
+	'website',
+	'telegram',
+	'banner',
+	'announcements'
+] as const;
+
+/** Копирует только перечисленные поля; отсутствующие удаляются */
+function assign<T extends object>(target: T, source: object, keys: readonly string[]) {
+	for (const key of keys)
+		(target as Record<string, unknown>)[key] = (source as Record<string, unknown>)[key];
+}
+
+const blankProfile = (): Profile => ({
+	name: '',
+	age: 0,
+	city: '',
+	bio: '',
+	interests: [],
+	tone: 'blue'
+});
 
 export interface Author {
 	name: string;
@@ -164,115 +163,184 @@ export interface Author {
 	verified?: boolean;
 }
 
+/** Данные регистрации: имя волонтёра и организация куратора */
+export interface SignUp {
+	role: Role;
+	name?: string;
+	city?: string;
+	/** Существующая организация или данные новой */
+	orgId?: string;
+	newOrg?: Pick<Organization, 'name' | 'city' | 'about'>;
+}
+
 class AppState {
+	// ───────── Настройки устройства ─────────
 	session = $state<Session | null>(null);
 	accent = $state<Accent>('wave');
 	mode = $state<ThemeMode>('light');
 	customTheme = $state<CustomTheme | null>(null);
 	/** Тёмная ли тема в системе — для режима «Системная» */
 	systemDark = $state(false);
-	profile = $state<Profile>(seedProfile);
-	orgProfile = $state<OrgProfile>(seedOrgProfile);
-	topics = $state<Topic[]>([]);
+	viewCity = $state('all');
+	reminders = $state<string[]>([]);
+
+	// ───────── Общие данные (Firestore) ─────────
+	people = $state<Person[]>([]);
+	orgs = $state<Organization[]>([]);
+	customTopics = $state<Topic[]>([]);
 	opportunities = $state<Opportunity[]>([]);
 	applications = $state<Application[]>([]);
-	reminders = $state<string[]>([]);
 	hours = $state<HoursEntry[]>([]);
 	posts = $state<Post[]>([]);
 	awards = $state<Award[]>([]);
 	skills = $state<Skill[]>([]);
 	skillMaterials = $state<SkillMaterial[]>([]);
-	memberships = $state<Membership[]>([]);
 	threads = $state<Thread[]>([]);
 	conversations = $state<Conversation[]>([]);
 	announcements = $state<Announcement[]>([]);
 	alerts = $state<Alert[]>([]);
 	dayPhotos = $state<DayPhoto[]>([]);
-	following = $state<string[]>([]);
-	privacy = $state<Privacy>({
-		publicProfile: true,
-		showHours: true,
-		searchable: true,
-		messages: 'all'
-	});
-	myOrgId = $state<string>(MY_ORG);
-	viewCity = $state<string>(seedProfile.city);
-	customOrgs = $state<Organization[]>([]);
+
+	// ───────── Состояние подключения ─────────
+	/** id пользователя Firebase */
+	uid = $state<string | null>(null);
+	/** Firebase сообщил, вошёл ли пользователь — до этого не перенаправляем на вход */
+	ready = $state(!firebaseEnabled);
+	/** Сервер недоступен: данные сохраняются на устройстве и уйдут при подключении */
+	offline = $state(false);
+
 	toast = $state<{ id: number; text: string } | null>(null);
 	/** Мероприятие, анкету на которое сейчас заполняет волонтёр */
 	applyingId = $state<string | null>(null);
 
+	#remote = Object.fromEntries(FIELDS.map((f) => [f, new Map()])) as Record<Field, Remote>;
+	#unsubscribe = new Map<Field, () => void>();
+	#scope = '';
+
 	constructor() {
-		this.#apply(load());
+		const prefs = loadPrefs();
+		this.session = prefs.session;
+		this.accent = prefs.accent;
+		this.mode = prefs.mode;
+		this.customTheme = prefs.customTheme;
+		this.viewCity = prefs.viewCity;
+		this.reminders = prefs.reminders;
+		if (firebaseEnabled && typeof window !== 'undefined') this.#watchAuth();
 	}
 
-	#apply(s: Snapshot) {
-		this.session = s.session;
-		this.accent = s.accent;
-		this.mode = s.mode;
-		this.customTheme = s.customTheme;
-		this.profile = s.profile;
-		this.orgProfile = s.orgProfile;
-		this.topics = s.topics;
-		this.opportunities = s.opportunities;
-		this.applications = s.applications;
-		this.reminders = s.reminders;
-		this.hours = s.hours;
-		this.posts = s.posts;
-		this.awards = s.awards;
-		this.skills = s.skills;
-		this.skillMaterials = s.skillMaterials;
-		this.memberships = s.memberships;
-		this.threads = s.threads;
-		this.conversations = s.conversations;
-		this.announcements = s.announcements;
-		this.alerts = s.alerts;
-		this.dayPhotos = s.dayPhotos;
-		this.following = s.following;
-		this.privacy = s.privacy;
-		this.myOrgId = s.myOrgId;
-		this.viewCity = s.viewCity;
-		this.customOrgs = s.customOrgs;
+	// ───────── Подключение к серверу ─────────
+
+	async #watchAuth() {
+		try {
+			const [auth, { onAuthStateChanged }] = await Promise.all([
+				firebaseAuth(),
+				import('firebase/auth')
+			]);
+			onAuthStateChanged(auth, (user) => {
+				this.uid = user?.uid ?? null;
+				if (user) {
+					this.session ??= {
+						method: user.phoneNumber ? 'phone' : 'email',
+						contact: user.phoneNumber ?? user.email ?? '',
+						role: 'volunteer'
+					};
+					if (!this.#unsubscribe.size) this.#start();
+				} else {
+					this.session = null;
+					this.#stop(FIELDS);
+				}
+				this.ready = true;
+				this.#savePrefs();
+			});
+		} catch {
+			this.ready = true;
+			this.offline = true;
+		}
 	}
 
-	#save() {
-		const snapshot: Snapshot = $state.snapshot({
+	/** Свои аккаунты: волонтёр и организация, которую он ведёт */
+	get #ids() {
+		return [this.uid, this.myOrgId].filter(Boolean) as string[];
+	}
+
+	#start() {
+		this.#stop(FIELDS);
+		this.#scope = this.#ids.join();
+		for (const field of FIELDS) this.#listen(field);
+	}
+
+	#listen(field: Field) {
+		const scoped = SCOPED[field];
+		const filter = scoped ? scoped(this.#ids) : null;
+		const ready = listen<Doc>(
+			COLLECTIONS[field],
+			filter,
+			this.#remote[field],
+			(docs) => {
+				const order = ORDER[field];
+				(this as unknown as Record<Field, Doc[]>)[field] = order
+					? docs.sort(order as (a: Doc, b: Doc) => number)
+					: docs;
+				this.offline = false;
+				// Появилась или сменилась своя организация — переподписываем личные коллекции
+				if (field === 'people' && this.#ids.join() !== this.#scope) this.#rescope();
+			},
+			(error) => {
+				console.warn(`sync: ${field}`, error);
+				this.offline = true;
+			}
+		);
+		// Отписка может понадобиться раньше, чем подписка успеет установиться
+		this.#unsubscribe.set(field, () => ready.then((stop) => stop()).catch(() => {}));
+	}
+
+	#rescope() {
+		this.#scope = this.#ids.join();
+		this.#stop(SCOPED_FIELDS);
+		for (const field of SCOPED_FIELDS) this.#listen(field);
+	}
+
+	#stop(fields: Field[]) {
+		for (const field of fields) {
+			this.#unsubscribe.get(field)?.();
+			this.#unsubscribe.delete(field);
+			this.#remote[field].clear();
+			(this as unknown as Record<Field, Doc[]>)[field] = [];
+		}
+	}
+
+	#savePrefs() {
+		const prefs: Prefs = $state.snapshot({
 			session: this.session,
 			accent: this.accent,
 			mode: this.mode,
 			customTheme: this.customTheme,
-			profile: this.profile,
-			orgProfile: this.orgProfile,
-			topics: this.topics,
-			opportunities: this.opportunities,
-			applications: this.applications,
-			reminders: this.reminders,
-			hours: this.hours,
-			// Загруженные видео живут как object URL только до перезагрузки — не сохраняем их
-			posts: this.posts.map((p) =>
-				p.media?.src?.startsWith('blob:') ? { ...p, media: { ...p.media, src: undefined } } : p
-			),
-			awards: this.awards,
-			skills: this.skills,
-			skillMaterials: this.skillMaterials,
-			memberships: this.memberships,
-			threads: this.threads,
-			conversations: this.conversations,
-			announcements: this.announcements,
-			alerts: this.alerts,
-			dayPhotos: this.dayPhotos,
-			following: this.following,
-			privacy: this.privacy,
-			myOrgId: this.myOrgId,
 			viewCity: this.viewCity,
-			schema: SCHEMA,
-			customOrgs: this.customOrgs
+			reminders: this.reminders
 		});
 		try {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+			localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
 		} catch {
-			this.notify(tr('Не удалось сохранить: в браузере закончилось место'));
+			// хранилище недоступно — настройки продержатся до перезагрузки
 		}
+	}
+
+	/** Сохраняет настройки и отправляет изменения указанных коллекций на сервер */
+	#save(...fields: Field[]) {
+		this.#savePrefs();
+		if (!this.uid) return;
+		for (const field of fields) {
+			push(
+				COLLECTIONS[field],
+				$state.snapshot((this as unknown as Record<Field, Doc[]>)[field]) as Doc[],
+				this.#remote[field]
+			).catch((e) => console.warn(`sync: push ${field}`, e));
+		}
+	}
+
+	/** Актуальная версия объекта из коллекции (после обновления с сервера ссылка могла устареть) */
+	#fresh<T extends Doc>(list: T[], item: T) {
+		return list.find((x) => x.id === item.id);
 	}
 
 	notify(text: string) {
@@ -283,65 +351,136 @@ class AppState {
 		}, 2600);
 	}
 
-	#alert(to: Role, emoji: string, text: string, href?: string) {
+	/** Личное уведомление получателю: волонтёру или организации */
+	#alert(to: string, emoji: string, text: string, href?: string) {
+		if (!to || to === this.actorId) return;
 		this.alerts.unshift({ id: uid(), to, emoji, text, href, at: now(), read: false });
 	}
 
-	// ───────── Роль и аккаунты ─────────
+	// ───────── Аккаунт ─────────
 
 	get role(): Role {
 		return this.session?.role ?? 'volunteer';
 	}
 
 	get isOrg() {
-		return this.role === 'org';
+		return this.role === 'org' && !!this.myOrgId;
 	}
 
-	/** Идентификатор текущего автора: волонтёр или организация */
+	/** id текущего пользователя (волонтёра) */
+	get me() {
+		return this.uid ?? '';
+	}
+
+	/** Мой публичный профиль */
+	get myPerson() {
+		return this.people.find((p) => p.id === this.me);
+	}
+
+	get profile(): Profile {
+		return this.myPerson ?? blankProfile();
+	}
+
+	get myOrgId() {
+		return this.myPerson?.orgId ?? '';
+	}
+
+	/** Текущий автор: волонтёр или организация */
 	get actorId() {
-		return this.isOrg ? this.myOrgId : ME;
+		return this.isOrg ? this.myOrgId : this.me;
 	}
 
-	login(session: Session, name?: string) {
-		this.session = session;
-		if (name && session.role === 'volunteer') this.profile.name = name;
-		this.#save();
+	get privacy(): Privacy {
+		return (
+			this.myPerson?.privacy ?? {
+				publicProfile: true,
+				showHours: true,
+				searchable: true,
+				messages: 'all'
+			}
+		);
 	}
 
-	/** Все организации платформы: справочник и добавленные пользователями */
+	/**
+	 * Завершает вход: Firebase уже подтвердил пользователя. При первом входе создаёт
+	 * профиль, а для куратора — организацию или привязку к существующей.
+	 */
+	async completeSignIn(session: Omit<Session, 'role'>, data: SignUp) {
+		const auth = await firebaseAuth();
+		const id = auth.currentUser?.uid;
+		if (!id) throw new Error('auth/no-current-user');
+		this.uid = id;
+		let person = this.people.find((p) => p.id === id);
+		if (!person) {
+			try {
+				person = await getOne<Person>('people', id);
+			} catch {
+				person = undefined;
+			}
+		}
+		person ??= {
+			...blankProfile(),
+			id,
+			name: data.name?.trim() || data.newOrg?.name || session.contact,
+			city: data.city ?? data.newOrg?.city ?? '',
+			tone: TONES[Math.floor(Math.random() * TONES.length)],
+			following: [],
+			createdAt: now()
+		};
+		if (data.role === 'org') {
+			const orgId = data.newOrg ? this.#createOrg(data.newOrg, id) : data.orgId;
+			if (orgId) {
+				person = { ...person, orgId };
+				const org = this.orgs.find((o) => o.id === orgId);
+				if (org && !org.ownerIds.includes(id)) org.ownerIds = [...org.ownerIds, id];
+			}
+		}
+		const index = this.people.findIndex((p) => p.id === id);
+		if (index === -1) this.people.push(person);
+		else this.people[index] = person;
+		this.session = { ...session, role: data.role === 'org' && person.orgId ? 'org' : 'volunteer' };
+		if (person.city) this.viewCity = person.city;
+		this.#save('people', 'orgs');
+		this.#rescope();
+	}
+
+	/** Все организации платформы */
 	get allOrgs(): Organization[] {
-		return [...organizations, ...this.customOrgs];
+		return this.orgs;
 	}
 
-	/** Аккаунт организации начинает управлять выбранной организацией */
-	chooseOrg(orgId: string) {
-		const org = this.allOrgs.find((o) => o.id === orgId);
-		if (!org) return;
-		this.myOrgId = org.id;
-		this.orgProfile = { name: org.name, city: org.city, about: org.about };
-		this.#save();
-	}
-
-	/** Новая организация, которой ещё нет на платформе. Проверку проходит позже */
-	createOrg(data: Pick<Organization, 'name' | 'city' | 'about'>) {
-		const tones: Tone[] = ['blue', 'yellow', 'green', 'lilac', 'peach'];
+	#createOrg(data: Pick<Organization, 'name' | 'city' | 'about'>, ownerId: string) {
 		const org: Organization = {
 			...data,
 			id: `org-${uid()}`,
-			tone: tones[this.customOrgs.length % tones.length],
+			tone: TONES[this.orgs.length % TONES.length],
 			emoji: '🏢',
 			verified: false,
-			followers: 0
+			ownerIds: [ownerId],
+			createdAt: now()
 		};
-		this.customOrgs.push(org);
-		this.#save();
+		this.orgs.push(org);
 		return org.id;
+	}
+
+	/** Добавить аккаунт организации к уже вошедшему волонтёру */
+	addOrgAccount(data: { orgId?: string; newOrg?: Pick<Organization, 'name' | 'city' | 'about'> }) {
+		const me = this.myPerson;
+		if (!me) return;
+		const orgId = data.newOrg ? this.#createOrg(data.newOrg, me.id) : data.orgId;
+		if (!orgId) return;
+		const org = this.orgs.find((o) => o.id === orgId);
+		if (org && !org.ownerIds.includes(me.id)) org.ownerIds = [...org.ownerIds, me.id];
+		me.orgId = orgId;
+		this.#save('people', 'orgs');
+		this.#rescope();
+		this.switchRole('org');
 	}
 
 	switchRole(role: Role) {
 		if (!this.session) return;
 		this.session.role = role;
-		this.#save();
+		this.#savePrefs();
 		this.notify(
 			role === 'org'
 				? tr('Вы вошли как {0}', this.orgProfile.name)
@@ -349,26 +488,33 @@ class AppState {
 		);
 	}
 
-	logout() {
+	async logout() {
 		this.session = null;
-		this.#save();
+		this.#savePrefs();
+		if (!firebaseEnabled) return;
+		try {
+			const [auth, { signOut }] = await Promise.all([firebaseAuth(), import('firebase/auth')]);
+			await signOut(auth);
+		} catch {
+			// без сети выход завершится при следующем подключении
+		}
 	}
 
 	updateContact(contact: string) {
 		if (!this.session) return;
 		this.session.contact = contact;
-		this.#save();
+		this.#savePrefs();
 		this.notify(tr('Учётная запись обновлена'));
 	}
 
 	setAccent(accent: Accent) {
 		this.accent = accent;
-		this.#save();
+		this.#savePrefs();
 	}
 
 	setMode(mode: ThemeMode) {
 		this.mode = mode;
-		this.#save();
+		this.#savePrefs();
 	}
 
 	/** Итоговая тема с учётом режима «Системная» */
@@ -379,88 +525,90 @@ class AppState {
 	/** Своя палитра применяется сразу на всех экранах и хранится на устройстве */
 	setCustomTheme(theme: CustomTheme | null) {
 		this.customTheme = theme;
-		this.#save();
+		this.#savePrefs();
 	}
 
 	setPrivacy(privacy: Privacy) {
-		this.privacy = privacy;
-		this.#save();
+		const me = this.myPerson;
+		if (!me) return;
+		me.privacy = privacy;
+		this.#save('people');
 	}
 
 	updateProfile(profile: Profile) {
+		const me = this.myPerson;
+		if (!me) return;
 		// Сменили город в профиле — лента сразу показывает возможности этого города
-		if (profile.city !== this.profile.city) this.viewCity = profile.city;
-		this.profile = profile;
-		this.#save();
+		if (profile.city && profile.city !== me.city) this.viewCity = profile.city;
+		assign(me, profile, PROFILE_KEYS);
+		this.#save('people');
 		this.notify(tr('Профиль сохранён'));
 	}
 
-	updateOrgProfile(profile: OrgProfile) {
-		this.orgProfile = profile;
-		this.#save();
-		this.notify(tr('Профиль организации сохранён'));
+	get myOrg(): Organization {
+		return (
+			this.org(this.myOrgId) ?? {
+				id: '',
+				name: '',
+				city: '',
+				about: '',
+				tone: 'blue',
+				emoji: '🏢',
+				verified: false,
+				ownerIds: [],
+				createdAt: ''
+			}
+		);
 	}
 
-	resetDemo() {
-		const { session, myOrgId, customOrgs, orgProfile } = this;
-		// Аккаунт и выбранная организация сохраняются, сбрасываются только демо-данные
-		this.#apply({
-			...fresh(),
-			session,
-			myOrgId,
-			customOrgs,
-			orgProfile: $state.snapshot(orgProfile)
-		});
-		this.#save();
-		this.notify(tr('Демо-данные восстановлены'));
+	get orgProfile(): OrgProfile {
+		return this.myOrg;
+	}
+
+	updateOrgProfile(profile: OrgProfile) {
+		const org = this.orgs.find((o) => o.id === this.myOrgId);
+		if (!org) return;
+		assign(org, { ...profile, tone: profile.tone ?? org.tone }, ORG_KEYS);
+		this.#save('orgs');
+		this.notify(tr('Профиль организации сохранён'));
 	}
 
 	// ───────── Справочники ─────────
 
 	org(id: string) {
-		const org = this.allOrgs.find((o) => o.id === id);
-		if (!org || id !== this.myOrgId) return org;
-		return {
-			...org,
-			name: this.orgProfile.name,
-			city: this.orgProfile.city,
-			about: this.orgProfile.about,
-			tone: this.orgProfile.tone ?? org.tone
-		};
+		return this.orgs.find((o) => o.id === id);
 	}
 
 	person(id: string) {
-		if (id === ME) {
-			return { id: ME, ...this.profile, followers: seedFollowers.length };
-		}
-		return people.find((p) => p.id === id);
+		return this.people.find((p) => p.id === id);
 	}
 
-	/** Автор поста, комментария или сообщения: я, другой волонтёр или организация */
+	/** Автор поста, комментария или сообщения: волонтёр или организация */
 	author(id: string): Author {
-		if (id === ME) {
-			return {
-				name: this.profile.name,
-				tone: this.profile.tone,
-				avatar: this.profile.avatar,
-				avatarEmoji: this.profile.avatarEmoji,
-				isOrg: false
-			};
-		}
 		const org = this.org(id);
 		if (org) {
 			return {
 				name: org.name,
 				tone: org.tone,
 				emoji: org.emoji,
-				avatar: id === this.myOrgId ? this.orgProfile.avatar : undefined,
-				avatarEmoji: id === this.myOrgId ? this.orgProfile.avatarEmoji : undefined,
+				avatar: org.avatar,
+				avatarEmoji: org.avatarEmoji,
 				isOrg: true,
 				verified: org.verified
 			};
 		}
-		const person = people.find((p) => p.id === id);
-		return { name: person?.name ?? tr('Волонтёр'), tone: person?.tone ?? 'blue', isOrg: false };
+		const person = this.person(id);
+		return {
+			name: person?.name || tr('Пользователь'),
+			tone: person?.tone ?? 'blue',
+			avatar: person?.avatar,
+			avatarEmoji: person?.avatarEmoji,
+			isOrg: false
+		};
+	}
+
+	get topics(): Topic[] {
+		return [...builtinTopics, ...this.customTopics];
 	}
 
 	topic(id: string) {
@@ -469,8 +617,8 @@ class AppState {
 
 	addTopic(topic: Omit<Topic, 'id' | 'custom'>) {
 		const id = `t-${uid()}`;
-		this.topics.push({ ...topic, id, custom: true });
-		this.#save();
+		this.customTopics.push({ ...topic, id, custom: true });
+		this.#save('customTopics');
 		this.notify(tr('Тема создана и видна всем'));
 		return id;
 	}
@@ -502,7 +650,7 @@ class AppState {
 
 	setViewCity(city: string) {
 		this.viewCity = city;
-		this.#save();
+		this.#savePrefs();
 	}
 
 	byTopic(topicId: string) {
@@ -522,7 +670,9 @@ class AppState {
 	// ───────── Заявки и анкеты ─────────
 
 	myApplication(opportunityId: string) {
-		return this.applications.find((a) => a.opportunityId === opportunityId && a.personId === ME);
+		return this.applications.find(
+			(a) => a.opportunityId === opportunityId && a.personId === this.me
+		);
 	}
 
 	taken(opportunityId: string) {
@@ -539,24 +689,22 @@ class AppState {
 
 	apply(opportunityId: string, answers: Answers) {
 		const o = this.opportunity(opportunityId);
-		if (!o || this.myApplication(opportunityId)) return;
+		if (!o || !this.me || this.myApplication(opportunityId)) return;
 		this.applications.push({
 			id: uid(),
 			opportunityId,
-			personId: ME,
+			personId: this.me,
 			status: 'pending',
 			createdAt: now(),
 			answers
 		});
-		if (o.orgId === this.myOrgId) {
-			this.#alert(
-				'org',
-				'📝',
-				tr('{0} подала заявку на «{1}»', this.profile.name, o.title),
-				'/cabinet?folder=applications'
-			);
-		}
-		this.#save();
+		this.#alert(
+			o.orgId,
+			'📝',
+			tr('{0} подала заявку на «{1}»', this.profile.name, o.title),
+			'/cabinet?folder=applications'
+		);
+		this.#save('applications', 'alerts');
 		this.notify(tr('Анкета отправлена организатору'));
 	}
 
@@ -580,10 +728,10 @@ class AppState {
 			this.reminders.push(opportunityId);
 			this.notify(tr('Напомним за день до дедлайна 🔔'));
 		}
-		this.#save();
+		this.#savePrefs();
 	}
 
-	// ───────── Чаты и уведомления ─────────
+	// ───────── Вопросы по мероприятиям и уведомления ─────────
 
 	threadId(opportunityId: string, personId: string) {
 		return `${opportunityId}__${personId}`;
@@ -605,27 +753,32 @@ class AppState {
 	}
 
 	sendMessage(opportunityId: string, personId: string, text: string) {
+		const o = this.opportunity(opportunityId);
+		if (!o) return;
 		const id = this.threadId(opportunityId, personId);
 		let thread = this.thread(id);
 		if (!thread) {
-			this.threads.push({ id, opportunityId, personId, messages: [] });
+			this.threads.push({
+				id,
+				opportunityId,
+				personId,
+				members: [personId, o.orgId],
+				messages: []
+			});
 			thread = this.thread(id)!;
 		}
-		const from = this.isOrg ? this.myOrgId : ME;
-		thread.messages.push({ id: uid(), from, text, at: now() });
-		const o = this.opportunity(opportunityId);
-		if (o && !this.isOrg && o.orgId === this.myOrgId) {
-			this.#alert('org', '💬', tr('Новый вопрос по «{0}»', o.title), `/chat?id=${id}`);
-		}
-		if (o && this.isOrg && personId === ME) {
+		thread.messages.push({ id: uid(), from: this.actorId, text, at: now() });
+		if (this.isOrg) {
 			this.#alert(
-				'volunteer',
+				personId,
 				'💬',
 				tr('{0} ответил на ваш вопрос', this.orgProfile.name),
 				`/chat?id=${id}`
 			);
+		} else {
+			this.#alert(o.orgId, '💬', tr('Новый вопрос по «{0}»', o.title), `/chat?id=${id}`);
 		}
-		this.#save();
+		this.#save('threads', 'alerts');
 	}
 
 	announcementsFor(opportunityId: string) {
@@ -638,16 +791,18 @@ class AppState {
 		const o = this.opportunity(opportunityId);
 		if (!o) return;
 		this.announcements.push({ id: uid(), opportunityId, title, text, at: now() });
-		const mine = this.myApplication(opportunityId);
-		if (mine && mine.status !== 'declined') {
+		const recipients = this.applications.filter(
+			(a) => a.opportunityId === opportunityId && a.status !== 'declined'
+		);
+		for (const a of recipients) {
 			this.#alert(
-				'volunteer',
+				a.personId,
 				'📣',
 				`${this.org(o.orgId)?.name}: ${title}`,
 				`/notifications?event=${o.id}`
 			);
 		}
-		this.#save();
+		this.#save('announcements', 'alerts');
 		const count = this.participants(opportunityId).length;
 		this.notify(
 			tr(
@@ -659,7 +814,7 @@ class AppState {
 	}
 
 	get myAlerts() {
-		return this.alerts.filter((a) => a.to === this.role);
+		return this.alerts.filter((a) => a.to === this.actorId);
 	}
 
 	get unread() {
@@ -669,12 +824,12 @@ class AppState {
 	markAlertsRead() {
 		let changed = false;
 		for (const a of this.alerts) {
-			if (a.to === this.role && !a.read) {
+			if (a.to === this.actorId && !a.read) {
 				a.read = true;
 				changed = true;
 			}
 		}
-		if (changed) this.#save();
+		if (changed) this.#save('alerts');
 	}
 
 	/** Мероприятия во вкладке «Уведомления» */
@@ -683,7 +838,7 @@ class AppState {
 		if (this.isOrg) return this.orgOpportunities.filter((o) => o.date >= today).reverse();
 		const ids = new Set([
 			...this.applications
-				.filter((a) => a.personId === ME && a.status !== 'declined')
+				.filter((a) => a.personId === this.me && a.status !== 'declined')
 				.map((a) => a.opportunityId),
 			...this.reminders
 		]);
@@ -731,9 +886,10 @@ class AppState {
 	}
 
 	markConversationRead(conversation: Conversation) {
-		if (!this.unreadIn(conversation)) return;
-		conversation.lastRead[this.actorId] = now();
-		this.#save();
+		const c = this.#fresh(this.conversations, conversation);
+		if (!c || !this.unreadIn(c)) return;
+		c.lastRead[this.actorId] = now();
+		this.#save('conversations');
 	}
 
 	/** Открывает существующий личный диалог или создаёт новый */
@@ -743,7 +899,8 @@ class AppState {
 			(c) => c.kind === 'dm' && c.members.includes(me) && c.members.includes(personId)
 		);
 		if (existing) return existing.id;
-		const id = `dm-${uid()}`;
+		// Один id для пары собеседников — двое не создадут два разных диалога
+		const id = `dm-${[me, personId].sort().join('-')}`;
 		this.conversations.push({
 			id,
 			kind: 'dm',
@@ -753,7 +910,7 @@ class AppState {
 			messages: [],
 			lastRead: { [me]: now() }
 		});
-		this.#save();
+		this.#save('conversations');
 		return id;
 	}
 
@@ -776,34 +933,40 @@ class AppState {
 			messages: [],
 			lastRead: { [me]: now() }
 		});
-		this.#save();
+		this.#save('conversations');
 		this.notify(tr('Групповой чат создан'));
 		return id;
 	}
 
 	addMembers(conversation: Conversation, members: string[]) {
-		conversation.members = [...new Set([...conversation.members, ...members])];
-		this.#save();
+		const c = this.#fresh(this.conversations, conversation);
+		if (!c) return;
+		c.members = [...new Set([...c.members, ...members])];
+		this.#save('conversations');
 	}
 
 	leaveConversation(conversation: Conversation) {
-		conversation.members = conversation.members.filter((m) => m !== this.actorId);
-		this.#save();
+		const c = this.#fresh(this.conversations, conversation);
+		if (!c) return;
+		c.members = c.members.filter((m) => m !== this.actorId);
+		this.#save('conversations');
 		this.notify(tr('Вы вышли из чата'));
 	}
 
 	sendToConversation(conversation: Conversation, text: string) {
+		const c = this.#fresh(this.conversations, conversation);
+		if (!c) return;
 		const me = this.actorId;
-		conversation.messages.push({ id: uid(), from: me, text, at: now() });
-		conversation.lastRead[me] = now();
-		this.#save();
+		c.messages.push({ id: uid(), from: me, text, at: now() });
+		c.lastRead[me] = now();
+		this.#save('conversations');
 	}
 
 	/** Вопросы по мероприятиям, где участвует текущий аккаунт */
 	get myEventThreads() {
 		const mine = this.isOrg
 			? this.threads.filter((t) => this.opportunity(t.opportunityId)?.orgId === this.myOrgId)
-			: this.threads.filter((t) => t.personId === ME);
+			: this.threads.filter((t) => t.personId === this.me);
 		return mine
 			.filter((t) => t.messages.length)
 			.sort((a, b) => (b.messages.at(-1)?.at ?? '').localeCompare(a.messages.at(-1)?.at ?? ''));
@@ -816,13 +979,12 @@ class AppState {
 			...post,
 			id: uid(),
 			authorId: this.actorId,
-			likes: 0,
-			liked: false,
+			likedBy: [],
 			shares: 0,
 			comments: [],
 			createdAt: now()
 		});
-		this.#save();
+		this.#save('posts');
 		this.notify(post.kind === 'review' ? tr('Отзыв опубликован') : tr('Пост опубликован'));
 	}
 
@@ -830,23 +992,31 @@ class AppState {
 		return this.posts.filter((p) => p.authorId === authorId);
 	}
 
+	isLiked(post: Post) {
+		return post.likedBy.includes(this.actorId);
+	}
+
 	toggleLike(post: Post) {
-		post.liked = !post.liked;
-		post.likes += post.liked ? 1 : -1;
-		this.#save();
+		const p = this.#fresh(this.posts, post);
+		if (!p) return;
+		const me = this.actorId;
+		p.likedBy = p.likedBy.includes(me) ? p.likedBy.filter((id) => id !== me) : [...p.likedBy, me];
+		this.#save('posts');
 	}
 
 	/** Лайк по двойному тапу: только ставит отметку, снять её можно кнопкой */
 	likePost(post: Post) {
-		if (post.liked) return;
-		post.liked = true;
-		post.likes += 1;
-		this.#save();
+		const p = this.#fresh(this.posts, post);
+		if (!p || p.likedBy.includes(this.actorId)) return;
+		p.likedBy = [...p.likedBy, this.actorId];
+		this.#save('posts');
 	}
 
 	addComment(post: Post, text: string) {
-		post.comments.push({ id: uid(), authorId: this.actorId, text, createdAt: now() });
-		this.#save();
+		const p = this.#fresh(this.posts, post);
+		if (!p) return;
+		p.comments.push({ id: uid(), authorId: this.actorId, text, createdAt: now() });
+		this.#save('posts');
 	}
 
 	async share(post: Post) {
@@ -855,8 +1025,9 @@ class AppState {
 			if (navigator.share)
 				await navigator.share({ title: tr('Волна'), text: post.text.slice(0, 80), url });
 			else await navigator.clipboard.writeText(url);
-			post.shares += 1;
-			this.#save();
+			const p = this.#fresh(this.posts, post);
+			if (p) p.shares += 1;
+			this.#save('posts');
 			if (!navigator.share) this.notify(tr('Ссылка скопирована'));
 		} catch {
 			// пользователь закрыл системное окно «Поделиться»
@@ -865,26 +1036,33 @@ class AppState {
 
 	// ───────── Подписки ─────────
 
+	get following() {
+		return this.myPerson?.following ?? [];
+	}
+
 	isFollowing(id: string) {
 		return this.following.includes(id);
 	}
 
 	toggleFollow(id: string) {
-		this.following = this.isFollowing(id)
-			? this.following.filter((f) => f !== id)
-			: [...this.following, id];
-		this.#save();
+		const me = this.myPerson;
+		if (!me) return;
+		me.following = this.isFollowing(id)
+			? me.following.filter((f) => f !== id)
+			: [...me.following, id];
+		this.#save('people');
+	}
+
+	followersOf(id: string) {
+		return this.people.filter((p) => p.following?.includes(id)).map((p) => p.id);
 	}
 
 	followersCount(id: string) {
-		if (id === ME) return seedFollowers.length;
-		const base = this.org(id)?.followers ?? people.find((p) => p.id === id)?.followers ?? 0;
-		return base + (this.isFollowing(id) ? 1 : 0);
+		return this.followersOf(id).length;
 	}
 
 	get myFollowers() {
-		if (!this.isOrg) return seedFollowers;
-		return this.myOrgId === MY_ORG ? seedOrgFollowers : [];
+		return this.followersOf(this.actorId);
 	}
 
 	// ───────── Часы, проекты, награды ─────────
@@ -896,7 +1074,7 @@ class AppState {
 	}
 
 	get myHours() {
-		return this.hoursOf(ME);
+		return this.hoursOf(this.me);
 	}
 
 	verifiedHoursOf(personId: string) {
@@ -906,7 +1084,7 @@ class AppState {
 	}
 
 	get verifiedHours() {
-		return this.verifiedHoursOf(ME);
+		return this.verifiedHoursOf(this.me);
 	}
 
 	get pendingHours() {
@@ -916,16 +1094,14 @@ class AppState {
 	logHours(
 		entry: Pick<HoursEntry, 'orgId' | 'opportunityId' | 'title' | 'date' | 'hours' | 'note'>
 	) {
-		this.hours.push({ ...entry, id: uid(), personId: ME, status: 'pending' });
-		if (entry.orgId === this.myOrgId) {
-			this.#alert(
-				'org',
-				'⏱️',
-				tr('{0} просит подтвердить {1} ч', this.profile.name, entry.hours),
-				'/cabinet?folder=hours'
-			);
-		}
-		this.#save();
+		this.hours.push({ ...entry, id: uid(), personId: this.me, status: 'pending' });
+		this.#alert(
+			entry.orgId,
+			'⏱️',
+			tr('{0} просит подтвердить {1} ч', this.profile.name, entry.hours),
+			'/cabinet?folder=hours'
+		);
+		this.#save('hours', 'alerts');
 		this.notify(tr('Заявка на подтверждение часов отправлена'));
 	}
 
@@ -938,7 +1114,20 @@ class AppState {
 	}
 
 	get participation() {
-		return this.participationOf(ME);
+		return this.participationOf(this.me);
+	}
+
+	/** Организации, где волонтёр участвовал: роль и дата первой подтверждённой заявки */
+	get memberships(): Membership[] {
+		const rows: Record<string, Membership> = {};
+		for (const { application, opportunity } of [...this.participation].reverse()) {
+			rows[opportunity.orgId] ??= {
+				orgId: opportunity.orgId,
+				role: application.role ?? tr('Волонтёр'),
+				since: application.createdAt.slice(0, 10)
+			};
+		}
+		return Object.values(rows);
 	}
 
 	awardsOf(personId: string) {
@@ -948,7 +1137,7 @@ class AppState {
 	}
 
 	get myAwards() {
-		return this.awardsOf(ME);
+		return this.awardsOf(this.me);
 	}
 
 	get issuedAwards() {
@@ -978,9 +1167,9 @@ class AppState {
 			id: uid(),
 			type: 'certificate',
 			tier: 'silver',
-			personId: ME
+			personId: this.me
 		});
-		this.#save();
+		this.#save('awards');
 		this.notify(tr('Сертификат добавлен'));
 	}
 
@@ -992,6 +1181,36 @@ class AppState {
 		return this.awards
 			.filter((a) => a.skillIds?.includes(skillId))
 			.sort((a, b) => b.date.localeCompare(a.date));
+	}
+
+	removeAward(id: string) {
+		const fileId = this.awards.find((a) => a.id === id)?.fileId;
+		if (fileId) deleteBlob(fileId).catch(() => {});
+		this.awards = this.awards.filter((a) => a.id !== id);
+		this.#save('awards');
+	}
+
+	grantAward(
+		award: Pick<Award, 'type' | 'tier' | 'title' | 'description' | 'opportunityId'>,
+		personIds: string[]
+	) {
+		for (const personId of personIds) {
+			this.awards.unshift({ ...award, id: uid(), personId, orgId: this.myOrgId, date: day(0) });
+			this.#alert(
+				personId,
+				'🏆',
+				tr('{0} наградил вас: «{1}»', this.orgProfile.name, award.title),
+				'/awards'
+			);
+		}
+		this.#save('awards', 'alerts');
+		this.notify(
+			tr(
+				'Награда вручена {0} {1}',
+				personIds.length,
+				plural(personIds.length, 'волонтёру', 'волонтёрам', 'волонтёрам')
+			)
+		);
 	}
 
 	// ───────── Навыки ─────────
@@ -1011,8 +1230,8 @@ class AppState {
 
 	addSkill(data: Pick<Skill, 'emoji' | 'title' | 'description' | 'level' | 'featured'>) {
 		const id = `sk-${uid()}`;
-		this.skills.push({ ...data, id, personId: ME, createdAt: now() });
-		this.#save();
+		this.skills.push({ ...data, id, personId: this.me, createdAt: now() });
+		this.#save('skills');
 		this.notify(tr('Навык добавлен'));
 		return id;
 	}
@@ -1021,17 +1240,21 @@ class AppState {
 		const index = this.skills.findIndex((s) => s.id === skill.id);
 		if (index === -1) return;
 		this.skills[index] = skill;
-		this.#save();
+		this.#save('skills');
 		this.notify(tr('Навык сохранён'));
 	}
 
 	/** Удаляет навык вместе с его материалами; сертификаты остаются, но отвязываются */
 	removeSkill(id: string) {
+		for (const m of this.skillMaterials) {
+			if (m.skillId === id && m.videoId) deleteBlob(m.videoId).catch(() => {});
+		}
 		this.skills = this.skills.filter((s) => s.id !== id);
 		this.skillMaterials = this.skillMaterials.filter((m) => m.skillId !== id);
-		for (const a of this.awards)
+		for (const a of this.awards) {
 			if (a.skillIds?.includes(id)) a.skillIds = a.skillIds.filter((s) => s !== id);
-		this.#save();
+		}
+		this.#save('skills', 'skillMaterials', 'awards');
 	}
 
 	materialsOf(skillId: string) {
@@ -1043,8 +1266,8 @@ class AppState {
 	addMaterial(
 		material: Pick<SkillMaterial, 'skillId' | 'kind' | 'text' | 'src' | 'videoId' | 'poster'>
 	) {
-		this.skillMaterials.push({ ...material, id: uid(), personId: ME, createdAt: now() });
-		this.#save();
+		this.skillMaterials.push({ ...material, id: uid(), personId: this.me, createdAt: now() });
+		this.#save('skillMaterials');
 		this.notify(tr('Материал добавлен'));
 	}
 
@@ -1052,63 +1275,27 @@ class AppState {
 		const videoId = this.skillMaterials.find((m) => m.id === id)?.videoId;
 		if (videoId) deleteBlob(videoId).catch(() => {});
 		this.skillMaterials = this.skillMaterials.filter((m) => m.id !== id);
-		this.#save();
-	}
-
-	removeAward(id: string) {
-		const fileId = this.awards.find((a) => a.id === id)?.fileId;
-		if (fileId) deleteBlob(fileId).catch(() => {});
-		this.awards = this.awards.filter((a) => a.id !== id);
-		this.#save();
-	}
-
-	grantAward(
-		award: Pick<Award, 'type' | 'tier' | 'title' | 'description' | 'opportunityId'>,
-		personIds: string[]
-	) {
-		for (const personId of personIds) {
-			this.awards.unshift({ ...award, id: uid(), personId, orgId: this.myOrgId, date: day(0) });
-		}
-		if (personIds.includes(ME)) {
-			this.#alert(
-				'volunteer',
-				'🏆',
-				tr('{0} наградил вас: «{1}»', this.orgProfile.name, award.title),
-				'/awards'
-			);
-		}
-		this.#save();
-		this.notify(
-			tr(
-				'Награда вручена {0} {1}',
-				personIds.length,
-				plural(personIds.length, 'волонтёру', 'волонтёрам', 'волонтёрам')
-			)
-		);
+		this.#save('skillMaterials');
 	}
 
 	// ───────── Календарь ─────────
 
 	photosFor(date: string) {
-		return this.dayPhotos.filter((p) => p.date === date && p.owner === this.role);
+		return this.dayPhotos.filter((p) => p.date === date && p.ownerId === this.actorId);
 	}
 
 	addDayPhoto(date: string, src: string) {
-		this.dayPhotos.push({ id: uid(), owner: this.role, date, src });
-		this.#save();
+		this.dayPhotos.push({ id: uid(), ownerId: this.actorId, date, src });
+		this.#save('dayPhotos');
 		this.notify(tr('Фото добавлено в календарь'));
 	}
 
 	removeDayPhoto(id: string) {
 		this.dayPhotos = this.dayPhotos.filter((p) => p.id !== id);
-		this.#save();
+		this.#save('dayPhotos');
 	}
 
 	// ───────── Кабинет организации ─────────
-
-	get myOrg() {
-		return this.org(this.myOrgId)!;
-	}
 
 	get orgOpportunities() {
 		return this.opportunities
@@ -1136,27 +1323,15 @@ class AppState {
 			string,
 			{ personId: string; attended: number; upcoming: number; hours: number }
 		> = {};
+		const row = (personId: string) =>
+			(rows[personId] ??= { personId, attended: 0, upcoming: 0, hours: 0 });
 		for (const a of this.orgApplications.filter((a) => a.status === 'approved')) {
 			const o = this.opportunity(a.opportunityId)!;
-			const row = rows[a.personId] ?? {
-				personId: a.personId,
-				attended: 0,
-				upcoming: 0,
-				hours: 0
-			};
-			if (o.date < today) row.attended += 1;
-			else row.upcoming += 1;
-			rows[a.personId] = row;
+			if (o.date < today) row(a.personId).attended += 1;
+			else row(a.personId).upcoming += 1;
 		}
 		for (const h of this.orgHours.filter((h) => h.status === 'verified')) {
-			const row = rows[h.personId] ?? {
-				personId: h.personId,
-				attended: 0,
-				upcoming: 0,
-				hours: 0
-			};
-			row.hours += h.hours;
-			rows[h.personId] = row;
+			row(h.personId).hours += h.hours;
 		}
 		return Object.values(rows).sort((a, b) => b.attended - a.attended || b.hours - a.hours);
 	}
@@ -1164,7 +1339,7 @@ class AppState {
 	createOpportunity(data: Omit<Opportunity, 'id' | 'orgId'>) {
 		const id = uid();
 		this.opportunities.push({ ...data, id, orgId: this.myOrgId });
-		this.#save();
+		this.#save('opportunities');
 		this.notify(tr('Мероприятие опубликовано'));
 		return id;
 	}
@@ -1173,17 +1348,19 @@ class AppState {
 		const o = this.opportunity(opportunityId);
 		if (!o) return;
 		o.promotedUntil = day(days);
-		this.#save();
+		this.#save('opportunities');
 		this.notify(tr('«{0}» продвигается до {1}', o.title, formatDate(o.promotedUntil)));
 	}
 
 	decide(application: Application, status: ApplicationStatus) {
-		application.status = status;
-		if (status === 'approved') application.role ??= tr('Волонтёр');
-		const o = this.opportunity(application.opportunityId);
-		if (o && application.personId === ME && status !== 'pending') {
+		const a = this.#fresh(this.applications, application);
+		if (!a) return;
+		a.status = status;
+		if (status === 'approved') a.role ??= tr('Волонтёр');
+		const o = this.opportunity(a.opportunityId);
+		if (o && status !== 'pending') {
 			this.#alert(
-				'volunteer',
+				a.personId,
 				status === 'approved' ? '✅' : '😔',
 				status === 'approved'
 					? tr('Заявка на «{0}» подтверждена — день отмечен в календаре', o.title)
@@ -1191,7 +1368,7 @@ class AppState {
 				status === 'approved' ? '/calendar' : `/o?id=${o.id}`
 			);
 		}
-		this.#save();
+		this.#save('applications', 'alerts');
 		this.notify(
 			status === 'approved'
 				? tr('Участие подтверждено')
@@ -1216,14 +1393,13 @@ class AppState {
 			status: 'verified',
 			note: tr('Начислено куратором')
 		});
-		if (application.personId === ME)
-			this.#alert(
-				'volunteer',
-				'⏱️',
-				tr('Начислено {0} ч за «{1}»', o.hours, o.title),
-				'/portfolio?tab=hours'
-			);
-		this.#save();
+		this.#alert(
+			application.personId,
+			'⏱️',
+			tr('Начислено {0} ч за «{1}»', o.hours, o.title),
+			'/portfolio?tab=hours'
+		);
+		this.#save('hours', 'alerts');
 		this.notify(tr('Начислено {0} ч', o.hours));
 	}
 
@@ -1237,19 +1413,19 @@ class AppState {
 	}
 
 	verifyHours(entry: HoursEntry, ok: boolean) {
-		entry.status = ok ? 'verified' : 'rejected';
-		if (entry.personId === ME) {
-			this.#alert(
-				'volunteer',
-				ok ? '⏱️' : '😔',
-				ok
-					? tr('Подтверждено {0} ч: «{1}»', entry.hours, entry.title)
-					: tr('Часы за «{0}» не подтверждены', entry.title),
-				'/portfolio?tab=requests'
-			);
-		}
-		this.#save();
-		this.notify(ok ? tr('Подтверждено {0} ч', entry.hours) : tr('Часы отклонены'));
+		const h = this.#fresh(this.hours, entry);
+		if (!h) return;
+		h.status = ok ? 'verified' : 'rejected';
+		this.#alert(
+			h.personId,
+			ok ? '⏱️' : '😔',
+			ok
+				? tr('Подтверждено {0} ч: «{1}»', h.hours, h.title)
+				: tr('Часы за «{0}» не подтверждены', h.title),
+			'/portfolio?tab=requests'
+		);
+		this.#save('hours', 'alerts');
+		this.notify(ok ? tr('Подтверждено {0} ч', h.hours) : tr('Часы отклонены'));
 	}
 
 	// ───────── Архив и поиск ─────────
@@ -1262,12 +1438,19 @@ class AppState {
 
 	search(query: string) {
 		const q = query.trim().toLowerCase();
-		const match = (...fields: string[]) => !q || fields.some((f) => f.toLowerCase().includes(q));
+		const match = (...fields: (string | undefined)[]) =>
+			!q || fields.some((f) => f?.toLowerCase().includes(q));
 		return {
-			people: people.filter((p) => match(p.name, p.city, p.bio)),
-			orgs: this.allOrgs.map((o) => this.org(o.id)!).filter((o) => match(o.name, o.about, o.city)),
+			people: this.people.filter(
+				(p) =>
+					p.id !== this.me &&
+					!!p.name &&
+					p.privacy?.searchable !== false &&
+					match(p.name, p.city, p.bio)
+			),
+			orgs: this.orgs.filter((o) => match(o.name, o.about, o.city)),
 			opportunities: this.upcoming.filter((o) =>
-				match(o.title, o.description, o.place, this.org(o.orgId)?.name ?? '')
+				match(o.title, o.description, o.place, this.org(o.orgId)?.name)
 			)
 		};
 	}

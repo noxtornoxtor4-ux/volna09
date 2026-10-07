@@ -11,13 +11,12 @@
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
 	import SkillsBlock from '#lib/components/SkillsBlock.svelte';
-	import { ME } from '#lib/data.ts';
-	import { plural } from '#lib/format.ts';
+	import { personMeta } from '#lib/format.ts';
 
 	const id = $derived(page.url.searchParams.get('id') ?? '');
 	const org = $derived(app.org(id));
 	const person = $derived(org ? undefined : app.person(id));
-	const isSelf = $derived(id === ME || id === app.myOrgId);
+	const isSelf = $derived(id === app.me || id === app.myOrgId);
 	let tab = $state<'posts' | 'awards' | 'events'>('posts');
 </script>
 
@@ -54,7 +53,7 @@
 		name={org.name}
 		subtitle={tr('Организация · {0}', tr(org.city))}
 		bio={org.about}
-		look={org.id === app.myOrgId ? app.orgProfile : {}}
+		look={org}
 		tone={org.tone}
 		verified={org.verified}
 		stats={[
@@ -94,9 +93,9 @@
 	<ProfileHeader
 		id={person.id}
 		name={person.name}
-		subtitle="{person.age} {plural(person.age, 'год', 'года', 'лет')} · {tr(person.city)}"
+		subtitle={personMeta(person.age, person.city)}
 		bio={person.bio}
-		look={person.id === ME ? app.profile : {}}
+		look={person}
 		tone={person.tone}
 		stats={[
 			{ label: tr('подписчиков'), value: app.followersCount(person.id) },
@@ -109,8 +108,8 @@
 		]}
 		actions={follow}
 	/>
-	<SkillsBlock personId={person.id} editable={person.id === ME} />
-	<CertificatesBlock personId={person.id} editable={person.id === ME} />
+	<SkillsBlock personId={person.id} editable={person.id === app.me} />
+	<CertificatesBlock personId={person.id} editable={person.id === app.me} />
 	<div class="mt-5 mb-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-bold">
 		<button
 			class="rounded-xl py-2.5 {tab !== 'awards' ? 'bg-surface shadow-sm' : 'text-muted'}"

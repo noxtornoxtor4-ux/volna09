@@ -8,8 +8,7 @@
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
 	import CertificatesBlock from '#lib/components/CertificatesBlock.svelte';
 	import SkillsBlock from '#lib/components/SkillsBlock.svelte';
-	import { ME } from '#lib/data.ts';
-	import { plural } from '#lib/format.ts';
+	import { personMeta } from '#lib/format.ts';
 
 	const certificates = $derived(app.myAwards.filter((a) => a.type === 'certificate').length);
 	const issuedHours = $derived(
@@ -85,16 +84,14 @@
 	<PostGrid posts={app.postsBy(app.myOrgId)} />
 {:else}
 	<ProfileHeader
-		id={ME}
+		id={app.me}
 		name={app.profile.name}
-		subtitle="{app.profile.age} {plural(app.profile.age, 'год', 'года', 'лет')} · {tr(
-			app.profile.city
-		)}"
+		subtitle={personMeta(app.profile.age, app.profile.city)}
 		bio={app.profile.bio}
 		look={app.profile}
 		tone={app.profile.tone}
 		stats={[
-			{ label: tr('подписчиков'), value: app.followersCount(ME), href: '/profile/followers' },
+			{ label: tr('подписчиков'), value: app.followersCount(app.me), href: '/profile/followers' },
 			{ label: tr('часов'), value: app.verifiedHours, href: '/portfolio?tab=hours' },
 			{ label: tr('проектов'), value: app.participation.length, href: '/portfolio?tab=projects' },
 			{ label: tr('сертификатов'), value: certificates, href: '/awards' }
@@ -113,8 +110,8 @@
 		{/snippet}
 	</ProfileHeader>
 
-	<SkillsBlock personId={ME} editable />
-	<CertificatesBlock personId={ME} editable />
+	<SkillsBlock personId={app.me} editable />
+	<CertificatesBlock personId={app.me} editable />
 
 	<div class="mt-4 grid grid-cols-2 gap-3">
 		<a href="/portfolio" class="flex items-center gap-3 card p-4 transition hover:border-accent">
@@ -144,7 +141,7 @@
 			><Plus class="size-4" /> {tr('Фото или видео')}</button
 		>
 	</div>
-	<PostGrid posts={app.postsBy(ME)} />
+	<PostGrid posts={app.postsBy(app.me)} />
 {/if}
 
 <PostComposer bind:open={composing} />

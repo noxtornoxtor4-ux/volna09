@@ -68,3 +68,10 @@ export function timeAgo(iso: string) {
 export const plural = pluralForm;
 
 export const hoursLabel = (n: number) => `${n} ${plural(n, 'час', 'часа', 'часов')}`;
+
+/** «16 лет» или пусто, если возраст не указан */
+export const ageLabel = (n: number) => (n > 0 ? `${n} ${plural(n, 'год', 'года', 'лет')}` : '');
+
+/** Подпись под именем волонтёра: возраст и город, если они указаны */
+export const personMeta = (age: number, city: string) =>
+	[ageLabel(age), city ? tr(city) : ''].filter(Boolean).join(' · ');

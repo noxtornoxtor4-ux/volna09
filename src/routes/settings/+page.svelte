@@ -16,7 +16,6 @@
 		Palette,
 		Plus,
 		Smartphone,
-		RotateCcw,
 		Sun,
 		UserCog,
 		Users
@@ -26,7 +25,10 @@
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import ThemeEditor from '#lib/components/ThemeEditor.svelte';
-	import { ME, accents, toneClass } from '#lib/data.ts';
+	import Modal from '#lib/components/Modal.svelte';
+	import OrgPicker from '#lib/components/OrgPicker.svelte';
+	import { authError, changePassword } from '#lib/auth.ts';
+	import { accents, toneClass } from '#lib/data.ts';
 	import { formatDate } from '#lib/format.ts';
 	import type { Accent, Privacy, Role, ThemeMode } from '#lib/types.ts';
 
@@ -62,8 +64,45 @@
 	const section = $derived(page.url.searchParams.get('s') as Section | null);
 	const current = $derived(sections.find((s) => s.id === section));
 
-	let contact = $state(app.session?.contact ?? '');
 	let password = $state('');
+	let passwordBusy = $state(false);
+	let passwordProblem = $state('');
+	let addingOrg = $state(false);
+	let orgChoice = $state('');
+	let newOrg = $state({ name: '', city: '', about: '' });
+
+	async function savePassword(e: SubmitEvent) {
+		e.preventDefault();
+		passwordProblem = '';
+		passwordBusy = true;
+		try {
+			await changePassword(password);
+			password = '';
+			app.notify(tr('Пароль обновлён'));
+		} catch (error) {
+			passwordProblem = authError(error);
+		} finally {
+			passwordBusy = false;
+		}
+	}
+
+	function addOrg(e: SubmitEvent) {
+		e.preventDefault();
+		if (!orgChoice) return;
+		app.addOrgAccount(
+			orgChoice === 'new'
+				? {
+						newOrg: {
+							name: newOrg.name.trim(),
+							city: newOrg.city.trim(),
+							about: newOrg.about.trim()
+						}
+					}
+				: { orgId: orgChoice }
+		);
+		addingOrg = false;
+		goto('/cabinet');
+	}
 	let privacy = $state<Privacy>($state.snapshot(app.privacy));
 
 	const guide = $derived(
@@ -220,44 +259,37 @@
 			</ol>
 		{:else if section === 'account'}
 			<div class="space-y-4">
-				<form
-					class="space-y-3 card p-5"
-					onsubmit={(e) => {
-						e.preventDefault();
-						app.updateContact(contact.trim());
-					}}
-				>
+				<div class="card p-5">
 					<span class="label"
 						>{app.session?.method === 'phone' ? tr('Номер телефона') : 'Email'}</span
 					>
-					<input class="input" required bind:value={contact} />
-					<button class="btn btn-primary">{tr('Сохранить')}</button>
-				</form>
-				<form
-					class="space-y-3 card p-5"
-					onsubmit={(e) => {
-						e.preventDefault();
-						password = '';
-						app.notify(tr('Пароль обновлён (демо)'));
-					}}
-				>
-					<span class="label">{tr('Новый пароль')}</span>
-					<input
-						class="input"
-						type="password"
-						minlength="6"
-						required
-						autocomplete="new-password"
-						bind:value={password}
-					/>
-					<button class="btn btn-ghost" disabled={password.length < 6}
-						>{tr('Сменить пароль')}</button
-					>
-				</form>
+					<p class="font-semibold">{app.session?.contact}</p>
+					<p class="mt-1 text-xs text-muted">
+						{tr('Вход подтверждён через Firebase. Другие пользователи этот контакт не видят.')}
+					</p>
+				</div>
+				{#if app.session?.method === 'email'}
+					<form class="space-y-3 card p-5" onsubmit={savePassword}>
+						<span class="label">{tr('Новый пароль')}</span>
+						<input
+							class="input"
+							type="password"
+							minlength="6"
+							required
+							autocomplete="new-password"
+							bind:value={password}
+						/>
+						{#if passwordProblem}<p
+								class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink"
+							>
+								{passwordProblem}
+							</p>{/if}
+						<button class="btn btn-ghost" disabled={password.length < 6 || passwordBusy}
+							>{tr('Сменить пароль')}</button
+						>
+					</form>
+				{/if}
 				<div class="space-y-2 card p-5">
-					<button class="btn w-full btn-ghost" onclick={() => app.resetDemo()}
-						><RotateCcw class="size-4" /> {tr('Восстановить демо-данные')}</button
-					>
 					<button class="btn w-full btn-ghost text-pastel-peach-ink" onclick={logout}
 						><LogOut class="size-4" /> {tr('Выйти из аккаунта')}</button
 					>
@@ -268,7 +300,7 @@
 				{tr('Переключайтесь между личным аккаунтом и аккаунтом организации без повторного входа.')}
 			</p>
 			<ul class="space-y-3">
-				{#each [{ role: 'volunteer' as Role, id: ME, label: tr('Волонтёр') }, { role: 'org' as Role, id: app.myOrgId, label: tr('Организация') }] as acc (acc.role)}
+				{#each [{ role: 'volunteer' as Role, id: app.me, label: tr('Волонтёр') }, ...(app.myOrgId ? [{ role: 'org' as Role, id: app.myOrgId, label: tr('Организация') }] : [])] as acc (acc.role)}
 					{@const active = app.role === acc.role}
 					<li
 						class="flex items-center gap-3 card p-4 {active
@@ -293,9 +325,22 @@
 					</li>
 				{/each}
 			</ul>
-			<button class="mt-4 btn w-full btn-ghost" onclick={logout}
-				><Plus class="size-4" /> {tr('Добавить аккаунт')}</button
-			>
+			{#if !app.myOrgId}
+				<button class="mt-4 btn w-full btn-ghost" onclick={() => (addingOrg = true)}
+					><Plus class="size-4" /> {tr('Добавить аккаунт организации')}</button
+				>
+			{/if}
+			<Modal bind:open={addingOrg} title={tr('Аккаунт организации')}>
+				<form onsubmit={addOrg}>
+					<OrgPicker bind:selected={orgChoice} bind:draft={newOrg} />
+					<button
+						class="mt-4 btn w-full btn-primary"
+						disabled={!orgChoice ||
+							(orgChoice === 'new' && (newOrg.name.trim().length < 2 || !newOrg.city.trim()))}
+						>{tr('Готово')}</button
+					>
+				</form>
+			</Modal>
 		{:else if section === 'style'}
 			<section class="card p-5">
 				<span class="label">{tr('Акцентный цвет')}</span>

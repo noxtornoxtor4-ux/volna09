@@ -29,7 +29,7 @@
 		const add = (date: string, mark: Mark) => (result[date] ??= []).push(mark);
 		for (const e of events) add(e.o.date, e.status === 'approved' ? 'event' : 'pending');
 		if (!app.isOrg) for (const h of app.myHours) if (h.status === 'verified') add(h.date, 'done');
-		for (const p of app.dayPhotos.filter((p) => p.owner === app.role)) add(p.date, 'photo');
+		for (const p of app.dayPhotos.filter((p) => p.ownerId === app.actorId)) add(p.date, 'photo');
 		return result;
 	});
 

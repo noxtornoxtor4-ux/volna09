@@ -27,26 +27,25 @@ export interface Topic {
 	custom?: boolean;
 }
 
-export interface Organization {
+/** Организация на платформе. Страницу ведут её кураторы (ownerIds) */
+export interface Organization extends OrgProfile {
 	id: string;
-	name: string;
 	tone: Tone;
 	emoji: string;
 	verified: boolean;
-	city: string;
-	about: string;
-	followers: number;
+	ownerIds: string[];
+	createdAt: string;
 }
 
-export interface Person {
+/** Публичный профиль пользователя. Телефон и почта сюда не попадают */
+export interface Person extends Profile {
 	id: string;
-	name: string;
-	age: number;
-	city: string;
-	tone: Tone;
-	interests: string[];
-	bio: string;
-	followers: number;
+	/** На кого подписан: волонтёры и организации */
+	following: string[];
+	privacy?: Privacy;
+	/** Организация, которую ведёт этот пользователь */
+	orgId?: string;
+	createdAt: string;
 }
 
 export type QuestionType = 'text' | 'textarea' | 'choice' | 'multi';
@@ -154,8 +153,8 @@ export interface Post {
 	media?: Media;
 	opportunityId?: string;
 	orgId?: string;
-	likes: number;
-	liked: boolean;
+	/** Кто поставил «нравится» */
+	likedBy: string[];
 	shares: number;
 	comments: Comment[];
 	createdAt: string;
@@ -207,6 +206,8 @@ export interface Thread {
 	id: string;
 	opportunityId: string;
 	personId: string;
+	/** Волонтёр и организация — для загрузки только своих вопросов */
+	members: string[];
 	messages: Message[];
 }
 
@@ -222,7 +223,8 @@ export interface Announcement {
 /** Личное событие: смена статуса заявки, награда, новая заявка и т.п. */
 export interface Alert {
 	id: string;
-	to: Role;
+	/** Получатель: id волонтёра или организации */
+	to: string;
 	text: string;
 	at: string;
 	href?: string;
@@ -232,7 +234,8 @@ export interface Alert {
 
 export interface DayPhoto {
 	id: string;
-	owner: Role;
+	/** Чей календарь: id волонтёра или организации */
+	ownerId: string;
 	date: string;
 	src: string;
 }

@@ -4,12 +4,12 @@
 	import { ChevronLeft, ChevronRight, Plus } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import SkillForm from '#lib/components/SkillForm.svelte';
-	import { ME, skillLevels } from '#lib/data.ts';
+	import { skillLevels } from '#lib/data.ts';
 
-	const personId = $derived(page.url.searchParams.get('u') ?? ME);
-	const mine = $derived(personId === ME && !app.isOrg);
+	const personId = $derived(page.url.searchParams.get('u') ?? app.me);
+	const mine = $derived(personId === app.me && !app.isOrg);
 	const skills = $derived(app.skillsOf(personId));
-	const backHref = $derived(personId === ME ? '/profile' : `/u?id=${personId}`);
+	const backHref = $derived(personId === app.me ? '/profile' : `/u?id=${personId}`);
 
 	let adding = $state(page.url.searchParams.has('add'));
 </script>

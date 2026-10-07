@@ -42,7 +42,7 @@
 				<span
 					class="absolute inset-0 flex items-center justify-center gap-1 bg-black/40 text-sm font-bold text-white opacity-0 transition group-hover:opacity-100"
 				>
-					<Heart class="size-4 fill-white" />{post.likes}
+					<Heart class="size-4 fill-white" />{post.likedBy.length}
 				</span>
 			</button>
 		{/each}

@@ -22,7 +22,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import PromoteSheet from '#lib/components/PromoteSheet.svelte';
-	import { ME, categories, toneClass } from '#lib/data.ts';
+	import { categories, toneClass } from '#lib/data.ts';
 	import { formatDate, hoursLabel, relativeDay } from '#lib/format.ts';
 
 	const id = $derived(page.url.searchParams.get('id') ?? '');
@@ -250,7 +250,7 @@
 								/>{/if}
 						</button>
 						<a
-							href="/chat?id={app.threadId(o.id, ME)}"
+							href="/chat?id={app.threadId(o.id, app.me)}"
 							class="btn btn-ghost px-3"
 							aria-label={tr('Задать вопрос организатору')}
 							title={tr('Задать вопрос организатору')}

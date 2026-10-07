@@ -6,6 +6,7 @@
 		Bell,
 		Briefcase,
 		CalendarDays,
+		CloudOff,
 		Compass,
 		FolderOpen,
 		MessageCircle,
@@ -150,6 +151,15 @@
 		</header>
 
 		<main class="mx-auto w-full max-w-5xl px-4 pt-5 pb-28 sm:px-6 lg:px-10 lg:pt-10 lg:pb-12">
+			{#if app.offline}
+				<p
+					class="mb-4 flex items-center gap-2 rounded-2xl bg-pastel-yellow px-4 py-2.5 text-sm font-semibold text-pastel-yellow-ink"
+					role="status"
+				>
+					<CloudOff class="size-4 shrink-0" />
+					{tr('Нет связи с сервером — изменения сохранятся и отправятся позже')}
+				</p>
+			{/if}
 			{@render children()}
 		</main>
 	</div>

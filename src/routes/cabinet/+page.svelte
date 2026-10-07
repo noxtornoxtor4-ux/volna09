@@ -19,7 +19,7 @@
 	import Modal from '#lib/components/Modal.svelte';
 	import PromoteSheet from '#lib/components/PromoteSheet.svelte';
 	import { categories, day, toneClass } from '#lib/data.ts';
-	import { formatDate, plural, timeAgo } from '#lib/format.ts';
+	import { formatDate, personMeta, plural, timeAgo } from '#lib/format.ts';
 	import type { ApplicationStatus } from '#lib/types.ts';
 
 	type FolderId = 'applications' | 'volunteers' | 'hours';
@@ -223,10 +223,9 @@
 							<div class="min-w-0 flex-1">
 								<div class="font-bold">{p?.name}</div>
 								<div class="text-xs text-muted">
-									{p?.age}
-									{plural(p?.age ?? 0, 'год', 'года', 'лет')} · {tr(p?.city ?? '')} · {timeAgo(
-										a.createdAt
-									)}
+									{[personMeta(p?.age ?? 0, p?.city ?? ''), timeAgo(a.createdAt)]
+										.filter(Boolean)
+										.join(' · ')}
 								</div>
 							</div>
 							{#if o}<span
@@ -302,8 +301,7 @@
 							<div class="min-w-0 flex-1">
 								<div class="truncate font-bold">{p?.name}</div>
 								<div class="text-xs text-muted">
-									{p?.age}
-									{plural(p?.age ?? 0, 'год', 'года', 'лет')} · {tr(p?.city ?? '')}
+									{personMeta(p?.age ?? 0, p?.city ?? '')}
 								</div>
 								<div class="mt-1.5 flex flex-wrap gap-1.5 text-xs font-semibold">
 									<span class="rounded-full bg-pastel-green px-2.5 py-0.5 text-pastel-green-ink"

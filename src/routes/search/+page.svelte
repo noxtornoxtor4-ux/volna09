@@ -3,8 +3,8 @@
 	import { BadgeCheck, ChevronRight, Search, X } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
-	import { ME, categories, toneClass } from '#lib/data.ts';
-	import { formatDate } from '#lib/format.ts';
+	import { categories, toneClass } from '#lib/data.ts';
+	import { formatDate, personMeta } from '#lib/format.ts';
 
 	type Tab = 'all' | 'people' | 'orgs' | 'events';
 
@@ -71,17 +71,13 @@
 							<div class="min-w-0">
 								<div class="truncate font-bold">{p.name}</div>
 								<div class="truncate text-xs text-muted">
-									{tr(
-										'{0} лет · {1} · {2} ч · {3}',
-										p.age,
-										tr(p.city),
-										app.verifiedHoursOf(p.id),
-										p.bio
-									)}
+									{[personMeta(p.age, p.city), tr('{0} ч', app.verifiedHoursOf(p.id)), p.bio]
+										.filter(Boolean)
+										.join(' · ')}
 								</div>
 							</div>
 						</a>
-						{#if !app.isOrg && p.id !== ME}
+						{#if !app.isOrg && p.id !== app.me}
 							<button
 								class="btn py-2 text-xs {app.isFollowing(p.id) ? 'btn-ghost' : 'btn-soft'}"
 								onclick={() => app.toggleFollow(p.id)}

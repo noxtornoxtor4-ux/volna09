@@ -1,19 +1,9 @@
 import { tr } from './i18n.ts';
-import {
-	FIREBASE_API_KEY,
-	FIREBASE_APP_ID,
-	FIREBASE_AUTH_DOMAIN,
-	FIREBASE_PROJECT_ID
-} from '$app/env/public';
+import { firebaseAuth, firebaseEnabled } from './firebase.ts';
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 
 /** Настоящие SMS включаются, когда в окружении заданы ключи Firebase */
-export const smsEnabled = !!(
-	FIREBASE_API_KEY &&
-	FIREBASE_AUTH_DOMAIN &&
-	FIREBASE_PROJECT_ID &&
-	FIREBASE_APP_ID
-);
+export const smsEnabled = firebaseEnabled;
 
 /** Длина кода: у Firebase всегда 6 цифр, в демо-режиме держим так же */
 export const CODE_LENGTH = 6;
@@ -26,18 +16,8 @@ let verifier: RecaptchaVerifier | null = null;
  * containerId — элемент для невидимой reCAPTCHA, которую Firebase требует от ботов.
  */
 export async function sendSms(phone: string, containerId: string) {
-	const { getApps, initializeApp } = await import('firebase/app');
-	const { getAuth, RecaptchaVerifier, signInWithPhoneNumber } = await import('firebase/auth');
-	const firebase =
-		getApps()[0] ??
-		initializeApp({
-			apiKey: FIREBASE_API_KEY,
-			authDomain: FIREBASE_AUTH_DOMAIN,
-			projectId: FIREBASE_PROJECT_ID,
-			appId: FIREBASE_APP_ID
-		});
-	const auth = getAuth(firebase);
-	auth.languageCode = 'ru';
+	const { RecaptchaVerifier, signInWithPhoneNumber } = await import('firebase/auth');
+	const auth = await firebaseAuth();
 	verifier ??= new RecaptchaVerifier(auth, containerId, { size: 'invisible' });
 	try {
 		confirmation = await signInWithPhoneNumber(auth, phone, verifier);

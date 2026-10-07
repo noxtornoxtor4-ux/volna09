@@ -6,6 +6,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import { app } from '#lib/app.svelte.ts';
 	import AppShell from '#lib/components/AppShell.svelte';
+	import Logo from '#lib/components/Logo.svelte';
 	import { themeVarNames, themeVars } from '#lib/theme.ts';
 	import type { LayoutProps } from './$types';
 
@@ -37,7 +38,10 @@
 	});
 
 	$effect(() => {
-		if (!app.session && !isAuthPage) goto('/login', { replaceState: true });
+		// Ждём ответа Firebase: вошедший пользователь не должен мелькнуть на экране входа
+		if (app.ready && !app.session && !isAuthPage) goto('/login', { replaceState: true });
+		if (app.ready && app.session && isAuthPage)
+			goto(app.isOrg ? '/cabinet' : '/', { replaceState: true });
 	});
 </script>
 
@@ -52,7 +56,12 @@
 	/>
 </svelte:head>
 
-{#if isAuthPage}
+{#if !app.ready}
+	<!-- Заставка, пока Firebase проверяет вход -->
+	<div class="grid min-h-dvh place-items-center">
+		<div class="animate-pulse"><Logo size={56} name={false} /></div>
+	</div>
+{:else if isAuthPage}
 	{@render children()}
 {:else if app.session}
 	<AppShell>{@render children()}</AppShell>

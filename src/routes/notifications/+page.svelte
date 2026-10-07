@@ -5,7 +5,7 @@
 	import { ChevronLeft, ChevronRight, Megaphone, MessageCircle, Send } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
-	import { ME, day, toneClass } from '#lib/data.ts';
+	import { day, toneClass } from '#lib/data.ts';
 	import { formatDate, relativeDay, timeAgo } from '#lib/format.ts';
 
 	const eventId = $derived(page.url.searchParams.get('event'));
@@ -30,7 +30,7 @@
 		text = '';
 	}
 
-	const chatHref = (id: string) => `/chat?id=${app.threadId(id, ME)}`;
+	const chatHref = (id: string) => `/chat?id=${app.threadId(id, app.me)}`;
 </script>
 
 <svelte:head><title>{tr('Уведомления — Волна')}</title></svelte:head>

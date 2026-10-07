@@ -11,6 +11,15 @@
 
 	let form = $state<Profile>($state.snapshot(app.profile));
 	let orgForm = $state<OrgProfile>($state.snapshot(app.orgProfile));
+
+	// Открыли страницу до загрузки профиля с сервера — заполняем форму, когда данные придут
+	let loaded = !!app.myPerson;
+	$effect(() => {
+		if (loaded || !app.myPerson) return;
+		form = $state.snapshot(app.profile);
+		orgForm = $state.snapshot(app.orgProfile);
+		loaded = true;
+	});
 	let news = $state({ title: '', text: '' });
 
 	/** Город может быть не из списка (старые данные) — тогда он тоже доступен в выборе */

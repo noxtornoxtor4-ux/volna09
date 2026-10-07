@@ -4,18 +4,21 @@
 	import { onDestroy } from 'svelte';
 	import { ArrowRight, Building, ChevronLeft, HandHeart, Mail, Smartphone } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import { authError, emailSignIn, emailSignUp, resetPassword } from '#lib/auth.ts';
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import Logo from '#lib/components/Logo.svelte';
 	import OrgPicker from '#lib/components/OrgPicker.svelte';
 	import OtpInput from '#lib/components/OtpInput.svelte';
-	import { CODE_LENGTH, confirmSms, sendSms, smsEnabled, smsError } from '#lib/sms.ts';
+	import { cities } from '#lib/data.ts';
+	import { CODE_LENGTH, confirmSms, sendSms, smsError } from '#lib/sms.ts';
 	import type { Role, Session } from '#lib/types.ts';
 
 	let mode = $state<'login' | 'signup'>('login');
 	let method = $state<Session['method']>('phone');
 	let role = $state<Role>('volunteer');
 	let name = $state('');
+	let city = $state(cities[0]);
 	let orgChoice = $state('');
 	let newOrg = $state({ name: '', city: '', about: '' });
 
@@ -24,12 +27,12 @@
 	let codeSent = $state(false);
 	let resendIn = $state(0);
 	let sending = $state(false);
-	let smsProblem = $state('');
+	let problem = $state('');
+	let notice = $state('');
 	let timer: ReturnType<typeof setInterval> | undefined;
 
 	let email = $state('');
 	let password = $state('');
-	let linkSent = $state(false);
 
 	const phoneDigits = $derived(phone.replace(/\D/g, ''));
 	const phoneValid = $derived(phoneDigits.length >= 9);
@@ -40,23 +43,19 @@
 	/** Для регистрации: имя волонтёра или выбранная организация */
 	const nameOk = $derived(mode === 'login' || (role === 'org' ? orgOk : name.trim().length > 1));
 
-	function finish(session: Omit<Session, 'role'>) {
-		if (mode === 'signup' && role === 'org') {
-			const orgId =
-				orgChoice === 'new'
-					? app.createOrg({
-							name: newOrg.name.trim(),
-							city: newOrg.city.trim(),
-							about: newOrg.about.trim()
-						})
-					: orgChoice;
-			app.chooseOrg(orgId);
-		}
-		app.login(
-			{ ...session, role },
-			mode === 'signup' && role === 'volunteer' ? name.trim() : undefined
-		);
-		goto(role === 'org' ? '/cabinet' : '/', { replaceState: true });
+	/** Firebase подтвердил пользователя — создаём профиль при первом входе и открываем приложение */
+	async function finish(session: Omit<Session, 'role'>) {
+		await app.completeSignIn(session, {
+			role,
+			name: mode === 'signup' && role === 'volunteer' ? name.trim() : undefined,
+			city: mode === 'signup' && role === 'volunteer' ? city : undefined,
+			orgId: mode === 'signup' && role === 'org' && orgChoice !== 'new' ? orgChoice : undefined,
+			newOrg:
+				mode === 'signup' && role === 'org' && orgChoice === 'new'
+					? { name: newOrg.name.trim(), city: newOrg.city.trim(), about: newOrg.about.trim() }
+					: undefined
+		});
+		goto(app.isOrg ? '/cabinet' : '/', { replaceState: true });
 	}
 
 	const fullPhone = $derived(`+996${phoneDigits.slice(-9)}`);
@@ -64,17 +63,15 @@
 	async function sendCode(e?: SubmitEvent) {
 		e?.preventDefault();
 		if (!phoneValid || !nameOk || sending) return;
-		smsProblem = '';
-		if (smsEnabled) {
-			sending = true;
-			try {
-				await sendSms(fullPhone, 'recaptcha');
-			} catch (error) {
-				smsProblem = smsError(error);
-				return;
-			} finally {
-				sending = false;
-			}
+		problem = '';
+		sending = true;
+		try {
+			await sendSms(fullPhone, 'recaptcha');
+		} catch (error) {
+			problem = smsError(error);
+			return;
+		} finally {
+			sending = false;
 		}
 		codeSent = true;
 		code = '';
@@ -89,36 +86,43 @@
 	async function verifyCode(e?: SubmitEvent) {
 		e?.preventDefault();
 		if (code.length !== CODE_LENGTH || sending) return;
-		smsProblem = '';
-		if (smsEnabled) {
-			sending = true;
-			try {
-				await confirmSms(code);
-			} catch (error) {
-				smsProblem = smsError(error);
-				code = '';
-				return;
-			} finally {
-				sending = false;
-			}
+		problem = '';
+		sending = true;
+		try {
+			await confirmSms(code);
+			await finish({ method: 'phone', contact: `+996 ${phoneDigits.slice(-9)}` });
+		} catch (error) {
+			problem = smsError(error);
+			code = '';
+		} finally {
+			sending = false;
 		}
-		finish({ method: 'phone', contact: `+996 ${phoneDigits.slice(-9)}` });
 	}
 
-	function emailLogin(e: SubmitEvent) {
+	async function emailLogin(e: SubmitEvent) {
 		e.preventDefault();
-		if (emailValid && password.length >= 6 && nameOk) finish({ method: 'email', contact: email });
+		if (!emailValid || password.length < 6 || !nameOk || sending) return;
+		problem = notice = '';
+		sending = true;
+		try {
+			if (mode === 'signup') await emailSignUp(email, password);
+			else await emailSignIn(email, password);
+			await finish({ method: 'email', contact: email.trim() });
+		} catch (error) {
+			problem = authError(error);
+		} finally {
+			sending = false;
+		}
 	}
 
-	function demo(demoRole: Role) {
-		// Демо-организация — клуб с заполненными заявками, часами и мероприятиями
-		if (demoRole === 'org') app.chooseOrg('eco');
-		app.login({
-			method: 'email',
-			contact: demoRole === 'org' ? 'eco@volna.kg' : 'demo@volna.kg',
-			role: demoRole
-		});
-		goto(demoRole === 'org' ? '/cabinet' : '/', { replaceState: true });
+	async function forgot() {
+		problem = notice = '';
+		try {
+			await resetPassword(email);
+			notice = tr('Письмо для сброса пароля отправлено на {0}', email.trim());
+		} catch (error) {
+			problem = authError(error);
+		}
 	}
 
 	onDestroy(() => clearInterval(timer));
@@ -205,7 +209,7 @@
 				</button>
 			</div>
 
-			{#if mode === 'signup' && !(method === 'phone' && codeSent) && !linkSent}
+			{#if mode === 'signup' && !(method === 'phone' && codeSent)}
 				{#if role === 'org'}
 					<OrgPicker bind:selected={orgChoice} bind:draft={newOrg} />
 				{:else}
@@ -218,11 +222,13 @@
 							bind:value={name}
 						/>
 					</label>
+					<label class="mt-3 block">
+						<span class="label">{tr('Город')}</span>
+						<select class="input" bind:value={city}>
+							{#each cities as c (c)}<option value={c}>{tr(c)}</option>{/each}
+						</select>
+					</label>
 				{/if}
-			{:else if mode === 'login' && role === 'org'}
-				<p class="mt-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">
-					{tr('Вход в кабинет организации')} <b class="text-ink">{app.org(app.myOrgId)?.name}</b>
-				</p>
 			{/if}
 
 			{#if method === 'phone'}
@@ -242,10 +248,8 @@
 								/>
 							</div>
 						</label>
-						{#if smsProblem}<p
-								class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink"
-							>
-								{smsProblem}
+						{#if problem}<p class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
+								{problem}
 							</p>{/if}
 						<button
 							class="btn w-full btn-primary py-3"
@@ -270,24 +274,17 @@
 								bind:value={code}
 								length={CODE_LENGTH}
 								disabled={sending}
-								invalid={!!smsProblem}
+								invalid={!!problem}
 								oncomplete={() => verifyCode()}
 							/>
 						</div>
-						{#if smsProblem}
+						{#if problem}
 							<p class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
-								{smsProblem}
-							</p>
-						{:else if smsEnabled}
-							<p class="text-sm text-muted">
-								{tr('Мы отправили SMS с кодом на +996 {0}', phoneDigits.slice(-9))}
+								{problem}
 							</p>
 						{:else}
-							<p class="rounded-2xl bg-pastel-yellow p-3 text-xs text-pastel-yellow-ink">
-								{tr(
-									'Демо-режим: SMS не отправляется, подойдёт любой код из {0} цифр.',
-									CODE_LENGTH
-								)}
+							<p class="text-sm text-muted">
+								{tr('Мы отправили SMS с кодом на +996 {0}', phoneDigits.slice(-9))}
 							</p>
 						{/if}
 						<button
@@ -308,7 +305,7 @@
 						</button>
 					</form>
 				{/if}
-			{:else if !linkSent}
+			{:else}
 				<form class="mt-5 space-y-4" onsubmit={emailLogin}>
 					<label class="block">
 						<span class="label">Email</span>
@@ -330,43 +327,27 @@
 							bind:value={password}
 						/>
 					</label>
+					{#if problem}<p class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
+							{problem}
+						</p>{/if}
+					{#if notice}<p class="rounded-2xl bg-pastel-green p-3 text-sm text-pastel-green-ink">
+							{notice}
+						</p>{/if}
 					<button
 						class="btn w-full btn-primary py-3"
-						disabled={!emailValid || password.length < 6 || !nameOk}
+						disabled={!emailValid || password.length < 6 || !nameOk || sending}
 					>
-						{mode === 'login' ? tr('Войти') : tr('Зарегистрироваться')}
+						{sending ? tr('Проверяем…') : mode === 'login' ? tr('Войти') : tr('Зарегистрироваться')}
 					</button>
-					<button
-						type="button"
-						class="btn w-full btn-ghost"
-						disabled={!emailValid || !nameOk}
-						onclick={() => (linkSent = true)}
-					>
-						{tr('Прислать ссылку для входа')}
-					</button>
+					{#if mode === 'login'}
+						<button
+							type="button"
+							class="w-full text-sm font-semibold text-muted hover:text-ink disabled:opacity-50"
+							disabled={!emailValid}
+							onclick={forgot}>{tr('Забыли пароль?')}</button
+						>
+					{/if}
 				</form>
-			{:else}
-				<div class="mt-5 space-y-4 text-center">
-					<div class="mx-auto grid size-16 place-items-center rounded-3xl bg-pastel-blue text-3xl">
-						📬
-					</div>
-					<p class="text-sm">
-						{tr('Мы отправили ссылку на')} <b>{email}</b>{tr(
-							'. Откройте письмо и нажмите «Войти».'
-						)}
-					</p>
-					<p class="rounded-2xl bg-pastel-yellow p-3 text-xs text-pastel-yellow-ink">
-						{tr('Демо-режим: письмо не отправляется.')}
-					</p>
-					<button
-						class="btn w-full btn-primary"
-						onclick={() => finish({ method: 'email', contact: email })}
-						>{tr('Открыть ссылку из письма')}</button
-					>
-					<button class="text-sm font-semibold text-muted" onclick={() => (linkSent = false)}
-						>{tr('Изменить email')}</button
-					>
-				</div>
 			{/if}
 
 			<p class="mt-6 text-center text-sm text-muted">
@@ -381,17 +362,6 @@
 
 			<div class="mt-8 border-t border-line pt-6">
 				<InstallApp variant="banner" />
-				<p class="mb-2 text-center text-xs font-semibold text-muted">
-					{tr('Демо без регистрации')}
-				</p>
-				<div class="grid grid-cols-2 gap-2">
-					<button class="btn btn-soft" onclick={() => demo('volunteer')}
-						><HandHeart class="size-4" /> {tr('Волонтёр')}</button
-					>
-					<button class="btn btn-ghost" onclick={() => demo('org')}
-						><Building class="size-4" /> {tr('Организация')}</button
-					>
-				</div>
 			</div>
 		</div>
 		<div id="recaptcha"></div>
