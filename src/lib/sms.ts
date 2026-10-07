@@ -58,6 +58,10 @@ export async function confirmSms(code: string) {
 /** Понятное сообщение об ошибке Firebase */
 export function smsError(error: unknown) {
 	const code = (error as { code?: string })?.code ?? String(error);
+	const message = (error as { message?: string })?.message ?? '';
+	// Регион номера запрещён в SMS region policy проекта Firebase
+	if (message.includes('region'))
+		return 'Отправка SMS на номера этой страны пока не включена. Войдите по email';
 	if (code.includes('invalid-phone-number')) return 'Проверьте номер телефона';
 	if (code.includes('invalid-verification-code'))
 		return 'Неверный код. Проверьте SMS и попробуйте ещё раз';
