@@ -4,6 +4,7 @@
 		title: string;
 		poster?: string;
 		videoId?: string;
+		url?: string;
 	}
 </script>
 
@@ -11,6 +12,7 @@
 	import { tr } from '#lib/i18n.ts';
 	import { ChevronDown, Eye, EyeOff, Play, Trash } from '@lucide/svelte';
 	import { blobUrl } from '#lib/media-db.ts';
+	import { playableUrl } from '#lib/video.ts';
 	import MediaViewer from './MediaViewer.svelte';
 
 	/** Свёрнутый список скрытых видео: посмотреть, вернуть обратно или удалить окончательно */
@@ -29,7 +31,11 @@
 
 	async function view(item: HiddenVideo) {
 		viewing = { title: item.title };
-		const src = item.videoId ? await blobUrl(item.videoId) : undefined;
+		const src = item.url
+			? playableUrl(item.url)
+			: item.videoId
+				? await blobUrl(item.videoId)
+				: undefined;
 		if (viewing?.title === item.title) viewing = { title: item.title, src };
 	}
 

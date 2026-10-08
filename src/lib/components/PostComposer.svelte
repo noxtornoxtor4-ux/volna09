@@ -3,7 +3,7 @@
 	import { Image, ImagePlus, Send, Star, Video, X } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { compressImage, isVerticalVideo, takeFile, videoPoster } from '#lib/files.ts';
-	import { saveBlob } from '#lib/media-db.ts';
+	import { MAX_VIDEO_BYTES, maxVideoMb, uploadVideo } from '#lib/video.ts';
 	import type { Media, Post } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
 	import Modal from './Modal.svelte';
@@ -19,10 +19,10 @@
 	let opportunityId = $state('');
 	let orgId = $state('');
 	let busy = $state(false);
-	/** Выбранный видеофайл: сохраняется в IndexedDB только при публикации */
+	/** Выбранный видеофайл: выкладывается на сервер при публикации */
 	let videoFile: File | undefined;
-
-	const MAX_VIDEO_BYTES = 300 * 1024 * 1024;
+	/** Доля загруженного видео 0–1; null — загрузки нет */
+	let progress = $state<number | null>(null);
 
 	async function attachPhoto(e: Event) {
 		const file = takeFile(e);
@@ -36,7 +36,7 @@
 		const file = takeFile(e);
 		if (!file) return;
 		if (file.size > MAX_VIDEO_BYTES) {
-			app.notify(tr('Видео больше 300 МБ — выберите ролик покороче'));
+			app.notify(tr('Видео больше {0} МБ — выберите ролик покороче или обрежьте его', maxVideoMb));
 			return;
 		}
 		busy = true;
@@ -66,18 +66,19 @@
 		const opportunity = opportunityId ? app.opportunity(opportunityId) : undefined;
 		let saved = media;
 		if (media && videoFile) {
-			// Видео — в IndexedDB, в посте остаются только ключ и превью
+			// Пост появится только после того, как видео целиком окажется на сервере
 			busy = true;
-			const videoId = `video-${crypto.randomUUID()}`;
+			progress = 0;
 			try {
-				await saveBlob(videoId, videoFile);
-				saved = { ...media, src: undefined, videoId };
+				const uploaded = await uploadVideo(videoFile, (share) => (progress = share));
+				saved = { ...media, src: undefined, ...uploaded };
 			} catch {
-				app.notify(tr('Не хватило места на устройстве для видео'));
-				busy = false;
+				app.notify(tr('Не удалось загрузить видео. Проверьте интернет и попробуйте ещё раз'));
 				return;
+			} finally {
+				busy = false;
+				progress = null;
 			}
-			busy = false;
 		}
 		app.addPost({
 			kind,
@@ -188,7 +189,10 @@
 				/>
 			</label>
 			<button class="ml-auto btn btn-primary py-2" disabled={!text.trim() || busy}
-				><Send class="size-4" /> {tr('Опубликовать')}</button
+				><Send class="size-4" />
+				{progress === null
+					? tr('Опубликовать')
+					: tr('Загрузка видео {0}%', Math.round(progress * 100))}</button
 			>
 		</div>
 	</form>

@@ -121,17 +121,15 @@ export const en: Record<string, string> = {
 	'Вертикальное видео станет Shorts, горизонтальное — длинным видео':
 		'A vertical video becomes a Short, a horizontal one becomes a long video',
 	Видео: 'Video',
-	'Видео больше 200 МБ — выберите ролик покороче':
-		'The video is over 200 MB — choose a shorter clip',
-	'Видео больше 300 МБ — выберите ролик покороче':
-		'The video is over 300 MB — choose a shorter clip',
-	'Видео для постера — до 60 МБ. Лучше короткий ролик на 5–15 секунд':
-		'Poster video — up to 60 MB. A short 5–15 second clip works best',
+	'Видео больше {0} МБ — выберите ролик покороче или обрежьте его':
+		'The video is over {0} MB — choose a shorter clip or trim it',
+	'Видео для постера — до {0} МБ. Лучше короткий ролик на 5–15 секунд':
+		'Cover video — up to {0} MB. A short 5–15 second clip works best',
+	'Видео не загрузилось на сервер — автору нужно опубликовать его заново':
+		"The video didn't reach the server — the author needs to post it again",
 	'Видео скрыто — его можно вернуть в разделе «Скрытые»':
 		'Video hidden — you can bring it back from Hidden',
 	'Видео снова видно': 'The video is visible again',
-	'Видео хранится на устройстве автора — здесь видна только обложка':
-		'The video is stored on the author’s device — only the cover is visible here',
 	Видеомонтаж: 'Video editing',
 	'Включить звук': 'Unmute',
 	'Во сколько сбор?': 'What time do we meet?',
@@ -258,6 +256,7 @@ export const en: Record<string, string> = {
 		'Upload a photo of a paper certificate or its digital version — it will appear in your profile.',
 	'Загрузить постер': 'Upload poster',
 	'Загрузить фото': 'Upload photo',
+	'Загрузка видео {0}%': 'Uploading video {0}%',
 	'Загрузка…': 'Loading…',
 	'Задайте вопрос — организатор ответит здесь.': 'Ask a question — the organizer will answer here.',
 	'Задать вопрос организатору': 'Ask the organizer a question',
@@ -466,7 +465,8 @@ export const en: Record<string, string> = {
 	'Не открылось? Нажмите ••• вверху справа → «Открыть в Safari»':
 		"Didn't open? Tap ••• at the top right → “Open in Safari”",
 	'Не удалось войти. Попробуйте ещё раз': "Couldn't sign in. Please try again",
-	'Не хватило места на устройстве для видео': 'Not enough space on the device for the video',
+	'Не удалось загрузить видео. Проверьте интернет и попробуйте ещё раз':
+		"Couldn't upload the video. Check your internet and try again",
 	'Не хватило места на устройстве для файла': 'Not enough space on the device for the file',
 	Небо: 'Sky',
 	'Неверный пароль. Нажмите «Забыли пароль?» — пришлём ссылку для сброса':

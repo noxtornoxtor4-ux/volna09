@@ -26,7 +26,8 @@
 	import { skillLevels } from '#lib/data.ts';
 	import { compressImage, takeFile, videoPoster } from '#lib/files.ts';
 	import { formatDate, plural } from '#lib/format.ts';
-	import { blobUrl, saveBlob } from '#lib/media-db.ts';
+	import { blobUrl } from '#lib/media-db.ts';
+	import { MAX_VIDEO_BYTES, maxVideoMb, playableUrl, uploadVideo } from '#lib/video.ts';
 	import type { Award, SkillMaterial } from '#lib/types.ts';
 
 	const skill = $derived(app.skill(page.url.searchParams.get('id') ?? ''));
@@ -45,6 +46,7 @@
 	let busy = $state(false);
 	/** Выбранное видео ждёт подтверждения: сначала его можно посмотреть */
 	let pendingVideo = $state<{ file: File; url: string } | null>(null);
+	let uploadShare = $state(0);
 	let viewing = $state<{ material: SkillMaterial; src?: string } | null>(null);
 	let viewingCertificate = $state<Award | null>(null);
 
@@ -68,8 +70,8 @@
 	function addVideo(e: Event) {
 		const file = takeFile(e);
 		if (!skill || !file) return;
-		if (file.size > 200 * 1024 * 1024) {
-			app.notify(tr('Видео больше 200 МБ — выберите ролик покороче'));
+		if (file.size > MAX_VIDEO_BYTES) {
+			app.notify(tr('Видео больше {0} МБ — выберите ролик покороче или обрежьте его', maxVideoMb));
 			return;
 		}
 		menu = false;
@@ -86,16 +88,25 @@
 		if (!skill || !pendingVideo) return;
 		const { file, url } = pendingVideo;
 		busy = true;
+		uploadShare = 0;
 		try {
-			const videoId = `video-${crypto.randomUUID()}`;
-			await saveBlob(videoId, file);
-			const poster = await videoPoster(url);
-			app.addMaterial({ skillId: skill.id, kind: 'video', videoId, poster });
+			const [uploaded, poster] = await Promise.all([
+				uploadVideo(file, (share) => (uploadShare = share)),
+				videoPoster(url)
+			]);
+			app.addMaterial({
+				skillId: skill.id,
+				kind: 'video',
+				videoId: uploaded.videoId,
+				videoUrl: uploaded.url,
+				poster
+			});
 			cancelVideo();
 		} catch {
-			app.notify(tr('Не хватило места на устройстве для видео'));
+			app.notify(tr('Не удалось загрузить видео. Проверьте интернет и попробуйте ещё раз'));
 		} finally {
 			busy = false;
+			uploadShare = 0;
 		}
 	}
 
@@ -108,8 +119,11 @@
 	}
 
 	async function open(material: SkillMaterial) {
-		viewing = { material, src: material.src };
-		if (material.videoId) {
+		viewing = {
+			material,
+			src: material.videoUrl ? playableUrl(material.videoUrl) : material.src
+		};
+		if (material.videoId && !material.videoUrl) {
 			const src = await blobUrl(material.videoId);
 			if (viewing?.material.id === material.id) viewing = { material, src };
 		}
@@ -281,7 +295,8 @@
 						id: m.id,
 						title: skill.title,
 						poster: m.poster,
-						videoId: m.videoId
+						videoId: m.videoId,
+						url: m.videoUrl
 					}))}
 					onrestore={(id) => app.setMaterialHidden(id, false)}
 					ondelete={(id) => app.removeMaterial(id)}
@@ -362,7 +377,9 @@
 			<div class="mt-4 grid grid-cols-2 gap-2">
 				<button class="btn btn-ghost" onclick={cancelVideo} disabled={busy}>{tr('Отмена')}</button>
 				<button class="btn btn-primary" onclick={confirmVideo} disabled={busy}
-					>{busy ? tr('Загрузка…') : tr('Добавить')}</button
+					>{busy
+						? tr('Загрузка видео {0}%', Math.round(uploadShare * 100))
+						: tr('Добавить')}</button
 				>
 			</div>
 		{/if}

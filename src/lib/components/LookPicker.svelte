@@ -4,7 +4,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import { avatarEmojis, coverPresets, toneClass } from '#lib/data.ts';
 	import { compressImage, takeFile } from '#lib/files.ts';
-	import { saveBlob } from '#lib/media-db.ts';
+	import { MAX_VIDEO_BYTES, maxVideoMb, uploadVideo } from '#lib/video.ts';
 	import type { ProfileLook, Tone } from '#lib/types.ts';
 	import ProfileCover from './ProfileCover.svelte';
 
@@ -16,11 +16,16 @@
 		fallback = '🙂'
 	}: { look: ProfileLook; tone: Tone; round?: boolean; fallback?: string } = $props();
 
-	const MAX_VIDEO_BYTES = 60 * 1024 * 1024;
 	let busy = $state(false);
 
 	function usePreset(id: string) {
-		look = { ...look, coverPreset: id, cover: undefined, coverVideoId: undefined };
+		look = {
+			...look,
+			coverPreset: id,
+			cover: undefined,
+			coverVideoId: undefined,
+			coverVideoUrl: undefined
+		};
 	}
 
 	async function coverPhoto(e: Event) {
@@ -31,7 +36,8 @@
 			...look,
 			cover: await compressImage(file, 1400, 0.8),
 			coverPreset: undefined,
-			coverVideoId: undefined
+			coverVideoId: undefined,
+			coverVideoUrl: undefined
 		};
 		busy = false;
 	}
@@ -40,14 +46,27 @@
 		const file = takeFile(e);
 		if (!file) return;
 		if (file.size > MAX_VIDEO_BYTES) {
-			app.notify(tr('Видео для постера — до 60 МБ. Лучше короткий ролик на 5–15 секунд'));
+			app.notify(
+				tr('Видео для постера — до {0} МБ. Лучше короткий ролик на 5–15 секунд', maxVideoMb)
+			);
 			return;
 		}
 		busy = true;
-		const id = `cover-${crypto.randomUUID()}`;
-		await saveBlob(id, file);
-		look = { ...look, coverVideoId: id, cover: undefined, coverPreset: undefined };
-		busy = false;
+		try {
+			// Постер-видео выкладывается на сервер, чтобы его видели все гости профиля
+			const uploaded = await uploadVideo(file);
+			look = {
+				...look,
+				coverVideoId: uploaded.videoId,
+				coverVideoUrl: uploaded.url,
+				cover: undefined,
+				coverPreset: undefined
+			};
+		} catch {
+			app.notify(tr('Не удалось загрузить видео. Проверьте интернет и попробуйте ещё раз'));
+		} finally {
+			busy = false;
+		}
 	}
 
 	async function avatarPhoto(e: Event) {
@@ -107,12 +126,18 @@
 				{busy ? tr('Загрузка…') : tr('Видео')}
 				<input type="file" accept="video/*" class="sr-only" onchange={coverVideo} disabled={busy} />
 			</label>
-			{#if look.cover || look.coverPreset || look.coverVideoId}
+			{#if look.cover || look.coverPreset || look.coverVideoId || look.coverVideoUrl}
 				<button
 					type="button"
 					class="btn btn-ghost py-2 text-sm"
 					onclick={() =>
-						(look = { ...look, cover: undefined, coverPreset: undefined, coverVideoId: undefined })}
+						(look = {
+							...look,
+							cover: undefined,
+							coverPreset: undefined,
+							coverVideoId: undefined,
+							coverVideoUrl: undefined
+						})}
 				>
 					<X class="size-4" />
 					{tr('Без постера')}

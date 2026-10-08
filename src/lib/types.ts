@@ -127,7 +127,9 @@ export interface Media {
 	emoji: string;
 	/** Фото пользователя (data URL) или временная ссылка на видео до публикации */
 	src?: string;
-	/** Ключ видеофайла в IndexedDB — видео хранится на устройстве и переживает перезагрузку */
+	/** Видео в Cloudinary — его видят все пользователи */
+	url?: string;
+	/** Ключ видеофайла: на устройстве (IndexedDB) и частями в Firestore */
 	videoId?: string;
 	/** Превью видео (data URL): кадр из ролика или загруженная обложка */
 	poster?: string;
@@ -250,6 +252,8 @@ export interface ProfileLook {
 	coverPreset?: string;
 	/** Видео-постер, хранится в IndexedDB */
 	coverVideoId?: string;
+	/** Видео-постер в Cloudinary */
+	coverVideoUrl?: string;
 	/** Оттенок профиля (#rrggbb): шапка, обводка аватара, кнопки и значки. Виден всем */
 	tint?: string;
 }
@@ -373,6 +377,8 @@ export interface SkillMaterial {
 	src?: string;
 	/** Видео в хранилище медиа и его обложка */
 	videoId?: string;
+	/** Видео в Cloudinary */
+	videoUrl?: string;
 	poster?: string;
 	/** Скрыто автором из списка работ, но не удалено */
 	hidden?: boolean;

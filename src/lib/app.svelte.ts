@@ -137,6 +137,7 @@ const LOOK_KEYS = [
 	'cover',
 	'coverPreset',
 	'coverVideoId',
+	'coverVideoUrl',
 	'tint'
 ] as const;
 const PROFILE_KEYS = [...LOOK_KEYS, 'name', 'age', 'city', 'bio', 'interests', 'tone'] as const;
@@ -1392,7 +1393,10 @@ class AppState {
 	}
 
 	addMaterial(
-		material: Pick<SkillMaterial, 'skillId' | 'kind' | 'text' | 'src' | 'videoId' | 'poster'>
+		material: Pick<
+			SkillMaterial,
+			'skillId' | 'kind' | 'text' | 'src' | 'videoId' | 'videoUrl' | 'poster'
+		>
 	) {
 		this.skillMaterials.push({ ...material, id: uid(), personId: this.me, createdAt: now() });
 		this.#save('skillMaterials');

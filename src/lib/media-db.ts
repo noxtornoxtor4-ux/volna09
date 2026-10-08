@@ -36,7 +36,7 @@ async function run<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) 
 }
 
 /** Выкладывает файл на сервер частями; метаданные пишутся последними — признак готовности */
-async function upload(id: string, blob: Blob) {
+async function upload(id: string, blob: Blob, onProgress?: (share: number) => void) {
 	const [db, s] = await Promise.all([firestore(), import('firebase/firestore')]);
 	const bytes = new Uint8Array(await blob.arrayBuffer());
 	const parts = Math.ceil(bytes.length / PART_SIZE);
@@ -46,6 +46,7 @@ async function upload(id: string, blob: Blob) {
 			index: i,
 			data: s.Bytes.fromUint8Array(chunk)
 		});
+		onProgress?.((i + 1) / (parts + 1));
 	}
 	await s.setDoc(s.doc(db, 'files', id), { mime: blob.type, size: blob.size, parts });
 }
@@ -66,12 +67,20 @@ async function download(id: string): Promise<Blob | undefined> {
 	);
 }
 
-/** Сохраняет файл на устройстве и (если он не слишком большой) делится им через сервер */
-export async function saveBlob(id: string, blob: Blob) {
+/**
+ * Сохраняет файл на устройстве и выкладывает на сервер, чтобы его видели другие.
+ * С onProgress загрузка дожидается конца (и бросает ошибку, если не удалась),
+ * без него — идёт в фоне.
+ */
+export async function saveBlob(id: string, blob: Blob, onProgress?: (share: number) => void) {
 	await run('readwrite', (store) => store.put(blob, id));
-	if (firebaseEnabled && blob.size <= SHARED_LIMIT) {
-		upload(id, blob).catch((e) => console.warn('media: upload failed', id, e));
+	if (!firebaseEnabled) return;
+	if (blob.size > SHARED_LIMIT) {
+		if (onProgress) throw new Error('media/too-large');
+		return;
 	}
+	if (onProgress) await upload(id, blob, onProgress);
+	else upload(id, blob).catch((e) => console.warn('media: upload failed', id, e));
 }
 
 /** Возвращает ссылку на файл: с устройства или, если его здесь нет, с сервера */

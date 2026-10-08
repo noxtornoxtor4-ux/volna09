@@ -4,6 +4,7 @@
 	import { Heart, Pause, Play, Volume2, VolumeX } from '@lucide/svelte';
 	import { toneClass } from '#lib/data.ts';
 	import { blobUrl } from '#lib/media-db.ts';
+	import { playableUrl } from '#lib/video.ts';
 	import type { Media } from '#lib/types.ts';
 
 	/** onlike — лайк по двойному тапу; без него медиа просто показывается */
@@ -12,7 +13,7 @@
 	const vertical = $derived(media.type === 'short');
 	const isVideo = $derived(media.type !== 'photo');
 	/** Демо-ролик без файла: воспроизведение имитируется полоской прогресса */
-	const isDemo = $derived(isVideo && !media.src && !media.videoId);
+	const isDemo = $derived(isVideo && !media.src && !media.url && !media.videoId);
 
 	// Настоящее видео: файл из IndexedDB или временная ссылка до публикации
 	let url = $state<string | undefined>();
@@ -20,6 +21,7 @@
 	$effect(() => {
 		missing = false;
 		if (media.src) url = media.src;
+		else if (media.url) url = playableUrl(media.url);
 		else if (media.videoId) {
 			const id = media.videoId;
 			blobUrl(id).then((found) => {
@@ -165,7 +167,7 @@
 			<span
 				class="absolute inset-x-3 top-12 rounded-2xl bg-black/50 p-2 text-center text-xs text-white"
 			>
-				{tr('Видео хранится на устройстве автора — здесь видна только обложка')}
+				{tr('Видео не загрузилось на сервер — автору нужно опубликовать его заново')}
 			</span>
 		{/if}
 

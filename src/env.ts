@@ -24,5 +24,11 @@ export const variables = defineEnvVars({
 		public: true,
 		static: true,
 		schema: withDefault('1:375451056746:web:b42caeca8bff7100036813')
-	}
+	},
+	/**
+	 * Cloudinary — бесплатное хранилище видео (unsigned upload). Имя облака и пресет загрузки
+	 * не секретные. Пока они пустые, видео хранятся частями в Firestore (до 25 МБ).
+	 */
+	CLOUDINARY_CLOUD_NAME: { public: true, static: true, schema: withDefault('') },
+	CLOUDINARY_UPLOAD_PRESET: { public: true, static: true, schema: withDefault('') }
 });

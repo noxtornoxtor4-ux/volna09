@@ -25,7 +25,8 @@
 			id: p.id,
 			title: p.text.slice(0, 60) || tr('Видео'),
 			poster: p.media?.poster,
-			videoId: p.media?.videoId
+			videoId: p.media?.videoId,
+			url: p.media?.url
 		}));
 
 	function withPost(id: string, action: (post: Post) => void) {

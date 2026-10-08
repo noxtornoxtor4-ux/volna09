@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { coverPresets, toneClass } from '#lib/data.ts';
 	import { blobUrl } from '#lib/media-db.ts';
+	import { playableUrl } from '#lib/video.ts';
 	import type { ProfileLook, Tone } from '#lib/types.ts';
 
 	/** Постер профиля: видео → фото → шаблон → оттенок профиля → мягкий фон цвета профиля */
@@ -13,7 +14,8 @@
 	let videoUrl = $state<string | undefined>();
 	$effect(() => {
 		const id = look.coverVideoId;
-		videoUrl = undefined;
+		videoUrl = look.coverVideoUrl ? playableUrl(look.coverVideoUrl) : undefined;
+		if (look.coverVideoUrl) return;
 		if (id) blobUrl(id).then((url) => look.coverVideoId === id && (videoUrl = url));
 	});
 

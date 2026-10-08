@@ -66,7 +66,8 @@
 		saving = true;
 		try {
 			const fileId = `file-${crypto.randomUUID()}`;
-			await saveBlob(fileId, file);
+			// Ждём, пока оригинал целиком окажется на сервере — иначе другие его не откроют
+			await saveBlob(fileId, file, () => {});
 			app.addCertificate({
 				title: form.title.trim(),
 				issuer: form.issuer.trim() || undefined,
