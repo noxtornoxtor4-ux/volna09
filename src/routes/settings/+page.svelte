@@ -24,6 +24,7 @@
 	import Avatar from '#lib/components/Avatar.svelte';
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
+	import LogoColorEditor from '#lib/components/LogoColorEditor.svelte';
 	import ThemeEditor from '#lib/components/ThemeEditor.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import OrgPicker from '#lib/components/OrgPicker.svelte';
@@ -385,6 +386,7 @@
 					</div>
 				</div>
 			</section>
+			<div class="mt-4"><LogoColorEditor /></div>
 			<div class="mt-4"><ThemeEditor /></div>
 		{:else if section === 'archive'}
 			<ul class="space-y-2">

@@ -46,6 +46,14 @@
 		const vars = app.customTheme ? themeVars(app.customTheme) : {};
 		for (const name of themeVarNames) root.style.removeProperty(name);
 		for (const [name, value] of Object.entries(vars)) root.style.setProperty(name, value);
+		// Свои цвета логотипа: значок и надпись
+		for (const [name, value] of [
+			['--brand-blue', app.logoColors?.icon],
+			['--brand-navy', app.logoColors?.text]
+		] as const) {
+			if (value) root.style.setProperty(name, value);
+			else root.style.removeProperty(name);
+		}
 		document
 			.querySelector('meta[name="theme-color"]')
 			?.setAttribute('content', app.customTheme?.bg ?? (app.isDark ? '#111319' : '#f6f8fc'));

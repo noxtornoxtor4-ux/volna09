@@ -16,6 +16,7 @@ import type {
 	CustomTheme,
 	DayPhoto,
 	HoursEntry,
+	LogoColors,
 	Membership,
 	Opportunity,
 	OrgProfile,
@@ -45,6 +46,8 @@ interface Prefs {
 	mode: ThemeMode;
 	/** Своя палитра интерфейса на этом устройстве; null — стандартная тема */
 	customTheme: CustomTheme | null;
+	/** Свои цвета логотипа; null — фирменные */
+	logoColors: LogoColors | null;
 	/** Город, по которому фильтруется лента возможностей; all — все города */
 	viewCity: string;
 	/** Мероприятия из «Напомнить позже» */
@@ -56,6 +59,7 @@ const defaultPrefs = (): Prefs => ({
 	accent: 'wave',
 	mode: 'light',
 	customTheme: null,
+	logoColors: null,
 	viewCity: 'all',
 	reminders: []
 });
@@ -179,6 +183,7 @@ class AppState {
 	accent = $state<Accent>('wave');
 	mode = $state<ThemeMode>('light');
 	customTheme = $state<CustomTheme | null>(null);
+	logoColors = $state<LogoColors | null>(null);
 	/** Тёмная ли тема в системе — для режима «Системная» */
 	systemDark = $state(false);
 	viewCity = $state('all');
@@ -223,6 +228,7 @@ class AppState {
 		this.accent = prefs.accent;
 		this.mode = prefs.mode;
 		this.customTheme = prefs.customTheme;
+		this.logoColors = prefs.logoColors;
 		this.viewCity = prefs.viewCity;
 		this.reminders = prefs.reminders;
 		if (firebaseEnabled && typeof window !== 'undefined') this.#watchAuth();
@@ -315,6 +321,7 @@ class AppState {
 			accent: this.accent,
 			mode: this.mode,
 			customTheme: this.customTheme,
+			logoColors: this.logoColors,
 			viewCity: this.viewCity,
 			reminders: this.reminders
 		});
@@ -525,6 +532,12 @@ class AppState {
 	/** Своя палитра применяется сразу на всех экранах и хранится на устройстве */
 	setCustomTheme(theme: CustomTheme | null) {
 		this.customTheme = theme;
+		this.#savePrefs();
+	}
+
+	/** Цвета значка и надписи логотипа меняются сразу на всех экранах */
+	setLogoColors(colors: LogoColors | null) {
+		this.logoColors = colors;
 		this.#savePrefs();
 	}
 

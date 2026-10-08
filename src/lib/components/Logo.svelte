@@ -35,5 +35,5 @@
 			stroke-linejoin="round"
 		/>
 	</svg>
-	{#if name}<span>{tr('Волна')}</span>{/if}
+	{#if name}<span class="text-brand-navy">{tr('Волна')}</span>{/if}
 </a>

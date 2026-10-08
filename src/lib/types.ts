@@ -374,3 +374,11 @@ export interface SkillMaterial {
 	poster?: string;
 	createdAt: string;
 }
+
+/** Свои цвета логотипа на этом устройстве */
+export interface LogoColors {
+	/** Значок и волна в надписи WAVE */
+	icon: string;
+	/** Название «Волна» и блоки букв WAVE */
+	text: string;
+}
