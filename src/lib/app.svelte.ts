@@ -26,6 +26,7 @@ import type {
 	Privacy,
 	Profile,
 	Role,
+	SavedTheme,
 	Session,
 	Skill,
 	SkillMaterial,
@@ -46,6 +47,10 @@ interface Prefs {
 	mode: ThemeMode;
 	/** Своя палитра интерфейса на этом устройстве; null — стандартная тема */
 	customTheme: CustomTheme | null;
+	/** Папка «Мои темы»: все созданные темы, ни одна не теряется */
+	savedThemes: SavedTheme[];
+	/** Тема из папки, которая сейчас применена и автоматически сохраняется */
+	activeThemeId: string | null;
 	/** Свои цвета логотипа; null — фирменные */
 	logoColors: LogoColors | null;
 	/** Шрифт названия у логотипа; null — шрифт приложения */
@@ -61,6 +66,8 @@ const defaultPrefs = (): Prefs => ({
 	accent: 'wave',
 	mode: 'light',
 	customTheme: null,
+	savedThemes: [],
+	activeThemeId: null,
 	logoColors: null,
 	logoFont: null,
 	viewCity: 'all',
@@ -186,6 +193,8 @@ class AppState {
 	accent = $state<Accent>('wave');
 	mode = $state<ThemeMode>('light');
 	customTheme = $state<CustomTheme | null>(null);
+	savedThemes = $state<SavedTheme[]>([]);
+	activeThemeId = $state<string | null>(null);
 	logoColors = $state<LogoColors | null>(null);
 	logoFont = $state<string | null>(null);
 	/** Тёмная ли тема в системе — для режима «Системная» */
@@ -232,6 +241,10 @@ class AppState {
 		this.accent = prefs.accent;
 		this.mode = prefs.mode;
 		this.customTheme = prefs.customTheme;
+		this.savedThemes = prefs.savedThemes;
+		this.activeThemeId = prefs.activeThemeId;
+		// Тема, созданная до появления «Моих тем», тоже попадает в папку
+		if (this.customTheme && !this.savedThemes.length) this.#addSavedTheme(this.customTheme);
 		this.logoColors = prefs.logoColors;
 		this.logoFont = prefs.logoFont;
 		this.viewCity = prefs.viewCity;
@@ -328,6 +341,8 @@ class AppState {
 			accent: this.accent,
 			mode: this.mode,
 			customTheme: this.customTheme,
+			savedThemes: this.savedThemes,
+			activeThemeId: this.activeThemeId,
 			logoColors: this.logoColors,
 			logoFont: this.logoFont,
 			viewCity: this.viewCity,
@@ -537,9 +552,67 @@ class AppState {
 		return this.mode === 'system' ? this.systemDark : this.mode === 'dark';
 	}
 
-	/** Своя палитра применяется сразу на всех экранах и хранится на устройстве */
+	/**
+	 * Своя палитра применяется сразу на всех экранах. Каждое изменение автоматически
+	 * сохраняется в «Мои темы»: в текущую тему, а если её нет — в новую.
+	 */
 	setCustomTheme(theme: CustomTheme | null) {
 		this.customTheme = theme;
+		// Выключение темы не теряет её: в папке остаётся и последняя применённая
+		if (theme) {
+			const active = this.savedThemes.find((t) => t.id === this.activeThemeId);
+			if (active) {
+				active.theme = { ...theme };
+				active.updatedAt = now();
+			} else this.#addSavedTheme(theme);
+		}
+		this.#savePrefs();
+	}
+
+	/** Новая тема в папке с уникальным именем «Моя тема N» */
+	#addSavedTheme(theme: CustomTheme) {
+		const numbers = this.savedThemes.map((t) => Number(/(\d+)$/.exec(t.name)?.[1] ?? 0));
+		const saved: SavedTheme = {
+			id: uid(),
+			name: tr('Моя тема {0}', Math.max(0, ...numbers) + 1),
+			theme: { ...theme },
+			createdAt: now(),
+			updatedAt: now()
+		};
+		this.savedThemes.unshift(saved);
+		this.activeThemeId = saved.id;
+		return saved;
+	}
+
+	/** Сохранить текущие цвета отдельной темой, не трогая прежнюю */
+	saveThemeAsNew(theme?: CustomTheme) {
+		const source = theme ?? this.customTheme;
+		if (!source) return;
+		this.customTheme = { ...source };
+		const saved = this.#addSavedTheme(source);
+		this.#savePrefs();
+		this.notify(tr('Сохранено в «Мои темы»: {0}', saved.name));
+	}
+
+	applySavedTheme(id: string) {
+		const saved = this.savedThemes.find((t) => t.id === id);
+		if (!saved) return;
+		this.customTheme = { ...saved.theme };
+		this.activeThemeId = id;
+		this.#savePrefs();
+	}
+
+	renameSavedTheme(id: string, name: string) {
+		const saved = this.savedThemes.find((t) => t.id === id);
+		if (!saved || !name.trim()) return;
+		saved.name = name.trim();
+		this.#savePrefs();
+	}
+
+	/** Удаление только по явной просьбе; применённые цвета остаются на экране */
+	deleteSavedTheme(id: string) {
+		this.savedThemes = this.savedThemes.filter((t) => t.id !== id);
+		if (this.activeThemeId === id) this.activeThemeId = null;
 		this.#savePrefs();
 	}
 

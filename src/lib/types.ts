@@ -382,3 +382,12 @@ export interface LogoColors {
 	/** Название «Волна» и блоки букв WAVE */
 	text: string;
 }
+
+/** Своя тема в папке «Мои темы» */
+export interface SavedTheme {
+	id: string;
+	name: string;
+	theme: CustomTheme;
+	createdAt: string;
+	updatedAt: string;
+}

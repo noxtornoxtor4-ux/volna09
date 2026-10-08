@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.ts';
-	import { ChevronDown, Copy, RotateCcw, TriangleAlert, Wand } from '@lucide/svelte';
+	import { ChevronDown, Copy, CopyPlus, RotateCcw, TriangleAlert, Wand } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { brandPalette } from '#lib/data.ts';
 	import {
@@ -12,6 +12,7 @@
 	} from '#lib/theme.ts';
 	import type { CustomTheme } from '#lib/types.ts';
 	import ColorPicker from './ColorPicker.svelte';
+	import SavedThemes from './SavedThemes.svelte';
 
 	let open = $state<keyof CustomTheme | null>(null);
 	let json = $state('');
@@ -21,8 +22,11 @@
 	const issues = $derived(theme ? contrastIssues(theme) : []);
 	const weak = $derived(new Set(issues.flatMap((i) => [i.fg, i.bg])));
 
+	/** Включение возвращает последнюю тему из «Моих тем», а если их нет — начинает с стандартной */
 	function enable() {
-		app.setCustomTheme({ ...themePresets[app.isDark ? 'dark' : 'light'] });
+		const last = app.savedThemes.find((t) => t.id === app.activeThemeId) ?? app.savedThemes[0];
+		if (last) app.applySavedTheme(last.id);
+		else app.setCustomTheme({ ...themePresets[app.isDark ? 'dark' : 'light'] });
 	}
 
 	/** Изменения применяются сразу ко всем экранам */
@@ -47,8 +51,8 @@
 		const parsed = parseTheme(json);
 		jsonError = !parsed;
 		if (parsed) {
-			app.setCustomTheme(parsed);
-			app.notify(tr('Тема применена'));
+			// Импортированная тема ложится в «Мои темы» отдельной записью
+			app.saveThemeAsNew(parsed);
 		}
 	}
 </script>
@@ -58,7 +62,9 @@
 		<div>
 			<h2 class="font-extrabold">{tr('Кастомная тема')}</h2>
 			<p class="text-sm text-muted">
-				{tr('Свои цвета фона, текста, кнопок и карточек. Сохраняются на этом устройстве.')}
+				{tr(
+					'Свои цвета фона, текста, кнопок и карточек. Каждая тема сама сохраняется в «Мои темы».'
+				)}
 			</p>
 		</div>
 		<button
@@ -148,6 +154,10 @@
 		</div>
 
 		<div class="mt-5 flex flex-wrap gap-2">
+			<button type="button" class="btn btn-ghost" onclick={() => app.saveThemeAsNew()}>
+				<CopyPlus class="size-4" />
+				{tr('Сохранить как новую')}
+			</button>
 			<button type="button" class="btn btn-ghost" onclick={() => app.setCustomTheme(null)}>
 				<RotateCcw class="size-4" />
 				{tr('Сбросить к стандартным')}
@@ -158,6 +168,8 @@
 			</button>
 		</div>
 	{/if}
+
+	<SavedThemes />
 
 	<details class="mt-4">
 		<summary class="cursor-pointer text-sm font-semibold text-muted"

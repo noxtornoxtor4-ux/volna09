@@ -373,7 +373,9 @@ export const en: Record<string, string> = {
 	'Моей организации нет в списке': 'My organization isn’t listed',
 	'Можно прийти с другом?': 'Can I bring a friend?',
 	'Мои публикации': 'My posts',
+	'Мои темы': 'My themes',
 	'Мой профиль': 'My profile',
+	'Моя тема {0}': 'My theme {0}',
 	Музыка: 'Music',
 	'Мягкий жёлтый': 'Soft yellow',
 	Мята: 'Mint',
@@ -583,6 +585,7 @@ export const en: Record<string, string> = {
 	'Пастельно-зелёный': 'Pastel green',
 	Пауза: 'Pause',
 	'Первая помощь': 'First aid',
+	Переименовать: 'Rename',
 	Перейти: 'Go',
 	'Переключайтесь между личным аккаунтом и аккаунтом организации без повторного входа.':
 		'Switch between your personal and organization accounts without signing in again.',
@@ -665,6 +668,8 @@ export const en: Record<string, string> = {
 	'Приложение «Волна»': '“WAVE” app',
 	'Приложение перезапустится на выбранном языке.': 'The app will restart in the selected language.',
 	'Приложение установлено': 'App installed',
+	Применена: 'Applied',
+	'Применена · сохраняется автоматически': 'Applied · saved automatically',
 	Применить: 'Apply',
 	Проверена: 'Verified',
 	'Проверенная организация': 'Verified organization',
@@ -733,8 +738,8 @@ export const en: Record<string, string> = {
 	Светлая: 'Light',
 	Светлота: 'Lightness',
 	'Своё фото': 'Your own photo',
-	'Свои цвета фона, текста, кнопок и карточек. Сохраняются на этом устройстве.':
-		'Your own colors for background, text, buttons and cards. Saved on this device.',
+	'Свои цвета фона, текста, кнопок и карточек. Каждая тема сама сохраняется в «Мои темы».':
+		'Your own colors for background, text, buttons and cards. Every theme is saved to My themes automatically.',
 	'Своя тема': 'Custom topic',
 	сегодня: 'today',
 	'сегодня вечером': 'this evening',
@@ -773,8 +778,10 @@ export const en: Record<string, string> = {
 	'Сообщение…': 'Message…',
 	Сообщения: 'Messages',
 	'Сообщения — Волна': 'Messages — WAVE',
+	'Сохранено в «Мои темы»: {0}': 'Saved to My themes: {0}',
 	'Сохраните воспоминания об этом дне.': 'Save your memories of this day.',
 	Сохранить: 'Save',
+	'Сохранить как новую': 'Save as new',
 	'Сохраняем…': 'Saving…',
 	'Сохраняется оригинал файла: фото, изображение или PDF до 20 МБ.':
 		'The original file is kept: a photo, image or PDF up to 20 MB.',
@@ -804,7 +811,6 @@ export const en: Record<string, string> = {
 	'Телефон или Telegram для связи': 'Phone or Telegram for contact',
 	'Телефон, email, пароль': 'Phone, email, password',
 	Тема: 'Topic',
-	'Тема применена': 'Theme applied',
 	'Тема создана и видна всем': 'Topic created and visible to everyone',
 	Тёмная: 'Dark',
 	'Тему увидят все волонтёры, а организаторы смогут отмечать ею свои мероприятия.':
@@ -840,6 +846,7 @@ export const en: Record<string, string> = {
 	'Удалить вариант': 'Delete option',
 	'Удалить вопрос': 'Delete question',
 	'Удалить навык «{0}» вместе с материалами?': 'Delete the skill “{0}” with its materials?',
+	'Удалить тему «{0}» из «Моих тем»?': 'Delete the theme “{0}” from My themes?',
 	'Удалить фото': 'Delete photo',
 	'Уже ведёте организацию? Можно ничего не выбирать — она подключится сама.':
 		'Already running an organization? No need to pick anything — it will connect automatically.',
