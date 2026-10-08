@@ -298,7 +298,7 @@ export interface Privacy {
 }
 
 export interface Session {
-	method: 'phone' | 'email';
+	method: 'phone' | 'email' | 'google';
 	contact: string;
 	role: Role;
 }

@@ -64,7 +64,6 @@ export const en: Record<string, string> = {
 	Аквамарин: 'Aquamarine',
 	'Аккаунт волонтёра': 'Volunteer account',
 	'Аккаунт организации': 'Organization account',
-	'Аккаунт создан — добро пожаловать!': 'Account created — welcome!',
 	Аккаунты: 'Accounts',
 	Активен: 'Active',
 	'Активная кнопка': 'Active button',
@@ -94,6 +93,8 @@ export const en: Record<string, string> = {
 	Ближайшие: 'Upcoming',
 	'Большой баннер вверху страницы: набор волонтёров, акция или важное объявление.':
 		'A large banner at the top of the page: volunteer recruitment, a campaign or an important announcement.',
+	'Браузер заблокировал окно Google — разрешите всплывающие окна или войдите по почте':
+		'The browser blocked the Google window — allow pop-ups or sign in with email',
 	Бронза: 'Bronze',
 	'Будьте первым, кто оставит комментарий.': 'Be the first to comment.',
 	'Был ли у вас опыт волонтёрства?': 'Have you volunteered before?',
@@ -134,8 +135,9 @@ export const en: Record<string, string> = {
 	'Возможности — Волна': 'Opportunities — WAVE',
 	Возраст: 'Age',
 	'Возраст от 14 лет': 'Ages 14 and up',
-	'Войдите, чтобы продолжить.': 'Sign in to continue.',
 	Войти: 'Sign in',
+	'Войти по почте и паролю': 'Sign in with email and password',
+	'Войти через Google': 'Continue with Google',
 	Волна: 'WAVE',
 	'Волна — платформа для подростков-волонтёров': 'WAVE — a platform for teen volunteers',
 	'Волна — фирменный': 'WAVE — brand',
@@ -157,7 +159,6 @@ export const en: Record<string, string> = {
 	'Вопросы · {0}': 'Questions · {0}',
 	'Вопросы волонтёров': 'Volunteer questions',
 	'Вопросы по мероприятиям': 'Event questions',
-	'Впервые здесь?': 'New here?',
 	Время: 'Time',
 	'Вручить награду': 'Give an award',
 	Вс: 'Sun',
@@ -173,10 +174,11 @@ export const en: Record<string, string> = {
 	Вт: 'Tue',
 	'Второстепенный текст': 'Secondary text',
 	'Вход — Волна': 'Sign in — WAVE',
-	'Вход по почте не включён в Firebase': 'Email sign-in is not enabled in Firebase',
-	'Вход по телефону не включён в Firebase': 'Phone sign-in is not enabled in Firebase',
 	'Вход подтверждён через Firebase. Другие пользователи этот контакт не видят.':
 		"Sign-in is verified by Firebase. Other users can't see this contact.",
+	'Вход через Google не работает внутри Telegram и WhatsApp. Откройте сайт в браузере или войдите по почте.':
+		"Google sign-in doesn't work inside Telegram and WhatsApp. Open the site in a browser or sign in with email.",
+	'Входим…': 'Signing in…',
 	вчера: 'yesterday',
 	'Вы вошли как {0}': 'You’re signed in as {0}',
 	'Вы вышли из чата': 'You left the chat',
@@ -229,9 +231,9 @@ export const en: Record<string, string> = {
 	'Добавьте то, что умеете: рисование, языки, фото… Внутри навыка можно хранить работы и сертификаты.':
 		'Add what you can do: drawing, languages, photography… Each skill can hold your works and certificates.',
 	'Добавьте фото или видео своих работ.': 'Add photos or videos of your work.',
+	'Добро пожаловать!': 'Welcome!',
 	'Дополнительная информация': 'Additional information',
 	Достижения: 'Achievements',
-	Другая: 'Other',
 	'Другое / регулярная помощь': 'Other / regular help',
 	'Её заполнят волонтёры, когда нажмут «Податься». Имя и возраст подставятся из профиля.':
 		'Volunteers fill it in when they tap “Apply”. Name and age are filled in from their profile.',
@@ -260,7 +262,6 @@ export const en: Record<string, string> = {
 	'Заполните название и место на шаге «Описание».':
 		'Fill in the title and place in the “Description” step.',
 	'Заполните обязательные поля ({0})': 'Fill in the required fields ({0})',
-	Зарегистрироваться: 'Sign up',
 	'Заявка возвращена': 'Application returned',
 	'Заявка на «{0}» отклонена': 'Your application for “{0}” was declined',
 	'Заявка на «{0}» подтверждена — день отмечен в календаре':
@@ -307,7 +308,6 @@ export const en: Record<string, string> = {
 	'Как всё устроено': 'How it works',
 	'Как прошло мероприятие? Что понравилось, что можно улучшить?':
 		'How did the event go? What did you like, and what could be improved?',
-	'Как тебя зовут?': 'What’s your name?',
 	Календарь: 'Calendar',
 	'Календарь — Волна': 'Calendar — WAVE',
 	'Кара-Балта': 'Kara-Balta',
@@ -321,11 +321,9 @@ export const en: Record<string, string> = {
 	'Кнопка при нажатии': 'Pressed button',
 	Кнопки: 'Buttons',
 	'Кого наградить · {0}': 'Who to award · {0}',
-	'Код из SMS': 'SMS code',
 	'Код не похож на тему: нужны все 8 цветов в формате #rrggbb':
 		'This code is not a theme: all 8 colors are needed in #rrggbb format',
 	'Код темы скопирован': 'Theme code copied',
-	'Код устарел — отправьте новый': 'The code has expired — send a new one',
 	'Количество людей': 'Number of people',
 	Комментарии: 'Comments',
 	'Комментарий для куратора': 'Comment for the coordinator',
@@ -350,8 +348,6 @@ export const en: Record<string, string> = {
 	Лента: 'Feed',
 	'Лента — Волна': 'Feed — WAVE',
 	Лес: 'Forest',
-	'Лимит SMS на сегодня исчерпан. Войдите по email':
-		'Today’s SMS limit has been reached. Sign in with email',
 	Лимонный: 'Lemon',
 	Личные: 'Direct',
 	'Личные сообщения': 'Direct messages',
@@ -374,13 +370,11 @@ export const en: Record<string, string> = {
 	'Мероприятия и проекты': 'Events and projects',
 	'Мест нет': 'No spots left',
 	Место: 'Place',
-	'Минимум 6 символов': 'At least 6 characters',
 	'Моей организации нет в списке': 'My organization isn’t listed',
 	'Можно прийти с другом?': 'Can I bring a friend?',
 	'Мои публикации': 'My posts',
 	'Мой профиль': 'My profile',
 	Музыка: 'Music',
-	'Мы отправили SMS с кодом на {0}': 'We sent an SMS with a code to {0}',
 	'Мягкий жёлтый': 'Soft yellow',
 	Мята: 'Mint',
 	'На проверке': 'Under review',
@@ -428,7 +422,6 @@ export const en: Record<string, string> = {
 	'Название сертификата': 'Certificate title',
 	'Название темы': 'Topic name',
 	'Название: например, Команда эко-марафона': 'Name, e.g. Eco-marathon team',
-	'Найдите свою организацию или добавьте новую.': 'Find your organization or add a new one.',
 	'Найти волонтёра или организацию': 'Find a volunteer or organization',
 	'Найти по названию или городу': 'Search by name or city',
 	Написать: 'Message',
@@ -468,13 +461,9 @@ export const en: Record<string, string> = {
 	'Не открылось? Нажмите ••• вверху справа → «Открыть в Safari»':
 		"Didn't open? Tap ••• at the top right → “Open in Safari”",
 	'Не удалось войти. Попробуйте ещё раз': "Couldn't sign in. Please try again",
-	'Не удалось отправить SMS. Попробуйте ещё раз': "Couldn't send the SMS. Please try again",
-	'Не удалось проверить, что вы не робот. Проверьте интернет':
-		"Couldn't verify that you're not a robot. Check your internet connection",
 	'Не хватило места на устройстве для видео': 'Not enough space on the device for the video',
 	'Не хватило места на устройстве для файла': 'Not enough space on the device for the file',
 	Небо: 'Sky',
-	'Неверный код. Проверьте SMS и попробуйте ещё раз': 'Wrong code. Check the SMS and try again',
 	'Неверный пароль. Нажмите «Забыли пароль?» — пришлём ссылку для сброса':
 		"Wrong password. Tap “Forgot password?” — we'll send a reset link",
 	'Неверный email или пароль': 'Wrong email or password',
@@ -511,7 +500,6 @@ export const en: Record<string, string> = {
 	'Новый отзыв': 'New review',
 	'Новый пароль': 'New password',
 	новых: 'new',
-	'Номер телефона': 'Phone number',
 	Ночь: 'Night',
 	Нравится: 'Like',
 	'О группе': 'About the group',
@@ -522,6 +510,10 @@ export const en: Record<string, string> = {
 	Образование: 'Education',
 	Обязательный: 'Required',
 	'Один вариант': 'Single choice',
+	'Один вход — и для новых, и для тех, кто уже с нами.':
+		'One sign-in for newcomers and returning users alike.',
+	'Окно Google закрыто — нажмите кнопку ещё раз':
+		'The Google window was closed — tap the button again',
 	Онлайн: 'Online',
 	Описание: 'Description',
 	Опубликовать: 'Publish',
@@ -569,13 +561,8 @@ export const en: Record<string, string> = {
 	Отправить: 'Send',
 	'Отправить анкету': 'Submit application form',
 	'Отправить всем участникам · {0}': 'Send to all participants · {0}',
-	'Отправить код ещё раз': 'Resend code',
 	'Отправить комментарий': 'Send comment',
 	'Отправить на подтверждение': 'Submit for confirmation',
-	'Отправить снова через {0} с': 'Resend in {0} s',
-	'Отправка SMS на номера этой страны пока не включена. Войдите по email':
-		"SMS to numbers in this country isn't enabled yet. Sign in with email",
-	'Отправляем SMS…': 'Sending SMS…',
 	'Отправляйте уведомления': 'Send notifications',
 	'Отправьте организации заявку на подтверждение часов. После проверки куратором часы попадут в портфолио.':
 		'Send the organization a request to confirm your hours. Once the coordinator checks them, the hours will go to your portfolio.',
@@ -586,8 +573,8 @@ export const en: Record<string, string> = {
 	Очистить: 'Clear',
 	Ош: 'Osh',
 	Палитра: 'Palette',
-	'Пара шагов — и можно подавать заявки.': 'Just a couple of steps and you can start applying.',
 	Пароль: 'Password',
+	'Пароль — минимум 6 символов': 'Password — at least 6 characters',
 	'Пароль обновлён': 'Password updated',
 	'Пароль слишком простой — минимум 6 символов':
 		'The password is too simple — at least 6 characters',
@@ -602,7 +589,8 @@ export const en: Record<string, string> = {
 	'Переключатели, иконки меню, индикаторы': 'Switches, menu icons, indicators',
 	'Переключиться на аккаунт организации': 'Switch to organization account',
 	Персиковый: 'Peach',
-	'Письмо для сброса пароля отправлено на {0}': 'A password reset email was sent to {0}',
+	'Письмо для сброса пароля отправлено на {0}. Его отправитель — noreply@volna-a7de4.firebaseapp.com. Если письма нет во «Входящих», проверьте «Спам» и «Промоакции».':
+		'A password reset email was sent to {0}. It comes from noreply@volna-a7de4.firebaseapp.com. If it is not in your Inbox, check Spam and Promotions.',
 	Пн: 'Mon',
 	'По городу подбираются мероприятия, наборы и активности на главной.':
 		'Your city is used to pick events, recruitments and activities on Home.',
@@ -655,7 +643,6 @@ export const en: Record<string, string> = {
 	'Показать все города': 'Show all cities',
 	'Показывать часы': 'Show hours',
 	Полоски: 'Stripes',
-	'Получить код': 'Get code',
 	Пользователь: 'User',
 	Портфолио: 'Portfolio',
 	'Портфолио — Волна': 'Portfolio — WAVE',
@@ -682,8 +669,6 @@ export const en: Record<string, string> = {
 	Проверена: 'Verified',
 	'Проверенная организация': 'Verified organization',
 	'Проверьте адрес почты': 'Check the email address',
-	'Проверьте номер телефона': 'Check the phone number',
-	'Проверяем…': 'Checking…',
 	Программирование: 'Programming',
 	Продвигается: 'Promoted',
 	'продвигается до {0}': 'promoted until {0}',
@@ -738,7 +723,6 @@ export const en: Record<string, string> = {
 	Рекомендации: 'Recommendations',
 	Рисование: 'Drawing',
 	'Руководство по использованию': 'User guide',
-	'С возвращением!': 'Welcome back!',
 	Сайт: 'Website',
 	'Сайт открыт внутри другого приложения — отсюда iPhone не даёт установить его. Сначала откройте Safari.':
 		"The site is open inside another app — iPhone doesn't allow installing it from here. Open Safari first.",
@@ -781,7 +765,6 @@ export const en: Record<string, string> = {
 	'Создал(а): {0}': 'Created by: {0}',
 	создатель: 'creator',
 	Создать: 'Create',
-	'Создать аккаунт': 'Create account',
 	'Создать группу': 'Create group',
 	'Создать награду': 'Create award',
 	'Создать тему': 'Create topic',
@@ -802,7 +785,6 @@ export const en: Record<string, string> = {
 	'Стиль приложения': 'App style',
 	'Сторисы по темам на главной — листайте постеры и сразу подавайтесь.':
 		'Topic stories on Home — swipe through posters and apply right away.',
-	Страна: 'Country',
 	'Счётчик часов и проекты видны в профиле':
 		'Your hours counter and projects are visible on your profile',
 	'Так карточку увидят волонтёры': 'This is how volunteers will see the card',
@@ -819,7 +801,6 @@ export const en: Record<string, string> = {
 		'Text: volunteer recruitment, a campaign or an important announcement',
 	Тексты: 'Texts',
 	'Тексты и журналистика': 'Writing and journalism',
-	Телефон: 'Phone',
 	'Телефон или Telegram для связи': 'Phone or Telegram for contact',
 	'Телефон, email, пароль': 'Phone, email, password',
 	Тема: 'Topic',
@@ -860,7 +841,8 @@ export const en: Record<string, string> = {
 	'Удалить вопрос': 'Delete question',
 	'Удалить навык «{0}» вместе с материалами?': 'Delete the skill “{0}” with its materials?',
 	'Удалить фото': 'Delete photo',
-	'Уже есть аккаунт?': 'Already have an account?',
+	'Уже ведёте организацию? Можно ничего не выбирать — она подключится сама.':
+		'Already running an organization? No need to pick anything — it will connect automatically.',
 	'Уже продвигается до {0}. Можно продлить.': 'Already promoted until {0}. You can extend it.',
 	Уменьшить: 'Zoom out',
 	Уровень: 'Level',
@@ -932,6 +914,8 @@ export const en: Record<string, string> = {
 	Эксперт: 'Expert',
 	'Экспорт JSON': 'Export JSON',
 	'Это мой первый раз': "It's my first time",
+	'Этот адрес сайта не разрешён в Firebase': 'This site address is not allowed in Firebase',
+	'Этот способ входа не включён в Firebase': 'This sign-in method is not enabled in Firebase',
 	'Этот формат браузер не показывает сам.': "The browser can't display this format.",
 	'Этот email уже зарегистрирован — войдите в аккаунт':
 		'This email is already registered — sign in instead',
@@ -940,9 +924,7 @@ export const en: Record<string, string> = {
 	Язык: 'Language',
 	'Apple не разрешает сайтам устанавливаться одной кнопкой — только так, через Safari.':
 		"Apple doesn't let websites install with one tap — only this way, through Safari.",
-	'HEX или RGB': 'HEX or RGB',
-	'SMS пока недоступны для этого номера. Войдите по email':
-		"SMS isn't available for this number yet. Sign in with email"
+	'HEX или RGB': 'HEX or RGB'
 };
 
 /** Формы после числа: ключ — русская форма «много», значение — [один, много] */

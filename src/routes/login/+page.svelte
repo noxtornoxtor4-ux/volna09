@@ -1,181 +1,86 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
-	import { onDestroy } from 'svelte';
-	import { ArrowRight, Building, ChevronLeft, HandHeart, Mail, Smartphone } from '@lucide/svelte';
+	import { Building, ChevronDown, Compass, HandHeart } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { authError, emailSignIn, emailSignUp, resetPassword } from '#lib/auth.ts';
+	import { authError, emailSignIn, emailSignUp, googleSignIn, resetPassword } from '#lib/auth.ts';
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import Logo from '#lib/components/Logo.svelte';
 	import OrgPicker from '#lib/components/OrgPicker.svelte';
-	import OtpInput from '#lib/components/OtpInput.svelte';
-	import { cities } from '#lib/data.ts';
-	import { CODE_LENGTH, confirmSms, sendSms, smsError } from '#lib/sms.ts';
+	import { installer } from '#lib/install.svelte.ts';
 	import type { Role, Session } from '#lib/types.ts';
 
-	let mode = $state<'login' | 'signup'>('login');
-	let method = $state<Session['method']>('phone');
 	let role = $state<Role>('volunteer');
-	let name = $state('');
-	let city = $state(cities[0]);
 	let orgChoice = $state('');
 	let newOrg = $state({ name: '', city: '', about: '' });
-
-	let phone = $state('');
-	let code = $state('');
-	let codeSent = $state(false);
-	let resendIn = $state(0);
-	let sending = $state(false);
-	let problem = $state('');
-	let notice = $state('');
-	let timer: ReturnType<typeof setInterval> | undefined;
-
+	/** Вход по почте — запасной способ, спрятан под кнопкой Google */
+	let showEmail = $state(false);
 	let email = $state('');
 	let password = $state('');
+	let busy = $state(false);
+	let problem = $state('');
+	let notice = $state('');
 
-	/** Страны для входа по телефону; other — номер целиком с кодом страны */
-	const countries = [
-		{ id: 'kg', flag: '🇰🇬', code: '+996', digits: 9, example: '700 123 456' },
-		{ id: 'kz', flag: '🇰🇿', code: '+7', digits: 10, example: '701 123 4567' },
-		{ id: 'ru', flag: '🇷🇺', code: '+7', digits: 10, example: '912 345 6789' },
-		{ id: 'uz', flag: '🇺🇿', code: '+998', digits: 9, example: '90 123 4567' },
-		{ id: 'tj', flag: '🇹🇯', code: '+992', digits: 9, example: '93 123 4567' },
-		{ id: 'other', flag: '🌍', code: '+', digits: 0, example: '+44 7700 900123' }
-	];
-	let countryId = $state('kg');
-	const country = $derived(countries.find((c) => c.id === countryId) ?? countries[0]);
-
-	const phoneDigits = $derived(phone.replace(/\D/g, ''));
-	const phoneValid = $derived(
-		country.id === 'other'
-			? phoneDigits.length >= 8 && phoneDigits.length <= 15
-			: phoneDigits.length >= country.digits
-	);
-	/** Номер в международном формате: +996700123456 */
-	const fullPhone = $derived(
-		country.id === 'other'
-			? `+${phoneDigits}`
-			: `${country.code}${phoneDigits.slice(-country.digits)}`
-	);
 	const emailValid = $derived(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
-	const orgOk = $derived(
-		!!orgChoice && (orgChoice !== 'new' || (newOrg.name.trim().length > 1 && !!newOrg.city.trim()))
-	);
-	/** Для регистрации: имя волонтёра или выбранная организация */
-	const nameOk = $derived(mode === 'login' || (role === 'org' ? orgOk : name.trim().length > 1));
+	const errorCode = (error: unknown) => (error as { code?: string })?.code ?? '';
 
 	/** Firebase подтвердил пользователя — создаём профиль при первом входе и открываем приложение */
-	async function finish(session: Omit<Session, 'role'>, fallbackName?: string) {
+	async function finish(session: Omit<Session, 'role'>, name: string) {
 		await app.completeSignIn(session, {
 			role,
-			name: mode === 'signup' && role === 'volunteer' ? name.trim() : fallbackName,
-			city: mode === 'signup' && role === 'volunteer' ? city : undefined,
-			orgId: mode === 'signup' && role === 'org' && orgChoice !== 'new' ? orgChoice : undefined,
+			name,
+			orgId: role === 'org' && orgChoice && orgChoice !== 'new' ? orgChoice : undefined,
 			newOrg:
-				mode === 'signup' && role === 'org' && orgChoice === 'new'
+				role === 'org' && orgChoice === 'new' && newOrg.name.trim().length > 1
 					? { name: newOrg.name.trim(), city: newOrg.city.trim(), about: newOrg.about.trim() }
 					: undefined
 		});
 		goto(app.isOrg ? '/cabinet' : '/', { replace: true });
 	}
 
-	async function sendCode(e?: SubmitEvent) {
-		e?.preventDefault();
-		if (!phoneValid || !nameOk || sending) return;
-		problem = '';
-		sending = true;
-		try {
-			await sendSms(fullPhone, 'recaptcha');
-		} catch (error) {
-			problem = smsError(error);
-			return;
-		} finally {
-			sending = false;
-		}
-		codeSent = true;
-		code = '';
-		resendIn = 30;
-		clearInterval(timer);
-		timer = setInterval(() => {
-			resendIn -= 1;
-			if (resendIn <= 0) clearInterval(timer);
-		}, 1000);
-	}
-
-	async function verifyCode(e?: SubmitEvent) {
-		e?.preventDefault();
-		if (code.length !== CODE_LENGTH || sending) return;
-		problem = '';
-		sending = true;
-		try {
-			await confirmSms(code);
-			await finish({ method: 'phone', contact: fullPhone });
-		} catch (error) {
-			problem = smsError(error);
-			code = '';
-		} finally {
-			sending = false;
-		}
-	}
-
-	async function emailLogin(e: SubmitEvent) {
-		e.preventDefault();
-		if (!emailValid || password.length < 6 || !nameOk || sending) return;
+	async function google() {
 		problem = notice = '';
-		sending = true;
+		busy = true;
 		try {
-			const created = await signInOrCreate();
-			// Аккаунт создан со страницы входа — имя берём из почты, его можно поменять в профиле
-			await finish(
-				{ method: 'email', contact: email.trim() },
-				created && mode === 'login' ? email.trim().split('@')[0] : undefined
-			);
-			if (created && mode === 'login') app.notify(tr('Аккаунт создан — добро пожаловать!'));
+			const user = await googleSignIn();
+			await finish({ method: 'google', contact: user.email }, user.name);
 		} catch (error) {
 			problem = authError(error);
 		} finally {
-			sending = false;
+			busy = false;
 		}
 	}
 
-	const errorCode = (error: unknown) => (error as { code?: string })?.code ?? '';
-
 	/**
-	 * Вход и регистрация одной кнопкой. Firebase не говорит, есть ли такая почта,
-	 * поэтому при неудачном входе пробуем создать аккаунт: если почта уже занята,
-	 * значит, неверен пароль. Возвращает true, если аккаунт только что создан.
+	 * Почта одной кнопкой: есть аккаунт — входим, нет — создаём. Firebase не говорит,
+	 * есть ли почта, поэтому при неудачном входе пробуем создать аккаунт; если почта
+	 * занята, значит, неверен пароль.
 	 */
-	async function signInOrCreate() {
-		if (mode === 'signup') {
-			try {
-				await emailSignUp(email, password);
-				return true;
-			} catch (error) {
-				if (!errorCode(error).includes('email-already-in-use')) throw error;
-			}
-			// Уже зарегистрирован — просто входим
+	async function emailLogin(e: SubmitEvent) {
+		e.preventDefault();
+		if (!emailValid || password.length < 6 || busy) return;
+		problem = notice = '';
+		busy = true;
+		try {
 			try {
 				await emailSignIn(email, password);
-				return false;
 			} catch (error) {
-				if (errorCode(error).includes('invalid-credential')) throw { code: 'auth/wrong-password' };
-				throw error;
+				const code = errorCode(error);
+				if (!code.includes('invalid-credential') && !code.includes('user-not-found')) throw error;
+				try {
+					await emailSignUp(email, password);
+				} catch (signUpError) {
+					if (errorCode(signUpError).includes('email-already-in-use'))
+						throw { code: 'auth/wrong-password' };
+					throw signUpError;
+				}
 			}
-		}
-		try {
-			await emailSignIn(email, password);
-			return false;
+			await finish({ method: 'email', contact: email.trim() }, email.trim().split('@')[0]);
 		} catch (error) {
-			const code = errorCode(error);
-			if (!code.includes('invalid-credential') && !code.includes('user-not-found')) throw error;
-		}
-		try {
-			await emailSignUp(email, password);
-			return true;
-		} catch (error) {
-			if (errorCode(error).includes('email-already-in-use')) throw { code: 'auth/wrong-password' };
-			throw error;
+			problem = authError(error);
+		} finally {
+			busy = false;
 		}
 	}
 
@@ -183,13 +88,14 @@
 		problem = notice = '';
 		try {
 			await resetPassword(email);
-			notice = tr('Письмо для сброса пароля отправлено на {0}', email.trim());
+			notice = tr(
+				'Письмо для сброса пароля отправлено на {0}. Его отправитель — noreply@volna-a7de4.firebaseapp.com. Если письма нет во «Входящих», проверьте «Спам» и «Промоакции».',
+				email.trim()
+			);
 		} catch (error) {
 			problem = authError(error);
 		}
 	}
-
-	onDestroy(() => clearInterval(timer));
 </script>
 
 <svelte:head><title>{tr('Вход — Волна')}</title></svelte:head>
@@ -226,15 +132,9 @@
 		<div class="lg:hidden"><Logo /></div>
 		<div class="mx-auto my-auto w-full max-w-sm py-10">
 			<div class="mb-6"><LanguagePicker /></div>
-			<h2 class="text-2xl font-extrabold tracking-tight">
-				{mode === 'login' ? tr('С возвращением!') : tr('Создать аккаунт')}
-			</h2>
+			<h2 class="text-2xl font-extrabold tracking-tight">{tr('Добро пожаловать!')}</h2>
 			<p class="mt-1 text-sm text-muted">
-				{mode === 'login'
-					? tr('Войдите, чтобы продолжить.')
-					: role === 'org'
-						? tr('Найдите свою организацию или добавьте новую.')
-						: tr('Пара шагов — и можно подавать заявки.')}
+				{tr('Один вход — и для новых, и для тех, кто уже с нами.')}
 			</p>
 
 			<div class="mt-6 grid grid-cols-2 gap-2">
@@ -253,154 +153,88 @@
 				{/each}
 			</div>
 
-			<div class="mt-4 grid grid-cols-2 rounded-2xl bg-surface-2 p-1 text-sm font-semibold">
-				<button
-					class="flex items-center justify-center gap-2 rounded-xl py-2.5 {method === 'phone'
-						? 'bg-surface shadow-sm'
-						: 'text-muted'}"
-					onclick={() => (method = 'phone')}
-				>
-					<Smartphone class="size-4" />
-					{tr('Телефон')}
-				</button>
-				<button
-					class="flex items-center justify-center gap-2 rounded-xl py-2.5 {method === 'email'
-						? 'bg-surface shadow-sm'
-						: 'text-muted'}"
-					onclick={() => (method = 'email')}
-				>
-					<Mail class="size-4" /> Email
-				</button>
-			</div>
-
-			{#if mode === 'signup' && !(method === 'phone' && codeSent)}
-				{#if role === 'org'}
-					<OrgPicker bind:selected={orgChoice} bind:draft={newOrg} />
-				{:else}
-					<label class="mt-5 block">
-						<span class="label">{tr('Как тебя зовут?')}</span>
-						<input
-							class="input"
-							autocomplete="name"
-							placeholder={tr('Имя и фамилия')}
-							bind:value={name}
-						/>
-					</label>
-					<label class="mt-3 block">
-						<span class="label">{tr('Город')}</span>
-						<select class="input" bind:value={city}>
-							{#each cities as c (c)}<option value={c}>{tr(c)}</option>{/each}
-						</select>
-					</label>
-				{/if}
+			{#if role === 'org'}
+				<OrgPicker bind:selected={orgChoice} bind:draft={newOrg} />
+				<p class="mt-2 text-xs text-muted">
+					{tr('Уже ведёте организацию? Можно ничего не выбирать — она подключится сама.')}
+				</p>
 			{/if}
 
-			{#if method === 'phone'}
-				{#if !codeSent}
-					<form class="mt-5 space-y-4" onsubmit={sendCode}>
-						<label class="block">
-							<span class="label">{tr('Номер телефона')}</span>
-							<div class="flex gap-2">
-								<select
-									class="input w-auto shrink-0 pr-8 font-semibold"
-									bind:value={countryId}
-									aria-label={tr('Страна')}
-								>
-									{#each countries as c (c.id)}
-										<option value={c.id}>{c.flag} {c.id === 'other' ? tr('Другая') : c.code}</option
-										>
-									{/each}
-								</select>
-								<input
-									class="input"
-									type="tel"
-									inputmode="tel"
-									autocomplete={country.id === 'other' ? 'tel' : 'tel-national'}
-									placeholder={country.example}
-									bind:value={phone}
-								/>
-							</div>
-						</label>
-						{#if problem}<p class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
-								{problem}
-							</p>{/if}
+			{#if installer.inApp}
+				<!-- Google не пускает во встроенные браузеры Telegram, WhatsApp, Instagram -->
+				<div class="mt-5 rounded-2xl bg-pastel-yellow p-3 text-sm text-pastel-yellow-ink">
+					{tr(
+						'Вход через Google не работает внутри Telegram и WhatsApp. Откройте сайт в браузере или войдите по почте.'
+					)}
+					{#if installer.ios}
 						<button
-							class="btn w-full btn-primary py-3"
-							disabled={!phoneValid || !nameOk || sending}
+							class="mt-2 btn w-full bg-ink py-2.5 text-bg"
+							onclick={() => installer.openInSafari()}
+							><Compass class="size-4" /> {tr('Открыть в Safari')}</button
 						>
-							{sending ? tr('Отправляем SMS…') : tr('Получить код')}
-							<ArrowRight class="size-4" />
-						</button>
-					</form>
-				{:else}
-					<form class="mt-5 space-y-4" onsubmit={verifyCode}>
-						<button
-							type="button"
-							class="flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink"
-							onclick={() => (codeSent = false)}
-						>
-							<ChevronLeft class="size-4" />
-							{fullPhone}
-						</button>
-						<div>
-							<span class="label">{tr('Код из SMS')}</span>
-							<OtpInput
-								bind:value={code}
-								length={CODE_LENGTH}
-								disabled={sending}
-								invalid={!!problem}
-								oncomplete={() => verifyCode()}
-							/>
-						</div>
-						{#if problem}
-							<p class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
-								{problem}
-							</p>
-						{:else}
-							<p class="text-sm text-muted">
-								{tr('Мы отправили SMS с кодом на {0}', fullPhone)}
-							</p>
-						{/if}
-						<button
-							class="btn w-full btn-primary py-3"
-							disabled={code.length !== CODE_LENGTH || sending}
-						>
-							{sending ? tr('Проверяем…') : tr('Подтвердить')}
-						</button>
-						<button
-							type="button"
-							class="w-full text-sm font-semibold text-muted disabled:opacity-60"
-							disabled={resendIn > 0}
-							onclick={() => sendCode()}
-						>
-							{resendIn > 0
-								? tr('Отправить снова через {0} с', resendIn)
-								: tr('Отправить код ещё раз')}
-						</button>
-					</form>
-				{/if}
-			{:else}
-				<form class="mt-5 space-y-4" onsubmit={emailLogin}>
-					<label class="block">
-						<span class="label">Email</span>
-						<input
-							class="input"
-							type="email"
-							autocomplete="email"
-							placeholder="you@mail.com"
-							bind:value={email}
-						/>
-					</label>
-					<label class="block">
-						<span class="label">{tr('Пароль')}</span>
-						<input
-							class="input"
-							type="password"
-							autocomplete={mode === 'login' ? 'current-password' : 'new-password'}
-							placeholder={tr('Минимум 6 символов')}
-							bind:value={password}
-						/>
-					</label>
+					{/if}
+				</div>
+			{/if}
+
+			<button
+				class="mt-5 btn w-full border border-line bg-surface py-3.5 text-[15px] text-ink shadow-sm hover:bg-surface-2"
+				onclick={google}
+				disabled={busy}
+			>
+				<svg viewBox="0 0 48 48" class="size-5" aria-hidden="true">
+					<path
+						fill="#ffc107"
+						d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"
+					/>
+					<path
+						fill="#ff3d00"
+						d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
+					/>
+					<path
+						fill="#4caf50"
+						d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"
+					/>
+					<path
+						fill="#1976d2"
+						d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"
+					/>
+				</svg>
+				{busy ? tr('Входим…') : tr('Войти через Google')}
+			</button>
+
+			{#if problem && !showEmail}<p
+					class="mt-3 rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink"
+				>
+					{problem}
+				</p>{/if}
+
+			<button
+				class="mt-4 flex w-full items-center justify-center gap-1 text-sm font-semibold text-muted hover:text-ink"
+				onclick={() => (showEmail = !showEmail)}
+				aria-expanded={showEmail}
+			>
+				{tr('Войти по почте и паролю')}
+				<ChevronDown class="size-4 transition {showEmail ? 'rotate-180' : ''}" />
+			</button>
+
+			{#if showEmail}
+				<form class="mt-3 space-y-3" onsubmit={emailLogin}>
+					<input
+						class="input"
+						type="email"
+						autocomplete="email"
+						placeholder="you@mail.com"
+						aria-label="Email"
+						bind:value={email}
+					/>
+					<input
+						class="input"
+						type="password"
+						autocomplete="current-password"
+						placeholder={tr('Пароль — минимум 6 символов')}
+						aria-label={tr('Пароль')}
+						bind:value={password}
+					/>
 					{#if problem}<p class="rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
 							{problem}
 						</p>{/if}
@@ -409,15 +243,12 @@
 						</p>{/if}
 					<button
 						class="btn w-full btn-primary py-3"
-						disabled={!emailValid || password.length < 6 || !nameOk || sending}
+						disabled={!emailValid || password.length < 6 || busy}
+						>{busy ? tr('Входим…') : tr('Войти')}</button
 					>
-						{sending ? tr('Проверяем…') : mode === 'login' ? tr('Войти') : tr('Зарегистрироваться')}
-					</button>
-					{#if mode === 'login'}
-						<p class="text-center text-xs text-muted">
-							{tr('Нет аккаунта? Он создастся автоматически с этой почтой и паролем.')}
-						</p>
-					{/if}
+					<p class="text-center text-xs text-muted">
+						{tr('Нет аккаунта? Он создастся автоматически с этой почтой и паролем.')}
+					</p>
 					<button
 						type="button"
 						class="w-full text-sm font-semibold text-muted hover:text-ink disabled:opacity-50"
@@ -427,20 +258,9 @@
 				</form>
 			{/if}
 
-			<p class="mt-6 text-center text-sm text-muted">
-				{mode === 'login' ? tr('Впервые здесь?') : tr('Уже есть аккаунт?')}
-				<button
-					class="font-semibold text-accent-text"
-					onclick={() => (mode = mode === 'login' ? 'signup' : 'login')}
-				>
-					{mode === 'login' ? tr('Зарегистрироваться') : tr('Войти')}
-				</button>
-			</p>
-
 			<div class="mt-8 border-t border-line pt-6">
 				<InstallApp variant="banner" />
 			</div>
 		</div>
-		<div id="recaptcha"></div>
 	</main>
 </div>

@@ -261,9 +261,7 @@
 		{:else if section === 'account'}
 			<div class="space-y-4">
 				<div class="card p-5">
-					<span class="label"
-						>{app.session?.method === 'phone' ? tr('Номер телефона') : 'Email'}</span
-					>
+					<span class="label">{app.session?.method === 'google' ? 'Google' : 'Email'}</span>
 					<p class="font-semibold">{app.session?.contact}</p>
 					<p class="mt-1 text-xs text-muted">
 						{tr('Вход подтверждён через Firebase. Другие пользователи этот контакт не видят.')}

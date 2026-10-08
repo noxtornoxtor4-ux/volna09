@@ -251,8 +251,10 @@ class AppState {
 				this.uid = user?.uid ?? null;
 				if (user) {
 					this.session ??= {
-						method: user.phoneNumber ? 'phone' : 'email',
-						contact: user.phoneNumber ?? user.email ?? '',
+						method: user.providerData.some((p) => p.providerId === 'google.com')
+							? 'google'
+							: 'email',
+						contact: user.email ?? user.phoneNumber ?? '',
 						role: 'volunteer'
 					};
 					if (!this.#unsubscribe.size) this.#start();
