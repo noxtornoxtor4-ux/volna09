@@ -47,6 +47,8 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 	if (url.origin !== self.location.origin) return;
+	// Служебные страницы входа Firebase (проксируются через vercel.json) — всегда напрямую в сеть
+	if (url.pathname.startsWith('/__/')) return;
 
 	// Файлы сборки неизменяемы — отдаём из кэша
 	if (STATIC.has(url.pathname)) {

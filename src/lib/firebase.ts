@@ -20,6 +20,20 @@ let appPromise: Promise<FirebaseApp> | undefined;
 let authPromise: Promise<Auth> | undefined;
 let dbPromise: Promise<Firestore> | undefined;
 
+/** Основной адрес сайта: на нём служебные страницы входа Firebase проксируются через vercel.json */
+const PRODUCTION_HOST = 'volna09.vercel.app';
+
+/**
+ * Домен входа. На основном сайте вход идёт через его же адрес (/__/auth → Firebase),
+ * поэтому браузеры с защитой от сторонних cookie (Safari, Chrome, Firefox) не теряют вход
+ * после возврата со страницы Google. На localhost и превью — стандартный домен Firebase.
+ */
+function authDomain() {
+	return typeof location !== 'undefined' && location.hostname === PRODUCTION_HOST
+		? PRODUCTION_HOST
+		: FIREBASE_AUTH_DOMAIN;
+}
+
 /** Firebase загружается лениво, чтобы первый экран показывался без ожидания SDK */
 export function firebaseApp() {
 	appPromise ??= import('firebase/app').then(
@@ -27,7 +41,7 @@ export function firebaseApp() {
 			getApps()[0] ??
 			initializeApp({
 				apiKey: FIREBASE_API_KEY,
-				authDomain: FIREBASE_AUTH_DOMAIN,
+				authDomain: authDomain(),
 				projectId: FIREBASE_PROJECT_ID,
 				appId: FIREBASE_APP_ID
 			})
