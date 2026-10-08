@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.ts';
-	import { BadgeCheck, EyeOff, Heart, MessageCircle, Send, Share2, Star } from '@lucide/svelte';
+	import {
+		BadgeCheck,
+		Ellipsis,
+		EyeOff,
+		Heart,
+		MessageCircle,
+		Send,
+		Share2,
+		Star,
+		Trash
+	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { toneClass } from '#lib/data.ts';
 	import { timeAgo } from '#lib/format.ts';
@@ -16,6 +26,10 @@
 	let draft = $state('');
 
 	const author = $derived(app.author(post.authorId));
+	/** Своя публикация: от меня или от моей организации */
+	const mine = $derived(post.authorId === app.actorId);
+	let menu = $state(false);
+	let menuBox = $state<HTMLDivElement>();
 	const opportunity = $derived(
 		post.opportunityId ? app.opportunity(post.opportunityId) : undefined
 	);
@@ -30,6 +44,8 @@
 		draft = '';
 	}
 </script>
+
+<svelte:window onclick={(e) => menu && !menuBox?.contains(e.target as Node) && (menu = false)} />
 
 <article id={post.id} class="scroll-mt-24 card p-4 sm:p-5">
 	<header class="flex items-center gap-3">
@@ -56,6 +72,38 @@
 				<Star class="size-3 fill-current" />
 				{tr('Отзыв')}
 			</span>
+		{/if}
+		{#if mine}
+			<!-- Свою публикацию можно скрыть (вернуть потом из профиля) или удалить -->
+			<div class="relative" bind:this={menuBox}>
+				<button
+					class="grid size-9 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink"
+					onclick={() => (menu = !menu)}
+					aria-label={tr('Действия с публикацией')}
+					aria-expanded={menu}><Ellipsis class="size-5" /></button
+				>
+				{#if menu}
+					<div
+						class="absolute top-full right-0 z-20 mt-1 grid w-52 gap-1 rounded-2xl border border-line bg-surface p-1.5 shadow-xl"
+					>
+						<button
+							class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-surface-2"
+							onclick={() => {
+								menu = false;
+								app.setPostHidden(post, true);
+							}}><EyeOff class="size-4" /> {tr('Скрыть')}</button
+						>
+						<button
+							class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-pastel-peach-ink hover:bg-surface-2"
+							onclick={() => {
+								menu = false;
+								if (confirm(tr('Удалить публикацию навсегда? Вернуть её будет нельзя.')))
+									app.deletePost(post);
+							}}><Trash class="size-4" /> {tr('Удалить')}</button
+						>
+					</div>
+				{/if}
+			</div>
 		{/if}
 	</header>
 
@@ -127,18 +175,6 @@
 			<Share2 class="size-5" />
 			{post.shares}
 		</button>
-		{#if post.authorId === app.actorId && post.media?.type !== 'photo' && post.media}
-			<!-- Автор может убрать своё видео из ленты, не удаляя его -->
-			<button
-				class="ml-auto flex items-center gap-1.5 rounded-xl px-3 py-2 transition hover:bg-surface-2"
-				onclick={() => app.setPostHidden(post, true)}
-				title={tr('Скрыть видео')}
-				aria-label={tr('Скрыть видео')}
-			>
-				<EyeOff class="size-5" />
-				<span class="hidden sm:inline">{tr('Скрыть')}</span>
-			</button>
-		{/if}
 		{#if post.authorId !== app.actorId}
 			<div class="ml-auto"><ReportButton target={{ targetType: 'post', targetId: post.id }} /></div>
 		{/if}

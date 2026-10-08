@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.ts';
 	import { Film, Heart, Play } from '@lucide/svelte';
+	import { app } from '#lib/app.svelte.ts';
 	import { toneClass } from '#lib/data.ts';
 	import type { Post } from '#lib/types.ts';
 	import Modal from './Modal.svelte';
@@ -8,6 +9,11 @@
 
 	let { posts }: { posts: Post[] } = $props();
 	let viewing = $state<Post | null>(null);
+
+	// Публикацию скрыли или удалили — окно закрывается само
+	$effect(() => {
+		if (viewing && !app.visiblePosts.some((p) => p.id === viewing?.id)) viewing = null;
+	});
 </script>
 
 {#if posts.length}

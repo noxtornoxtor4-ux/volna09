@@ -5,23 +5,28 @@
 		poster?: string;
 		videoId?: string;
 		url?: string;
+		/** Фото публикации (для постов без видео) */
+		photo?: string;
 	}
 </script>
 
 <script lang="ts">
 	import { tr } from '#lib/i18n.ts';
-	import { ChevronDown, Eye, EyeOff, Play, Trash } from '@lucide/svelte';
+	import { ChevronDown, Eye, EyeOff, Play, Trash, Type } from '@lucide/svelte';
 	import { blobUrl } from '#lib/media-db.ts';
 	import { playableUrl } from '#lib/video.ts';
 	import MediaViewer from './MediaViewer.svelte';
 
-	/** Свёрнутый список скрытых видео: посмотреть, вернуть обратно или удалить окончательно */
+	/** Свёрнутый список скрытого: посмотреть, вернуть обратно или удалить окончательно */
 	let {
 		items,
+		posts = false,
 		onrestore,
 		ondelete
 	}: {
 		items: HiddenVideo[];
+		/** Список публикаций (фото, текст, видео), а не только видео */
+		posts?: boolean;
 		onrestore: (id: string) => void;
 		ondelete: (id: string) => void;
 	} = $props();
@@ -40,7 +45,10 @@
 	}
 
 	function remove(item: HiddenVideo) {
-		if (confirm(tr('Удалить видео навсегда? Вернуть его будет нельзя.'))) ondelete(item.id);
+		const question = posts
+			? tr('Удалить публикацию навсегда? Вернуть её будет нельзя.')
+			: tr('Удалить видео навсегда? Вернуть его будет нельзя.');
+		if (confirm(question)) ondelete(item.id);
 	}
 </script>
 
@@ -53,26 +61,42 @@
 			aria-expanded={open}
 		>
 			<EyeOff class="size-4" />
-			<span class="flex-1">{tr('Скрытые видео · {0}', items.length)}</span>
+			<span class="flex-1"
+				>{posts
+					? tr('Скрытые публикации · {0}', items.length)
+					: tr('Скрытые видео · {0}', items.length)}</span
+			>
 			<ChevronDown class="size-4 transition {open ? 'rotate-180' : ''}" />
 		</button>
 		{#if open}
 			<ul class="space-y-2 px-3 pb-3">
 				{#each items as item (item.id)}
 					<li class="flex items-center gap-3 rounded-2xl bg-surface-2 p-2">
-						<button
-							type="button"
-							class="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface"
-							onclick={() => view(item)}
-							aria-label={tr('Смотреть видео')}
-						>
-							{#if item.poster}<img
-									src={item.poster}
-									alt=""
-									class="size-full object-cover opacity-70"
-								/>{/if}
-							<Play class="absolute size-5 fill-current text-ink" />
-						</button>
+						{#if item.videoId || item.url}
+							<button
+								type="button"
+								class="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface"
+								onclick={() => view(item)}
+								aria-label={tr('Смотреть видео')}
+							>
+								{#if item.poster}<img
+										src={item.poster}
+										alt=""
+										class="size-full object-cover opacity-70"
+									/>{/if}
+								<Play class="absolute size-5 fill-current text-ink" />
+							</button>
+						{:else}
+							<span
+								class="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface text-muted"
+							>
+								{#if item.photo}<img
+										src={item.photo}
+										alt=""
+										class="size-full object-cover"
+									/>{:else}<Type class="size-5" />{/if}
+							</span>
+						{/if}
 						<span class="min-w-0 flex-1 truncate text-sm">{item.title}</span>
 						<button
 							type="button"

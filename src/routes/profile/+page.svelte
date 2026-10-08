@@ -23,7 +23,8 @@
 	const hiddenItems = (authorId: string) =>
 		app.hiddenPostsBy(authorId).map((p) => ({
 			id: p.id,
-			title: p.text.slice(0, 60) || tr('Видео'),
+			title: p.text.slice(0, 60) || tr('Публикация'),
+			photo: p.media?.type === 'photo' ? p.media.src : undefined,
 			poster: p.media?.poster,
 			videoId: p.media?.videoId,
 			url: p.media?.url
@@ -100,6 +101,7 @@
 	</div>
 	<PostGrid posts={app.postsBy(app.myOrgId)} />
 	<HiddenVideos
+		posts
 		items={hiddenItems(app.myOrgId)}
 		onrestore={(id) => withPost(id, (p) => app.setPostHidden(p, false))}
 		ondelete={(id) => withPost(id, (p) => app.deletePost(p))}
@@ -165,6 +167,7 @@
 	</div>
 	<PostGrid posts={app.postsBy(app.me)} />
 	<HiddenVideos
+		posts
 		items={hiddenItems(app.me)}
 		onrestore={(id) => withPost(id, (p) => app.setPostHidden(p, false))}
 		ondelete={(id) => withPost(id, (p) => app.deletePost(p))}

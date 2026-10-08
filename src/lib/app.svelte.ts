@@ -1166,14 +1166,16 @@ class AppState {
 		return this.posts.filter((p) => p.hidden && p.authorId === authorId);
 	}
 
-	/** Скрыть видео из ленты и профиля, не удаляя его */
+	/** Скрыть публикацию из ленты и профиля, не удаляя её */
 	setPostHidden(post: Post, hidden: boolean) {
 		const p = this.#fresh(this.posts, post);
 		if (!p) return;
 		p.hidden = hidden || undefined;
 		this.#save('posts');
 		this.notify(
-			hidden ? tr('Видео скрыто — его можно вернуть в разделе «Скрытые»') : tr('Видео снова видно')
+			hidden
+				? tr('Публикация скрыта — её можно вернуть в профиле, в разделе «Скрытые»')
+				: tr('Публикация снова видна')
 		);
 	}
 
