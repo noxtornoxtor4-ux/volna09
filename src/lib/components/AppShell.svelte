@@ -9,6 +9,7 @@
 		CloudOff,
 		Compass,
 		FolderOpen,
+		Gavel,
 		MessageCircle,
 		MessagesSquare,
 		Search,
@@ -45,6 +46,7 @@
 		{ href: '/search', label: tr('Поиск'), icon: Search },
 		{ href: '/awards', label: tr('Кабинет наград'), icon: Award },
 		...(app.isOrg ? [] : [{ href: '/portfolio', label: tr('Портфолио'), icon: FolderOpen }]),
+		...(app.isModerator ? [{ href: '/moderation', label: tr('Модерация'), icon: Gavel }] : []),
 		{ href: '/settings', label: tr('Настройки'), icon: Settings }
 	]);
 

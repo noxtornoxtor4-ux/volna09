@@ -9,6 +9,7 @@
 	import AwardItem from './AwardItem.svelte';
 	import Avatar from './Avatar.svelte';
 	import CertificateViewer from './CertificateViewer.svelte';
+	import QrCode from './QrCode.svelte';
 	import Modal from './Modal.svelte';
 
 	let {
@@ -97,6 +98,35 @@
 				<a href="/o?id={viewing.opportunityId}" class="text-sm font-semibold text-accent-text"
 					>{tr('За «{0}»', app.opportunity(viewing.opportunityId)?.title)}</a
 				>
+			{/if}
+			{#if viewing.certificateId}
+				<!-- QR ведёт на публичную страницу проверки подлинности -->
+				<div class="flex w-full items-center gap-3 rounded-2xl bg-surface-2 p-3 text-left">
+					<div class="w-24 shrink-0 rounded-xl bg-white p-1">
+						<QrCode
+							value={`${location.origin}/verify/${viewing.certificateId}`}
+							class="size-full"
+						/>
+					</div>
+					<div class="min-w-0 text-sm">
+						<div class="font-mono font-bold">{viewing.certificateId}</div>
+						<div
+							class="text-xs {viewing.status === 'revoked'
+								? 'text-pastel-peach-ink'
+								: 'text-muted'}"
+						>
+							{viewing.status === 'revoked'
+								? tr('Отозван: {0}', viewing.revokedReason ?? '')
+								: tr('Действителен · проверка по QR-коду')}
+						</div>
+						<a
+							href="/verify/{viewing.certificateId}"
+							target="_blank"
+							class="mt-1 inline-block text-xs font-semibold text-accent-text"
+							>{tr('Открыть страницу проверки')}</a
+						>
+					</div>
+				</div>
 			{/if}
 			{#if showRecipient}
 				<div class="flex items-center gap-2 text-sm">

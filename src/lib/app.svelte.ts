@@ -10,6 +10,10 @@ import type {
 	Announcement,
 	Answers,
 	Application,
+	Appeal,
+	AuditEntry,
+	ModeratorRole,
+	Report,
 	ApplicationStatus,
 	Award,
 	Consent,
@@ -21,6 +25,7 @@ import type {
 	Membership,
 	Opportunity,
 	OrgProfile,
+	OrgVerification,
 	Organization,
 	Person,
 	Post,
@@ -101,14 +106,25 @@ const COLLECTIONS = {
 	conversations: 'conversations',
 	announcements: 'announcements',
 	alerts: 'alerts',
-	dayPhotos: 'dayPhotos'
+	dayPhotos: 'dayPhotos',
+	reports: 'reports',
+	appeals: 'appeals',
+	auditLog: 'auditLog'
 } as const;
 
 type Field = keyof typeof COLLECTIONS;
 const FIELDS = Object.keys(COLLECTIONS) as Field[];
 
-/** Личные коллекции загружаются только для своих аккаунтов (волонтёр и его организация) */
-const SCOPED: Partial<Record<Field, (ids: string[]) => Filter>> = {
+/**
+ * Личные коллекции загружаются только для своих аккаунтов (волонтёр и его организация).
+ * Жалобы и журнал видят только модераторы, апелляции — автор и модераторы.
+ */
+const SCOPED: Partial<
+	Record<Field, (ids: string[], moderator: boolean) => Filter | null | 'skip'>
+> = {
+	appeals: (ids, moderator) => (moderator ? null : { field: 'personId', op: '==', value: ids[0] }),
+	reports: (_, moderator) => (moderator ? null : 'skip'),
+	auditLog: (_, moderator) => (moderator ? null : 'skip'),
 	alerts: (ids) => ({ field: 'to', op: 'in', value: ids }),
 	conversations: (ids) => ({ field: 'members', op: 'array-contains-any', value: ids }),
 	threads: (ids) => ({ field: 'members', op: 'array-contains-any', value: ids }),
@@ -124,10 +140,20 @@ const byNewest =
 const ORDER: Partial<Record<Field, (a: never, b: never) => number>> = {
 	posts: byNewest<Post>((p) => p.createdAt),
 	alerts: byNewest<Alert>((a) => a.at),
-	awards: byNewest<Award>((a) => a.date)
+	awards: byNewest<Award>((a) => a.date),
+	reports: byNewest<Report>((r) => r.createdAt),
+	appeals: byNewest<Appeal>((a) => a.createdAt),
+	auditLog: byNewest<AuditEntry>((e) => e.at)
 };
 
 const uid = () => crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+/** ID сертификата: VLN-XXXX-XXXX, без похожих символов (0/O, 1/I) */
+const certificateCode = () => {
+	const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+	const bytes = crypto.getRandomValues(new Uint8Array(8));
+	const chars = [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
+	return `VLN-${chars.slice(0, 4)}-${chars.slice(4)}`;
+};
 const now = () => new Date().toISOString();
 const TONES: Tone[] = ['blue', 'yellow', 'green', 'lilac', 'peach'];
 
@@ -220,6 +246,11 @@ class AppState {
 	announcements = $state<Announcement[]>([]);
 	alerts = $state<Alert[]>([]);
 	dayPhotos = $state<DayPhoto[]>([]);
+	reports = $state<Report[]>([]);
+	appeals = $state<Appeal[]>([]);
+	auditLog = $state<AuditEntry[]>([]);
+	/** Роль модератора: назначается в Firestore (коллекция moderators), не из приложения */
+	modRole = $state<ModeratorRole | null>(null);
 
 	// ───────── Состояние подключения ─────────
 	/** id пользователя Firebase */
@@ -273,6 +304,7 @@ class AppState {
 						role: 'volunteer'
 					};
 					if (!this.#unsubscribe.size) this.#start();
+					this.#loadRole(user.uid);
 				} else {
 					this.session = null;
 					this.#stop(FIELDS);
@@ -299,7 +331,8 @@ class AppState {
 
 	#listen(field: Field) {
 		const scoped = SCOPED[field];
-		const filter = scoped ? scoped(this.#ids) : null;
+		const filter = scoped ? scoped(this.#ids, this.isModerator) : null;
+		if (filter === 'skip') return;
 		const ready = listen<Doc>(
 			COLLECTIONS[field],
 			filter,
@@ -320,6 +353,23 @@ class AppState {
 		);
 		// Отписка может понадобиться раньше, чем подписка успеет установиться
 		this.#unsubscribe.set(field, () => ready.then((stop) => stop()).catch(() => {}));
+	}
+
+	/** Модераторы перечислены в коллекции moderators — её правят только через консоль Firebase */
+	async #loadRole(uid: string) {
+		try {
+			const found = await getOne<Doc & { role?: ModeratorRole }>('moderators', uid);
+			const role = found ? (found.role ?? 'moderator') : null;
+			if (role === this.modRole) return;
+			this.modRole = role;
+			this.#rescope();
+		} catch {
+			this.modRole = null;
+		}
+	}
+
+	get isModerator() {
+		return !!this.modRole;
 	}
 
 	#rescope() {
@@ -461,9 +511,10 @@ class AppState {
 		};
 		if (data.role === 'org') {
 			const orgId = data.newOrg ? this.#createOrg(data.newOrg, id) : data.orgId;
-			if (orgId) {
+			const org = this.orgs.find((o) => o.id === orgId);
+			// К проверенной организации нельзя присоединиться самому — иначе её часы мог бы начислять кто угодно
+			if (orgId && (!org || org.ownerIds.includes(id) || !org.verified)) {
 				person = { ...person, orgId };
-				const org = this.orgs.find((o) => o.id === orgId);
 				if (org && !org.ownerIds.includes(id)) org.ownerIds = [...org.ownerIds, id];
 			}
 		}
@@ -502,6 +553,10 @@ class AppState {
 		const orgId = data.newOrg ? this.#createOrg(data.newOrg, me.id) : data.orgId;
 		if (!orgId) return;
 		const org = this.orgs.find((o) => o.id === orgId);
+		if (org?.verified && !org.ownerIds.includes(me.id)) {
+			this.notify(tr('К проверенной организации куратора добавляет сама организация'));
+			return;
+		}
 		if (org && !org.ownerIds.includes(me.id)) org.ownerIds = [...org.ownerIds, me.id];
 		me.orgId = orgId;
 		this.#save('people', 'orgs');
@@ -744,7 +799,7 @@ class AppState {
 	get upcoming() {
 		const today = day(0);
 		return this.opportunities
-			.filter((o) => o.date >= today)
+			.filter((o) => o.date >= today && !o.removed)
 			.sort(
 				(a, b) =>
 					Number(this.isPromoted(b)) - Number(this.isPromoted(a)) || a.date.localeCompare(b.date)
@@ -1229,20 +1284,6 @@ class AppState {
 		return this.myHours.filter((h) => h.status === 'pending').reduce((s, h) => s + h.hours, 0);
 	}
 
-	logHours(
-		entry: Pick<HoursEntry, 'orgId' | 'opportunityId' | 'title' | 'date' | 'hours' | 'note'>
-	) {
-		this.hours.push({ ...entry, id: uid(), personId: this.me, status: 'pending' });
-		this.#alert(
-			entry.orgId,
-			'⏱️',
-			tr('{0} просит подтвердить {1} ч', this.profile.name, entry.hours),
-			'/cabinet?folder=hours'
-		);
-		this.#save('hours', 'alerts');
-		this.notify(tr('Заявка на подтверждение часов отправлена'));
-	}
-
 	participationOf(personId: string) {
 		return this.applications
 			.filter((a) => a.personId === personId && a.status === 'approved')
@@ -1332,8 +1373,19 @@ class AppState {
 		award: Pick<Award, 'type' | 'tier' | 'title' | 'description' | 'opportunityId'>,
 		personIds: string[]
 	) {
+		if (!this.#requireVerified()) return;
 		for (const personId of personIds) {
-			this.awards.unshift({ ...award, id: uid(), personId, orgId: this.myOrgId, date: day(0) });
+			// Сертификат получает уникальный ID — по нему документ проверяют на /verify/ID
+			const certificateId = award.type === 'certificate' ? certificateCode() : undefined;
+			const hours = award.opportunityId ? this.opportunity(award.opportunityId)?.hours : undefined;
+			this.awards.unshift({
+				...award,
+				id: certificateId ?? uid(),
+				personId,
+				orgId: this.myOrgId,
+				date: day(0),
+				...(certificateId ? { certificateId, status: 'valid' as const, hours } : {})
+			});
 			this.#alert(
 				personId,
 				'🏆',
@@ -1489,6 +1541,7 @@ class AppState {
 	}
 
 	createOpportunity(data: Omit<Opportunity, 'id' | 'orgId'>) {
+		if (!this.#requireVerified()) return '';
 		const id = uid();
 		this.opportunities.push({ ...data, id, orgId: this.myOrgId });
 		this.#save('opportunities');
@@ -1531,7 +1584,9 @@ class AppState {
 	}
 
 	/** Начислить часы участнику одобренной заявки после мероприятия */
-	creditHours(application: Application) {
+	/** Начислить часы участнику после мероприятия: по ведомости или QR-коду на месте */
+	creditHours(application: Application, source: 'qr' | 'roster' = 'roster') {
+		if (!this.#requireVerified()) return;
 		const o = this.opportunity(application.opportunityId);
 		if (!o || o.date > day(0) || this.isCredited(application)) return;
 		this.hours.push({
@@ -1543,7 +1598,8 @@ class AppState {
 			date: o.date,
 			hours: o.hours,
 			status: 'verified',
-			note: tr('Начислено куратором')
+			note: source === 'qr' ? tr('Подтверждено по QR-коду') : tr('Подтверждено по ведомости'),
+			source
 		});
 		this.#alert(
 			application.personId,
@@ -1553,6 +1609,19 @@ class AppState {
 		);
 		this.#save('hours', 'alerts');
 		this.notify(tr('Начислено {0} ч', o.hours));
+	}
+
+	/** QR на месте: подтвердить участие (если заявка ещё не одобрена) и сразу начислить часы */
+	checkIn(application: Application, source: 'qr' | 'roster' = 'qr') {
+		if (!this.#requireVerified()) return;
+		const a = this.#fresh(this.applications, application);
+		if (!a) return;
+		if (a.status !== 'approved') {
+			a.status = 'approved';
+			a.role ??= tr('Волонтёр');
+			this.#save('applications');
+		}
+		this.creditHours(a, source);
 	}
 
 	isCredited(application: Application) {
@@ -1565,6 +1634,7 @@ class AppState {
 	}
 
 	verifyHours(entry: HoursEntry, ok: boolean) {
+		if (!this.#requireVerified()) return;
 		const h = this.#fresh(this.hours, entry);
 		if (!h) return;
 		h.status = ok ? 'verified' : 'rejected';
@@ -1578,6 +1648,303 @@ class AppState {
 		);
 		this.#save('hours', 'alerts');
 		this.notify(ok ? tr('Подтверждено {0} ч', h.hours) : tr('Часы отклонены'));
+	}
+
+	// ───────── Верификация организаций ─────────
+
+	/** Проверенная организация: может публиковать мероприятия, начислять часы и выдавать сертификаты */
+	get canManage() {
+		return this.isOrg && this.myOrg.verified;
+	}
+
+	#requireVerified() {
+		if (this.canManage) return true;
+		this.notify(tr('Сначала пройдите проверку организации — это делает модератор'));
+		return false;
+	}
+
+	/** Заявка на синий бейдж с документами */
+	requestVerification(data: Pick<OrgVerification, 'docs' | 'links' | 'note'>) {
+		const org = this.orgs.find((o) => o.id === this.myOrgId);
+		if (!org) return;
+		org.verification = { ...data, status: 'pending', requestedAt: now() };
+		this.#save('orgs');
+		this.notify(tr('Заявка отправлена модератору'));
+	}
+
+	// ───────── Модерация ─────────
+
+	/** Каждое действие модератора попадает в журнал аудита */
+	#audit(action: string, targetType: string, targetId: string, details = '') {
+		this.auditLog.unshift({
+			id: uid(),
+			moderatorId: this.me,
+			action,
+			targetType,
+			targetId,
+			details,
+			at: now()
+		});
+		this.#save('auditLog');
+	}
+
+	/** Организации, ждущие проверки (и требующие уточнений) */
+	get verificationQueue() {
+		return this.orgs
+			.filter((o) => o.verification && !o.verified)
+			.sort((a, b) =>
+				(b.verification?.requestedAt ?? '').localeCompare(a.verification?.requestedAt ?? '')
+			);
+	}
+
+	reviewVerification(
+		orgId: string,
+		decision: 'approved' | 'rejected' | 'needs_info',
+		message = ''
+	) {
+		const org = this.orgs.find((o) => o.id === orgId);
+		if (!org || !this.isModerator) return;
+		org.verified = decision === 'approved';
+		org.verification = {
+			...(org.verification ?? { docs: [], links: '', note: '', requestedAt: now() }),
+			status: decision,
+			message: message.trim() || undefined,
+			reviewedAt: now(),
+			reviewerId: this.me
+		};
+		const text =
+			decision === 'approved'
+				? tr('Организация проверена — синий бейдж получен')
+				: decision === 'rejected'
+					? tr('Заявка на проверку отклонена: {0}', message)
+					: tr('Модератор просит уточнить данные: {0}', message);
+		this.#alert(
+			orgId,
+			decision === 'approved' ? '✅' : decision === 'rejected' ? '❌' : '❓',
+			text,
+			'/cabinet'
+		);
+		this.#save('orgs', 'alerts');
+		this.#audit(`verification:${decision}`, 'org', orgId, message);
+	}
+
+	/** Снять бейдж у организации (например, при нарушениях) */
+	revokeVerification(orgId: string, reason: string) {
+		const org = this.orgs.find((o) => o.id === orgId);
+		if (!org || !this.isModerator) return;
+		org.verified = false;
+		if (org.verification)
+			org.verification = { ...org.verification, status: 'rejected', message: reason };
+		this.#save('orgs');
+		this.#audit('verification:revoked', 'org', orgId, reason);
+	}
+
+	/** Мероприятие снимается с публикации, но не удаляется */
+	removeOpportunity(id: string, reason: string) {
+		const o = this.opportunity(id);
+		if (!o || !this.isModerator) return;
+		o.removed = { reason, by: this.me, at: now() };
+		this.#alert(o.orgId, '🚫', tr('Мероприятие «{0}» снято модератором: {1}', o.title, reason));
+		this.#save('opportunities', 'alerts');
+		this.#audit('opportunity:removed', 'opportunity', id, reason);
+	}
+
+	restoreOpportunity(id: string) {
+		const o = this.opportunity(id);
+		if (!o || !this.isModerator) return;
+		o.removed = undefined;
+		this.#save('opportunities');
+		this.#audit('opportunity:restored', 'opportunity', id);
+	}
+
+	markReviewed(id: string) {
+		const o = this.opportunity(id);
+		if (!o || !this.isModerator) return;
+		o.reviewedBy = this.me;
+		this.#save('opportunities');
+		this.#audit('opportunity:reviewed', 'opportunity', id);
+	}
+
+	/** Жалоба на пост, комментарий, мероприятие или профиль */
+	report(target: Pick<Report, 'targetType' | 'targetId' | 'postId'>, reason: string) {
+		if (!this.me) return;
+		this.reports.unshift({
+			...target,
+			id: uid(),
+			reason: reason.trim(),
+			reporterId: this.me,
+			createdAt: now(),
+			status: 'open'
+		});
+		this.#save('reports');
+		this.notify(tr('Жалоба отправлена модератору'));
+	}
+
+	resolveReport(id: string, status: 'resolved' | 'dismissed') {
+		const r = this.reports.find((x) => x.id === id);
+		if (!r || !this.isModerator) return;
+		r.status = status;
+		r.resolvedBy = this.me;
+		this.#save('reports');
+		this.#audit(`report:${status}`, r.targetType, r.targetId, r.reason);
+	}
+
+	/** Удаление публикации модератором по жалобе */
+	moderatePost(postId: string, reason: string) {
+		const post = this.posts.find((p) => p.id === postId);
+		if (!post || !this.isModerator) return;
+		if (post.media?.videoId) deleteBlob(post.media.videoId).catch(() => {});
+		this.posts = this.posts.filter((p) => p.id !== postId);
+		this.#alert(post.authorId, '🚫', tr('Ваша публикация удалена модератором: {0}', reason));
+		this.#save('posts', 'alerts');
+		this.#audit('post:deleted', 'post', postId, reason);
+	}
+
+	moderateComment(postId: string, commentId: string, reason: string) {
+		const post = this.posts.find((p) => p.id === postId);
+		if (!post || !this.isModerator) return;
+		post.comments = post.comments.filter((c) => c.id !== commentId);
+		this.#save('posts');
+		this.#audit('comment:deleted', 'comment', commentId, reason);
+	}
+
+	/** Апелляция волонтёра: часы не начислили или начислили неверно */
+	createAppeal(data: Pick<Appeal, 'orgId' | 'opportunityId' | 'text'>) {
+		if (!this.me) return;
+		this.appeals.unshift({
+			...data,
+			id: uid(),
+			personId: this.me,
+			text: data.text.trim(),
+			status: 'open',
+			createdAt: now()
+		});
+		this.#save('appeals');
+		this.notify(tr('Обращение отправлено модератору'));
+	}
+
+	get myAppeals() {
+		return this.appeals.filter((a) => a.personId === this.me);
+	}
+
+	/** Решение по апелляции; при удовлетворении можно сразу начислить часы */
+	resolveAppeal(id: string, decision: 'resolved' | 'rejected', response: string, hours = 0) {
+		const a = this.appeals.find((x) => x.id === id);
+		if (!a || !this.isModerator) return;
+		a.status = decision;
+		a.response = response.trim();
+		a.resolvedAt = now();
+		a.resolvedBy = this.me;
+		if (decision === 'resolved' && hours) {
+			const o = a.opportunityId ? this.opportunity(a.opportunityId) : undefined;
+			this.#addHours(
+				a.personId,
+				hours,
+				o?.title ?? tr('Решение по апелляции'),
+				a.orgId ?? o?.orgId ?? '',
+				o?.id
+			);
+		}
+		const text =
+			decision === 'resolved'
+				? tr('Апелляция удовлетворена: {0}', response)
+				: tr('Апелляция отклонена: {0}', response);
+		this.#alert(a.personId, decision === 'resolved' ? '✅' : '😔', text, '/portfolio?tab=requests');
+		this.#save('appeals', 'alerts', 'hours');
+		this.#audit(
+			`appeal:${decision}`,
+			'person',
+			a.personId,
+			hours ? `${response} (+${hours} ч)` : response
+		);
+	}
+
+	#addHours(personId: string, hours: number, title: string, orgId: string, opportunityId?: string) {
+		this.hours.push({
+			id: uid(),
+			personId,
+			orgId,
+			opportunityId,
+			title,
+			date: day(0),
+			hours,
+			status: 'verified',
+			note: tr('Начислено модератором'),
+			source: 'moderator'
+		});
+	}
+
+	/** Ручная корректировка часов при накрутке: отрицательное число списывает часы */
+	adjustHours(personId: string, hours: number, reason: string) {
+		if (!this.isModerator || !hours) return;
+		this.#addHours(personId, hours, tr('Корректировка: {0}', reason), '');
+		this.#alert(
+			personId,
+			'⚖️',
+			tr('Модератор скорректировал часы: {0} ч. {1}', hours, reason),
+			'/portfolio?tab=hours'
+		);
+		this.#save('hours', 'alerts');
+		this.#audit('hours:adjusted', 'person', personId, `${hours} ч: ${reason}`);
+	}
+
+	/** Все выданные платформой сертификаты */
+	get issuedCertificates() {
+		return this.awards.filter((a) => a.certificateId);
+	}
+
+	setCertificateStatus(awardId: string, status: 'valid' | 'revoked', reason = '') {
+		const a = this.awards.find((x) => x.id === awardId);
+		if (!a || !this.isModerator) return;
+		a.status = status;
+		a.revokedReason = status === 'revoked' ? reason : undefined;
+		const text =
+			status === 'revoked'
+				? tr('Сертификат «{0}» отозван: {1}', a.title, reason)
+				: tr('Сертификат «{0}» снова действителен', a.title);
+		this.#alert(a.personId, status === 'revoked' ? '🚫' : '✅', text, '/awards');
+		this.#save('awards', 'alerts');
+		this.#audit(`certificate:${status}`, 'certificate', awardId, reason);
+	}
+
+	/** Предупреждение пользователю */
+	warnUser(personId: string, reason: string) {
+		const p = this.person(personId);
+		if (!p || !this.isModerator || personId === this.me) return;
+		p.warnings = [...(p.warnings ?? []), { reason, at: now(), by: this.me }];
+		this.#alert(personId, '⚠️', tr('Предупреждение от модератора: {0}', reason));
+		this.#save('people', 'alerts');
+		this.#audit('user:warned', 'person', personId, reason);
+	}
+
+	/** Блокировка на days дней; без days — навсегда */
+	banUser(personId: string, reason: string, days?: number) {
+		const p = this.person(personId);
+		if (!p || !this.isModerator || personId === this.me) return;
+		const until = days ? new Date(Date.now() + days * 864e5).toISOString() : undefined;
+		p.ban = { reason, at: now(), by: this.me, until };
+		this.#save('people');
+		this.#audit(
+			days ? 'user:temp-ban' : 'user:ban',
+			'person',
+			personId,
+			days ? `${reason} (${days} дн.)` : reason
+		);
+	}
+
+	unbanUser(personId: string) {
+		const p = this.person(personId);
+		if (!p || !this.isModerator) return;
+		p.ban = undefined;
+		this.#save('people');
+		this.#audit('user:unbanned', 'person', personId);
+	}
+
+	/** Действующая блокировка пользователя */
+	activeBan(person?: Person) {
+		const ban = person?.ban;
+		if (!ban) return undefined;
+		return !ban.until || ban.until > now() ? ban : undefined;
 	}
 
 	// ───────── Архив и поиск ─────────

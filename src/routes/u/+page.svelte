@@ -6,6 +6,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import AwardShelves from '#lib/components/AwardShelves.svelte';
 	import CertificatesBlock from '#lib/components/CertificatesBlock.svelte';
+	import ReportButton from '#lib/components/ReportButton.svelte';
 	import OpportunityCard from '#lib/components/OpportunityCard.svelte';
 	import OrgShowcase from '#lib/components/OrgShowcase.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
@@ -43,6 +44,9 @@
 		</button>
 	{:else if isSelf}
 		<a href="/profile" class="btn btn-ghost">{tr('Мой профиль')}</a>
+	{/if}
+	{#if !isSelf}
+		<ReportButton compact target={{ targetType: 'person', targetId: id }} />
 	{/if}
 {/snippet}
 

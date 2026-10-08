@@ -266,6 +266,18 @@
 					<p class="mt-1 text-xs text-muted">
 						{tr('Вход подтверждён через Firebase. Другие пользователи этот контакт не видят.')}
 					</p>
+					<span class="mt-4 label">{tr('Ваш ID')}</span>
+					<button
+						type="button"
+						class="w-full truncate rounded-xl bg-surface-2 px-3 py-2 text-left font-mono text-xs"
+						title={tr('Скопировать')}
+						onclick={() =>
+							navigator.clipboard.writeText(app.me).then(() => app.notify(tr('ID скопирован')))}
+						>{app.me}</button
+					>
+					{#if app.modRole}<p class="mt-2 text-xs font-semibold text-accent-text">
+							{app.modRole === 'admin' ? tr('Роль: администратор') : tr('Роль: модератор')}
+						</p>{/if}
 				</div>
 				{#if app.session?.method === 'email'}
 					<form class="space-y-3 card p-5" onsubmit={savePassword}>

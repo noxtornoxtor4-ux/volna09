@@ -50,10 +50,11 @@
 					type="button"
 					role="radio"
 					aria-checked={on}
-					class="flex w-full items-center gap-3 rounded-2xl border-2 p-2.5 text-left transition {on
+					class="flex w-full items-center gap-3 rounded-2xl border-2 p-2.5 text-left transition disabled:cursor-not-allowed disabled:opacity-50 {on
 						? 'border-accent bg-accent-soft'
 						: 'border-transparent bg-surface-2 hover:border-accent/40'}"
 					onclick={() => (selected = org.id)}
+					disabled={org.verified && !org.ownerIds.includes(app.me)}
 				>
 					<span
 						class="grid size-10 shrink-0 place-items-center rounded-xl text-xl {toneClass[org.tone]
@@ -68,7 +69,11 @@
 								/>{/if}
 						</span>
 						<span class="block truncate text-xs text-muted"
-							>{tr(org.city)}{org.verified ? '' : tr(' · на проверке')}</span
+							>{tr(org.city)}{org.verified
+								? org.ownerIds.includes(app.me)
+									? ''
+									: tr(' · проверена — куратора добавляет организация')
+								: tr(' · на проверке')}</span
 						>
 					</span>
 					<span

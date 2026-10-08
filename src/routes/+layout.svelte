@@ -93,6 +93,22 @@
 	</div>
 {:else if isAuthPage}
 	{@render children()}
+{:else if app.session && app.activeBan(app.myPerson)}
+	{@const ban = app.activeBan(app.myPerson)!}
+	<!-- Заблокированный аккаунт: приложение недоступно до окончания блокировки -->
+	<div class="grid min-h-dvh place-items-center px-5">
+		<div class="max-w-sm text-center">
+			<div class="text-5xl">🚫</div>
+			<h1 class="mt-4 text-2xl font-extrabold">{tr('Аккаунт заблокирован')}</h1>
+			<p class="mt-2 text-muted">
+				{ban.until
+					? tr('Доступ откроется {0}.', new Date(ban.until).toLocaleString())
+					: tr('Блокировка бессрочная.')}
+			</p>
+			<p class="mt-2 rounded-2xl bg-surface-2 p-3 text-sm">{tr('Причина: {0}', ban.reason)}</p>
+			<button class="mt-5 btn btn-ghost" onclick={() => app.logout()}>{tr('Выйти')}</button>
+		</div>
+	</div>
 {:else if app.session}
 	<AppShell>{@render children()}</AppShell>
 	<!-- Согласие с условиями — один раз после первого входа -->

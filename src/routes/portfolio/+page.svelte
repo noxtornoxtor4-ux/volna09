@@ -2,12 +2,12 @@
 	import { tr } from '#lib/i18n.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { CircleCheck, CircleX, Hourglass, Plus } from '@lucide/svelte';
+	import { CircleCheck, CircleX, Hourglass, QrCode, Scale } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import AwardShelves from '#lib/components/AwardShelves.svelte';
 	import Avatar from '#lib/components/Avatar.svelte';
-	import LogHoursForm from '#lib/components/LogHoursForm.svelte';
 	import Modal from '#lib/components/Modal.svelte';
+	import MyQrCode from '#lib/components/MyQrCode.svelte';
 	import { toneClass } from '#lib/data.ts';
 	import { formatDate, hoursLabel } from '#lib/format.ts';
 	import type { HoursStatus } from '#lib/types.ts';
@@ -19,11 +19,32 @@
 		{ id: 'projects', label: tr('Проекты') },
 		{ id: 'orgs', label: tr('Организации') },
 		{ id: 'awards', label: tr('Награды') },
-		{ id: 'requests', label: tr('Подтверждение часов') }
+		{ id: 'requests', label: tr('QR и обращения') }
 	];
 
 	const tab = $derived((page.url.searchParams.get('tab') as Tab) || 'hours');
-	let requesting = $state(false);
+	let appealing = $state(false);
+	let appeal = $state({ opportunityId: '', text: '' });
+	/** Мероприятия, по которым можно обжаловать часы: все свои заявки */
+	const appealable = $derived(
+		app.applications
+			.filter((a) => a.personId === app.me)
+			.map((a) => app.opportunity(a.opportunityId))
+			.filter((o) => !!o)
+	);
+
+	function sendAppeal(e: SubmitEvent) {
+		e.preventDefault();
+		if (!appeal.text.trim()) return;
+		const o = appeal.opportunityId ? app.opportunity(appeal.opportunityId) : undefined;
+		app.createAppeal({
+			opportunityId: o?.id,
+			orgId: o?.orgId,
+			text: appeal.text
+		});
+		appeal = { opportunityId: '', text: '' };
+		appealing = false;
+	}
 
 	const statusView: Record<HoursStatus, { label: string; cls: string; icon: typeof CircleCheck }> =
 		{
@@ -61,9 +82,7 @@
 				{tr('Подтверждённая история волонтёрства для вуза, работы и грантов')}
 			</p>
 		</div>
-		<button class="btn btn-primary" onclick={() => (requesting = true)}
-			><Plus class="size-4" /> {tr('Заявка на часы')}</button
-		>
+		<a href="?tab=requests" class="btn btn-primary"><QrCode class="size-4" /> {tr('Мой QR-код')}</a>
 	</div>
 
 	<section class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -183,11 +202,47 @@
 	{:else if tab === 'awards'}
 		<AwardShelves awards={app.myAwards} removable />
 	{:else}
-		<p class="mb-4 text-sm text-muted">
-			{tr(
-				'Отправьте организации заявку на подтверждение часов. После проверки куратором часы попадут в портфолио.'
-			)}
-		</p>
+		<MyQrCode />
+
+		<section class="mt-5">
+			<div class="mb-3 flex items-center justify-between gap-3">
+				<h2 class="font-extrabold">{tr('Обращения к модератору')}</h2>
+				<button class="btn btn-soft py-2 text-sm" onclick={() => (appealing = true)}
+					><Scale class="size-4" /> {tr('Обжаловать')}</button
+				>
+			</div>
+			<p class="mb-3 text-sm text-muted">
+				{tr(
+					'Часы начисляет только проверенная организация — по QR-коду или в ведомости участников. Если часы не начислили или начислили неверно, напишите модератору.'
+				)}
+			</p>
+			<ul class="space-y-2">
+				{#each app.myAppeals as a (a.id)}
+					<li class="card p-4">
+						<div class="flex items-center justify-between gap-2 text-xs text-muted">
+							<span
+								>{a.opportunityId
+									? app.opportunity(a.opportunityId)?.title
+									: tr('Без мероприятия')}</span
+							>
+							<span class="font-bold"
+								>{a.status === 'open'
+									? tr('На рассмотрении')
+									: a.status === 'resolved'
+										? tr('Удовлетворено')
+										: tr('Отклонено')}</span
+							>
+						</div>
+						<p class="mt-1 text-sm">{a.text}</p>
+						{#if a.response}<p class="mt-2 rounded-xl bg-surface-2 p-2.5 text-sm">
+								{tr('Ответ модератора: {0}', a.response)}
+							</p>{/if}
+					</li>
+				{/each}
+			</ul>
+		</section>
+
+		<h2 class="mt-6 mb-3 font-extrabold">{tr('История начислений')}</h2>
 		<ul class="space-y-2">
 			{#each app.myHours as h (h.id)}
 				{@const s = statusView[h.status]}
@@ -208,7 +263,23 @@
 		</ul>
 	{/if}
 
-	<Modal bind:open={requesting} title={tr('Заявка на подтверждение часов')}>
-		<LogHoursForm ondone={() => (requesting = false)} />
+	<Modal bind:open={appealing} title={tr('Обращение к модератору')}>
+		<form class="space-y-3" onsubmit={sendAppeal}>
+			<label class="block">
+				<span class="label">{tr('Мероприятие')}</span>
+				<select class="input" bind:value={appeal.opportunityId}>
+					<option value="">{tr('Без мероприятия')}</option>
+					{#each appealable as o (o.id)}<option value={o.id}>{o.title}</option>{/each}
+				</select>
+			</label>
+			<textarea
+				class="min-h-28 input"
+				maxlength="1000"
+				placeholder={tr('Что произошло: например, был на мероприятии, но часы не начислили')}
+				bind:value={appeal.text}></textarea>
+			<button class="btn w-full btn-primary" disabled={!appeal.text.trim()}
+				>{tr('Отправить')}</button
+			>
+		</form>
 	</Modal>
 {/if}

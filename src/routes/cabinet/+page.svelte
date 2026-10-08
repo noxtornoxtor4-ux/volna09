@@ -16,6 +16,8 @@
 	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
+	import VerificationPanel from '#lib/components/VerificationPanel.svelte';
+	import CheckIn from '#lib/components/CheckIn.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import PromoteSheet from '#lib/components/PromoteSheet.svelte';
 	import { categories, day, toneClass } from '#lib/data.ts';
@@ -86,19 +88,25 @@
 				{app.orgProfile.name}
 			</h1>
 		</div>
+		<CheckIn />
 		<button class="btn hidden btn-ghost sm:inline-flex" onclick={() => (choosingPromo = true)}
 			><Rocket class="size-4" /> {tr('Продвижение')}</button
 		>
 		<!-- Кнопка с плюсиком наверху — публикация мероприятия -->
 		<a
 			href="/cabinet/new"
-			class="btn size-12 shrink-0 rounded-2xl btn-primary p-0 shadow-lg shadow-accent/40"
+			class="btn size-12 shrink-0 rounded-2xl btn-primary p-0 shadow-lg shadow-accent/40 {app.canManage
+				? ''
+				: 'pointer-events-none opacity-40'}"
+			aria-disabled={!app.canManage}
 			aria-label={tr('Опубликовать мероприятие')}
 			title={tr('Опубликовать мероприятие')}
 		>
 			<Plus class="size-6" />
 		</a>
 	</header>
+
+	<VerificationPanel />
 
 	{#if !folder}
 		<!-- Папки -->
@@ -269,7 +277,8 @@
 									<span class="btn btn-ghost text-muted">{tr('Часы начислены')}</span>
 								{:else if o && o.date <= today}
 									<button class="btn btn-soft" onclick={() => app.creditHours(a)}
-										><Hourglass class="size-4" /> {tr('Начислить {0} ч', o.hours)}</button
+										><Hourglass class="size-4" />
+										{tr('Подтвердить участие и часы · {0} ч', o.hours)}</button
 									>
 								{:else if o}
 									<span class="btn btn-ghost text-muted"

@@ -6,6 +6,7 @@
 	import { timeAgo } from '#lib/format.ts';
 	import type { Post } from '#lib/types.ts';
 	import Avatar from './Avatar.svelte';
+	import ReportButton from './ReportButton.svelte';
 	import PostMedia from './PostMedia.svelte';
 
 	let { post, openComments = false }: { post: Post; openComments?: boolean } = $props();
@@ -138,6 +139,9 @@
 				<span class="hidden sm:inline">{tr('Скрыть')}</span>
 			</button>
 		{/if}
+		{#if post.authorId !== app.actorId}
+			<div class="ml-auto"><ReportButton target={{ targetType: 'post', targetId: post.id }} /></div>
+		{/if}
 	</footer>
 
 	{#if showComments}
@@ -152,6 +156,12 @@
 						</div>
 						{c.text}
 					</div>
+					{#if c.authorId !== app.actorId}
+						<ReportButton
+							compact
+							target={{ targetType: 'comment', targetId: c.id, postId: post.id }}
+						/>
+					{/if}
 				</div>
 			{:else}
 				<p class="text-sm text-muted">{tr('Будьте первым, кто оставит комментарий.')}</p>

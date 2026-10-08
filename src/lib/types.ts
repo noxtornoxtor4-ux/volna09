@@ -32,9 +32,29 @@ export interface Organization extends OrgProfile {
 	id: string;
 	tone: Tone;
 	emoji: string;
+	/** Синий бейдж «Верифицированная организация» — ставит только модератор */
 	verified: boolean;
 	ownerIds: string[];
+	/** Заявка на проверку документов */
+	verification?: OrgVerification;
 	createdAt: string;
+}
+
+export type VerificationStatus = 'pending' | 'approved' | 'rejected' | 'needs_info';
+
+/** Заявка организации на статус «Проверенный организатор» */
+export interface OrgVerification {
+	status: VerificationStatus;
+	/** Устав, письмо, справка от учебного заведения или НКО */
+	docs: { fileId: string; name: string; mime: string }[];
+	/** Сайт и соцсети */
+	links: string;
+	note: string;
+	/** Причина отказа или вопрос модератора */
+	message?: string;
+	requestedAt: string;
+	reviewedAt?: string;
+	reviewerId?: string;
 }
 
 /** Публичный профиль пользователя. Телефон и почта сюда не попадают */
@@ -104,6 +124,10 @@ export interface Opportunity {
 	questions: FormQuestion[];
 	/** До какой даты публикация продвигается, YYYY-MM-DD */
 	promotedUntil?: string;
+	/** Снято модератором с публикации */
+	removed?: { reason: string; by: string; at: string };
+	/** Модератор просмотрел мероприятие */
+	reviewedBy?: string;
 }
 
 export type ApplicationStatus = 'pending' | 'approved' | 'declined';
@@ -132,6 +156,8 @@ export interface HoursEntry {
 	hours: number;
 	status: HoursStatus;
 	note: string;
+	/** Как начислены: QR на месте, ведомость куратора, решение модератора */
+	source?: 'qr' | 'roster' | 'moderator' | 'request';
 }
 
 /** short — вертикальное видео, video — длинное горизонтальное */
@@ -206,6 +232,13 @@ export interface Award {
 	/** Оригинал файла в хранилище медиа */
 	fileId?: string;
 	mime?: string;
+	/** Сертификат, выданный организацией через платформу: проверяется по ссылке /verify/ID */
+	certificateId?: string;
+	/** Действителен или отозван модератором */
+	status?: 'valid' | 'revoked';
+	revokedReason?: string;
+	/** Подтверждённые часы, за которые выдан сертификат */
+	hours?: number;
 }
 
 export interface Membership {
@@ -416,4 +449,45 @@ export interface SavedTheme {
 	theme: CustomTheme;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export type ModeratorRole = 'moderator' | 'admin';
+
+/** Жалоба пользователя на контент */
+export interface Report {
+	id: string;
+	targetType: 'post' | 'comment' | 'opportunity' | 'person';
+	targetId: string;
+	/** Пост, к которому относится комментарий */
+	postId?: string;
+	reason: string;
+	reporterId: string;
+	createdAt: string;
+	status: 'open' | 'resolved' | 'dismissed';
+	resolvedBy?: string;
+}
+
+/** Апелляция волонтёра по часам: не начислили или начислили неверно */
+export interface Appeal {
+	id: string;
+	personId: string;
+	orgId?: string;
+	opportunityId?: string;
+	text: string;
+	status: 'open' | 'resolved' | 'rejected';
+	response?: string;
+	createdAt: string;
+	resolvedAt?: string;
+	resolvedBy?: string;
+}
+
+/** Запись журнала действий модераторов */
+export interface AuditEntry {
+	id: string;
+	moderatorId: string;
+	action: string;
+	targetType: string;
+	targetId: string;
+	details: string;
+	at: string;
 }

@@ -20,6 +20,7 @@
 		Users
 	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
+	import ReportButton from '#lib/components/ReportButton.svelte';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import PromoteSheet from '#lib/components/PromoteSheet.svelte';
 	import { categories, toneClass } from '#lib/data.ts';
@@ -65,12 +66,22 @@
 		<button class="btn btn-ghost" onclick={() => history.back()}
 			><ChevronLeft class="size-4" /> {tr('Назад')}</button
 		>
-		<button
-			class="btn size-10 rounded-full btn-ghost p-0"
-			onclick={share}
-			aria-label={tr('Поделиться')}><Share2 class="size-4" /></button
-		>
+		<div class="flex items-center gap-1">
+			{#if o.orgId !== app.myOrgId}
+				<ReportButton compact target={{ targetType: 'opportunity', targetId: o.id }} />
+			{/if}
+			<button
+				class="btn size-10 rounded-full btn-ghost p-0"
+				onclick={share}
+				aria-label={tr('Поделиться')}><Share2 class="size-4" /></button
+			>
+		</div>
 	</div>
+	{#if o.removed}
+		<p class="mb-4 rounded-2xl bg-pastel-peach p-3 text-sm text-pastel-peach-ink">
+			{tr('Мероприятие снято модератором: {0}', o.removed.reason)}
+		</p>
+	{/if}
 
 	<div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
 		<div class="space-y-5">

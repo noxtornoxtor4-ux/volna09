@@ -14,7 +14,9 @@ export default defineConfig({
 			},
 			adapter: adapter(),
 			// Раз в 2 минуты проверяем, не вышла ли новая версия: открытые вкладки обновятся при переходе
-			version: { pollInterval: 120_000 }
+			version: { pollInterval: 120_000 },
+			// /verify/ID открывает одну страницу проверки сертификата для любого ID
+			prerender: { entries: ['*', '/verify'] }
 		})
 	]
 });

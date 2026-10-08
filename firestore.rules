@@ -2,33 +2,173 @@ rules_version = '2';
 
 // Правила доступа к базе «Волны». Вставьте их в Firebase Console →
 // Firestore Database → Rules и нажмите Publish.
+//
+// Главное: часы и сертификаты создают только проверенные организации и модераторы,
+// синий бейдж ставит только модератор, роль модератора выдаётся вручную
+// в коллекции moderators (документ с ID пользователя).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
       return request.auth != null;
     }
 
-    // Публичные профили: видят все вошедшие, меняет только сам пользователь
-    match /people/{uid} {
-      allow read: if signedIn();
-      allow write: if signedIn() && request.auth.uid == uid;
+    function me() {
+      return request.auth.uid;
     }
 
-    // Организации: страницу правят кураторы; новый куратор может только добавить себя
-    match /orgs/{orgId} {
-      allow read: if signedIn();
-      allow create: if signedIn() && request.auth.uid in request.resource.data.ownerIds;
+    function isModerator() {
+      return signedIn() && exists(/databases/$(database)/documents/moderators/$(me()));
+    }
+
+    function orgData(orgId) {
+      return get(/databases/$(database)/documents/orgs/$(orgId)).data;
+    }
+
+    function isCurator(orgId) {
+      return signedIn() && orgId is string && orgId != ''
+        && exists(/databases/$(database)/documents/orgs/$(orgId))
+        && me() in orgData(orgId).ownerIds;
+    }
+
+    function isVerifiedCurator(orgId) {
+      return isCurator(orgId) && orgData(orgId).verified == true;
+    }
+
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // Модераторов назначают только через консоль Firebase
+    match /moderators/{id} {
+      allow get: if signedIn() && me() == id;
+      allow list: if isModerator();
+      allow write: if false;
+    }
+
+    // Профили: открыты (страница проверки сертификата показывает имя), правит владелец.
+    // Предупреждения и блокировки ставит только модератор.
+    match /people/{id} {
+      allow get: if true;
+      allow list: if signedIn();
+      allow create: if signedIn() && me() == id
+        && !('ban' in request.resource.data) && !('warnings' in request.resource.data);
       allow update: if signedIn() && (
-        request.auth.uid in resource.data.ownerIds ||
-        (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ownerIds']) &&
-          request.resource.data.ownerIds.hasAll(resource.data.ownerIds)
-        )
+        (me() == id && !changed().hasAny(['ban', 'warnings']))
+        || (isModerator() && changed().hasOnly(['ban', 'warnings']))
       );
-      allow delete: if signedIn() && request.auth.uid in resource.data.ownerIds;
+      allow delete: if isModerator();
     }
 
-    // Файлы (видео, оригиналы сертификатов) хранятся частями до 1 МБ
+    // Организации: бейдж ставит модератор; куратор правит страницу и подаёт заявку на проверку;
+    // к непроверенной организации можно присоединиться куратором
+    match /orgs/{orgId} {
+      allow get: if true;
+      allow list: if signedIn();
+      allow create: if signedIn() && me() in request.resource.data.ownerIds
+        && request.resource.data.verified == false;
+      allow update: if isModerator()
+        || (
+          signedIn() && me() in resource.data.ownerIds
+          && !changed().hasAny(['verified'])
+          && (!changed().hasAny(['verification']) || request.resource.data.verification.status == 'pending')
+        )
+        || (
+          signedIn() && resource.data.verified == false
+          && changed().hasOnly(['ownerIds'])
+          && request.resource.data.ownerIds.hasAll(resource.data.ownerIds)
+          && request.resource.data.ownerIds.size() == resource.data.ownerIds.size() + 1
+          && me() in request.resource.data.ownerIds
+        );
+      allow delete: if isModerator();
+    }
+
+    // Мероприятия публикуют только проверенные организации; снимает с публикации модератор
+    match /opportunities/{id} {
+      allow get: if true;
+      allow list: if signedIn();
+      allow create: if isVerifiedCurator(request.resource.data.orgId)
+        && !('removed' in request.resource.data);
+      allow update: if isModerator()
+        || (isCurator(resource.data.orgId) && !changed().hasAny(['removed', 'reviewedBy', 'orgId']));
+      allow delete: if isModerator() || isCurator(resource.data.orgId);
+    }
+
+    // Заявки: волонтёр подаёт свою, статус меняет организатор мероприятия
+    match /applications/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.personId == me()
+        && request.resource.data.status == 'pending';
+      allow update: if isModerator()
+        || (signedIn() && resource.data.personId == me() && !changed().hasAny(['status', 'role', 'personId']))
+        || isCurator(get(/databases/$(database)/documents/opportunities/$(resource.data.opportunityId)).data.orgId);
+      allow delete: if isModerator() || (signedIn() && resource.data.personId == me());
+    }
+
+    // Часы начисляют только проверенные организации (QR или ведомость) и модераторы
+    match /hours/{id} {
+      allow read: if signedIn();
+      allow create: if isModerator() || isVerifiedCurator(request.resource.data.orgId);
+      allow update: if isModerator() || isVerifiedCurator(resource.data.orgId);
+      allow delete: if isModerator();
+    }
+
+    // Награды и сертификаты. Свой документ волонтёр загружает сам (без ID проверки),
+    // сертификаты с ID выдают проверенные организации, отзывает модератор.
+    match /awards/{id} {
+      allow get: if signedIn() || ('certificateId' in resource.data);
+      allow list: if signedIn();
+      allow create: if isModerator()
+        || isVerifiedCurator(request.resource.data.orgId)
+        || (
+          signedIn() && request.resource.data.personId == me()
+          && !('orgId' in request.resource.data) && !('certificateId' in request.resource.data)
+        );
+      allow update: if isModerator()
+        || (
+          signedIn() && resource.data.personId == me()
+          && (
+            (!('orgId' in resource.data) && !changed().hasAny(['certificateId', 'status', 'orgId', 'personId']))
+            || changed().hasOnly(['skillIds'])
+          )
+        );
+      allow delete: if isModerator()
+        || (signedIn() && resource.data.personId == me() && !('orgId' in resource.data));
+    }
+
+    // Жалобы видят и решают только модераторы
+    match /reports/{id} {
+      allow create: if signedIn() && request.resource.data.reporterId == me();
+      allow read, update: if isModerator();
+      allow delete: if false;
+    }
+
+    // Апелляции: волонтёр видит свои, решает модератор
+    match /appeals/{id} {
+      allow create: if signedIn() && request.resource.data.personId == me()
+        && request.resource.data.status == 'open';
+      allow read: if signedIn() && (resource.data.personId == me() || isModerator());
+      allow update: if isModerator();
+      allow delete: if false;
+    }
+
+    // Журнал действий модераторов: только дописывается, менять и удалять нельзя
+    match /auditLog/{id} {
+      allow create: if isModerator() && request.resource.data.moderatorId == me();
+      allow read: if isModerator();
+      allow update, delete: if false;
+    }
+
+    // Публикации: автор — волонтёр или куратор организации; лайки и комментарии ставят все
+    match /posts/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && (request.resource.data.authorId == me() || isCurator(request.resource.data.authorId));
+      allow update: if signedIn();
+      allow delete: if isModerator()
+        || (signedIn() && (resource.data.authorId == me() || isCurator(resource.data.authorId)));
+    }
+
+    // Файлы (видео, оригиналы сертификатов, документы организаций) хранятся частями до 1 МБ
     match /files/{fileId} {
       allow read, write: if signedIn();
       match /parts/{part} {
@@ -36,12 +176,11 @@ service cloud.firestore {
       }
     }
 
-    // Мероприятия, заявки, посты, чаты, уведомления и остальное — для вошедших пользователей
+    // Темы, навыки, чаты, уведомления и календарь — для вошедших пользователей
     match /{collection}/{id} {
       allow read, write: if signedIn() && collection in [
-        'topics', 'opportunities', 'applications', 'hours', 'posts', 'awards',
-        'skills', 'skillMaterials', 'threads', 'conversations', 'announcements',
-        'alerts', 'dayPhotos'
+        'topics', 'skills', 'skillMaterials', 'threads', 'conversations',
+        'announcements', 'alerts', 'dayPhotos'
       ];
     }
   }
