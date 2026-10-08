@@ -1,3 +1,3 @@
 {
-	"rewrites": [{ "source": "/verify/:id", "destination": "/verify.html" }]
+	"rewrites": [{ "source": "/verify/:id", "destination": "/verify" }]
 }
