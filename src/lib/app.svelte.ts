@@ -12,6 +12,7 @@ import type {
 	Application,
 	ApplicationStatus,
 	Award,
+	Consent,
 	Conversation,
 	CustomTheme,
 	DayPhoto,
@@ -626,6 +627,14 @@ class AppState {
 	setLogoFont(font: string | null) {
 		this.logoFont = font;
 		this.#savePrefs();
+	}
+
+	/** Согласие с условиями сохраняется в профиле один раз */
+	saveConsent(consent: Omit<Consent, 'at'>) {
+		const me = this.myPerson;
+		if (!me) return;
+		me.consent = { ...consent, at: now() };
+		this.#save('people');
 	}
 
 	setPrivacy(privacy: Privacy) {

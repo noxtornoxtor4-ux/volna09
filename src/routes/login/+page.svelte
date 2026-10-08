@@ -258,6 +258,12 @@
 				</form>
 			{/if}
 
+			<p class="mt-6 text-center text-xs text-muted">
+				<a href="/terms" class="underline hover:text-ink">{tr('Условия использования')}</a>
+				·
+				<a href="/privacy" class="underline hover:text-ink">{tr('Политика конфиденциальности')}</a>
+			</p>
+
 			<div class="mt-8 border-t border-line pt-6">
 				<InstallApp variant="banner" />
 			</div>

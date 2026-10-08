@@ -45,7 +45,23 @@ export interface Person extends Profile {
 	privacy?: Privacy;
 	/** Организация, которую ведёт этот пользователь */
 	orgId?: string;
+	/** Согласие с условиями и (для младше 18) разрешение родителей */
+	consent?: Consent;
+	/** Предупреждения модератора */
+	warnings?: { reason: string; at: string; by: string }[];
+	/** Блокировка: until — до какого времени, без until — навсегда */
+	ban?: { reason: string; at: string; by: string; until?: string };
 	createdAt: string;
+}
+
+export interface Consent {
+	/** Мне исполнилось 14 лет, согласен с Условиями и Политикой */
+	terms: true;
+	/** Мне уже есть 18 лет */
+	adult: boolean;
+	/** Есть разрешение родителей или опекунов (обязательно, если младше 18) */
+	parental: boolean;
+	at: string;
 }
 
 export type QuestionType = 'text' | 'textarea' | 'choice' | 'multi';
