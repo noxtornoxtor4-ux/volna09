@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { getLocale, tr } from '#lib/i18n.ts';
 	import './layout.css';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { beforeNavigate, goto } from '$app/navigation';
+	import { page, updated } from '$app/state';
 	import favicon from '#lib/assets/favicon.svg';
 	import { app } from '#lib/app.svelte.ts';
 	import AppShell from '#lib/components/AppShell.svelte';
@@ -13,6 +13,20 @@
 	let { children }: LayoutProps = $props();
 
 	const isAuthPage = $derived(page.url.pathname === '/login');
+
+	// Вышла новая версия — следующий переход загружает страницу заново, а не старый код из памяти
+	beforeNavigate(({ willUnload, to }) => {
+		if (updated.current && !willUnload && to?.url) location.href = to.url.href;
+	});
+
+	// Новый service worker взял управление — перезагружаемся на свежие файлы
+	$effect(() => {
+		if (!('serviceWorker' in navigator)) return;
+		const hadController = !!navigator.serviceWorker.controller;
+		const reload = () => hadController && location.reload();
+		navigator.serviceWorker.addEventListener('controllerchange', reload);
+		return () => navigator.serviceWorker.removeEventListener('controllerchange', reload);
+	});
 
 	// Режим «Системная» следует за настройкой устройства
 	$effect(() => {

@@ -10,6 +10,7 @@
 		X
 	} from '@lucide/svelte';
 	import { installer } from '#lib/install.svelte.ts';
+	import InstallGuide from './InstallGuide.svelte';
 
 	/** banner — компактное предложение на главной; full — подробная инструкция в настройках */
 	let { variant = 'full' }: { variant?: 'banner' | 'full' } = $props();
@@ -23,9 +24,6 @@
 			<img src="/icon-192.png" alt="" class="size-11 shrink-0 rounded-2xl" />
 			<div class="min-w-0 flex-1">
 				<div class="truncate text-sm font-bold">{tr('Приложение «Волна»')}</div>
-				{#if installer.ios}
-					<div class="truncate text-xs opacity-75">{tr('Поделиться → «На экран „Домой“»')}</div>
-				{/if}
 			</div>
 			{#if installer.canPrompt}
 				<button
@@ -36,10 +34,13 @@
 					{tr('Установить')}
 				</button>
 			{:else}
-				<a
-					href="/settings?s=install"
-					class="btn shrink-0 bg-accent px-3 py-2 text-xs text-accent-ink">{tr('Как?')}</a
+				<button
+					class="btn shrink-0 bg-accent px-3 py-2 text-xs text-accent-ink"
+					onclick={() => (installer.guide = true)}
 				>
+					<Download class="size-4" />
+					{tr('Установить')}
+				</button>
 			{/if}
 			<button
 				class="grid size-8 shrink-0 place-items-center rounded-full opacity-60 hover:opacity-100"
@@ -68,6 +69,14 @@
 				>
 			{:else if installer.canPrompt}
 				<button class="btn w-full max-w-xs btn-primary py-3" onclick={() => installer.install()}>
+					<Download class="size-4" />
+					{tr('Установить приложение')}
+				</button>
+			{:else if installer.ios || installer.inApp}
+				<button
+					class="btn w-full max-w-xs btn-primary py-3"
+					onclick={() => (installer.guide = true)}
+				>
 					<Download class="size-4" />
 					{tr('Установить приложение')}
 				</button>
@@ -132,3 +141,5 @@
 		</section>
 	</div>
 {/if}
+
+<InstallGuide />

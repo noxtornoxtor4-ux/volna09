@@ -302,7 +302,6 @@ export const en: Record<string, string> = {
 	'Как прошло мероприятие? Что понравилось, что можно улучшить?':
 		'How did the event go? What did you like, and what could be improved?',
 	'Как тебя зовут?': 'What’s your name?',
-	'Как?': 'How?',
 	Календарь: 'Calendar',
 	'Календарь — Волна': 'Calendar — WAVE',
 	'Кара-Балта': 'Kara-Balta',
@@ -401,11 +400,16 @@ export const en: Record<string, string> = {
 		'Awards your organization has given to volunteers',
 	Награждайте: 'Give awards',
 	'Нажмите «+», чтобы опубликовать первое мероприятие': 'Tap “+” to publish your first event',
+	'Нажмите «Добавить» — иконка «Волны» появится на экране':
+		'Tap “Add” — the WAVE icon will appear on your screen',
 	'Нажмите «Добавить» — иконка появится на экране':
 		'Tap “Add” — the icon will appear on your screen',
 	'Нажмите «Напомнить позже» на карточке, и она появится здесь.':
 		'Tap “Remind me later” on a card and it will appear here.',
 	'Нажмите «Поделиться» внизу экрана': 'Tap “Share” at the bottom of the screen',
+	'Нажмите «Поделиться» внизу экрана. На iOS 26 она в меню «•••»':
+		'Tap “Share” at the bottom of the screen. On iOS 26 it is in the “•••” menu',
+	'Нажмите ⋮ вверху справа → «Открыть в браузере»': 'Tap ⋮ at the top right → “Open in browser”',
 	'Нажмите значок установки справа в адресной строке':
 		'Click the install icon on the right side of the address bar',
 	Назад: 'Back',
@@ -452,6 +456,8 @@ export const en: Record<string, string> = {
 		'Start the conversation — send the first message.',
 	'Не нашли «{0}» — добавьте организацию ниже.':
 		"Couldn't find “{0}” — add the organization below.",
+	'Не открылось? Нажмите ••• вверху справа → «Открыть в Safari»':
+		"Didn't open? Tap ••• at the top right → “Open in Safari”",
 	'Не удалось войти. Попробуйте ещё раз': "Couldn't sign in. Please try again",
 	'Не удалось отправить SMS. Попробуйте ещё раз': "Couldn't send the SMS. Please try again",
 	'Не удалось проверить, что вы не робот. Проверьте интернет':
@@ -541,6 +547,7 @@ export const en: Record<string, string> = {
 	'Открытый профиль': 'Public profile',
 	'Открытых наборов пока нет.': 'No open recruitments yet.',
 	Открыть: 'Open',
+	'Открыть в Safari': 'Open in Safari',
 	'Открыть кабинет': 'Open dashboard',
 	'Открыть оригинал': 'Open original',
 	'Открыть системную палитру': 'Open system color picker',
@@ -598,7 +605,6 @@ export const en: Record<string, string> = {
 	Податься: 'Apply',
 	'Поделитесь историей, фото или видео': 'Share a story, photo or video',
 	Поделиться: 'Share',
-	'Поделиться → «На экран „Домой“»': 'Share → “Add to Home Screen”',
 	Подписаться: 'Follow',
 	'Подписки · {0}': 'Following · {0}',
 	'Подписчики — Волна': 'Followers — WAVE',
@@ -685,6 +691,7 @@ export const en: Record<string, string> = {
 		'Projects will appear once applications are confirmed.',
 	'Проекты, акции и тренинги рядом с тобой': 'Projects, campaigns and trainings near you',
 	'проекты, часы, организации': 'projects, hours, organizations',
+	'Пролистайте и выберите «На экран „Домой“»': 'Scroll and choose “Add to Home Screen”',
 	Профиль: 'Profile',
 	'Профиль — Волна': 'Profile — WAVE',
 	'Профиль и публикации видны всем пользователям':
@@ -720,6 +727,10 @@ export const en: Record<string, string> = {
 	'Руководство по использованию': 'User guide',
 	'С возвращением!': 'Welcome back!',
 	Сайт: 'Website',
+	'Сайт открыт внутри другого приложения — отсюда iPhone не даёт установить его. Сначала откройте Safari.':
+		"The site is open inside another app — iPhone doesn't allow installing it from here. Open Safari first.",
+	'Сайт открыт внутри другого приложения. Откройте его в Chrome, чтобы установить.':
+		'The site is open inside another app. Open it in Chrome to install.',
 	Сб: 'Sat',
 	'Сбросить к стандартным': 'Reset to defaults',
 	Светлая: 'Light',
@@ -842,6 +853,7 @@ export const en: Record<string, string> = {
 	Уровень: 'Level',
 	'Установите вручную — инструкции ниже.': 'Install manually — instructions below.',
 	Установить: 'Install',
+	'Установить «Волну»': 'Install WAVE',
 	'Установить приложение': 'Install app',
 	Участвует: 'Participating',
 	'участие подтверждено': 'participation confirmed',
@@ -911,6 +923,8 @@ export const en: Record<string, string> = {
 	'Я волонтёр': "I'm a volunteer",
 	'Я организация': "I'm an organization",
 	Язык: 'Language',
+	'Apple не разрешает сайтам устанавливаться одной кнопкой — только так, через Safari.':
+		"Apple doesn't let websites install with one tap — only this way, through Safari.",
 	'HEX или RGB': 'HEX or RGB',
 	'SMS пока недоступны для этого номера. Войдите по email':
 		"SMS isn't available for this number yet. Sign in with email"

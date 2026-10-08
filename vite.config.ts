@@ -12,7 +12,9 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter(),
+			// Раз в 2 минуты проверяем, не вышла ли новая версия: открытые вкладки обновятся при переходе
+			version: { pollInterval: 120_000 }
 		})
 	]
 });
