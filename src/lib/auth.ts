@@ -1,13 +1,59 @@
 import { tr } from './i18n.ts';
 import { firebaseAuth } from './firebase.ts';
 
-/** Вход через Google одним касанием. Возвращает имя и почту из аккаунта Google */
-export async function googleSignIn() {
-	const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
-	const provider = new GoogleAuthProvider();
-	provider.setCustomParameters({ prompt: 'select_account' });
-	const { user } = await signInWithPopup(await firebaseAuth(), provider);
-	return { name: user.displayName ?? '', email: user.email ?? '' };
+type AuthSdk = typeof import('firebase/auth');
+let prepared: { auth: Awaited<ReturnType<typeof firebaseAuth>>; sdk: AuthSdk } | null = null;
+
+/**
+ * Заранее загружает Firebase Auth. Окно Google браузер пропускает, только если оно
+ * открывается сразу по нажатию — без ожидания загрузки модулей.
+ */
+export async function prepareGoogle() {
+	const [auth, sdk] = await Promise.all([firebaseAuth(), import('firebase/auth')]);
+	prepared = { auth, sdk };
+}
+
+/** Роль, выбранная перед уходом на страницу Google, — чтобы завершить вход после возврата */
+export const PENDING_ROLE_KEY = 'volna:pending-role';
+
+function provider(sdk: AuthSdk) {
+	const google = new sdk.GoogleAuthProvider();
+	google.setCustomParameters({ prompt: 'select_account' });
+	return google;
+}
+
+/** Вход через Google через переход на страницу Google — когда всплывающие окна заблокированы */
+export async function googleRedirect(role: string) {
+	const sdk = prepared?.sdk ?? (await import('firebase/auth'));
+	const auth = prepared?.auth ?? (await firebaseAuth());
+	try {
+		sessionStorage.setItem(PENDING_ROLE_KEY, role);
+	} catch {
+		// без хранилища войдём волонтёром — роль можно сменить в настройках
+	}
+	await sdk.signInWithRedirect(auth, provider(sdk));
+}
+
+/**
+ * Вход через Google одним касанием. Окно открывается синхронно в обработчике нажатия;
+ * если браузер его заблокировал, вход продолжается через переход на страницу Google.
+ */
+export async function googleSignIn(role: string) {
+	if (!prepared) {
+		await googleRedirect(role);
+		return null;
+	}
+	try {
+		const { user } = await prepared.sdk.signInWithPopup(prepared.auth, provider(prepared.sdk));
+		return { name: user.displayName ?? '', email: user.email ?? '' };
+	} catch (error) {
+		const code = (error as { code?: string })?.code ?? '';
+		if (code.includes('popup-blocked') || code.includes('operation-not-supported')) {
+			await googleRedirect(role);
+			return null;
+		}
+		throw error;
+	}
 }
 
 /** Вход по почте и паролю */

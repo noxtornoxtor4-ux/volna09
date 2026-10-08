@@ -3,7 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { Building, ChevronDown, Compass, HandHeart } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
-	import { authError, emailSignIn, emailSignUp, googleSignIn, resetPassword } from '#lib/auth.ts';
+	import {
+		authError,
+		emailSignIn,
+		emailSignUp,
+		googleSignIn,
+		prepareGoogle,
+		resetPassword
+	} from '#lib/auth.ts';
+	import { onMount } from 'svelte';
 	import InstallApp from '#lib/components/InstallApp.svelte';
 	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import Logo from '#lib/components/Logo.svelte';
@@ -21,6 +29,11 @@
 	let busy = $state(false);
 	let problem = $state('');
 	let notice = $state('');
+
+	// Firebase загружается заранее, чтобы окно Google не блокировалось браузером
+	onMount(() => {
+		prepareGoogle().catch(() => {});
+	});
 
 	const emailValid = $derived(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
 	const errorCode = (error: unknown) => (error as { code?: string })?.code ?? '';
@@ -43,7 +56,9 @@
 		problem = notice = '';
 		busy = true;
 		try {
-			const user = await googleSignIn();
+			// Окно Google открывается сразу по нажатию — до любых ожиданий
+			const user = await googleSignIn(role);
+			if (!user) return; // ушли на страницу Google, вход завершится после возврата
 			await finish({ method: 'google', contact: user.email }, user.name);
 		} catch (error) {
 			problem = authError(error);

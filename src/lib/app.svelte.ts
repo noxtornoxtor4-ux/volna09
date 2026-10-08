@@ -1,5 +1,6 @@
 import { tr } from './i18n.ts';
 import { ONLINE, builtinTopics, day } from './data.ts';
+import { PENDING_ROLE_KEY } from './auth.ts';
 import { firebaseAuth, firebaseEnabled } from './firebase.ts';
 import { formatDate, plural } from './format.ts';
 import { deleteBlob } from './media-db.ts';
@@ -289,10 +290,27 @@ class AppState {
 
 	async #watchAuth() {
 		try {
-			const [auth, { onAuthStateChanged }] = await Promise.all([
+			const [auth, { onAuthStateChanged, getRedirectResult }] = await Promise.all([
 				firebaseAuth(),
 				import('firebase/auth')
 			]);
+			// Вернулись со страницы Google (всплывающее окно было заблокировано) — завершаем вход
+			getRedirectResult(auth)
+				.then((result) => {
+					if (!result?.user) return;
+					let role: Role = 'volunteer';
+					try {
+						if (sessionStorage.getItem(PENDING_ROLE_KEY) === 'org') role = 'org';
+						sessionStorage.removeItem(PENDING_ROLE_KEY);
+					} catch {
+						// хранилище недоступно — входим волонтёром
+					}
+					return this.completeSignIn(
+						{ method: 'google', contact: result.user.email ?? '' },
+						{ role, name: result.user.displayName ?? '' }
+					);
+				})
+				.catch((e) => console.warn('auth: redirect', e));
 			onAuthStateChanged(auth, (user) => {
 				this.uid = user?.uid ?? null;
 				if (user) {
