@@ -34,8 +34,30 @@
 	let email = $state('');
 	let password = $state('');
 
+	/** Страны для входа по телефону; other — номер целиком с кодом страны */
+	const countries = [
+		{ id: 'kg', flag: '🇰🇬', code: '+996', digits: 9, example: '700 123 456' },
+		{ id: 'kz', flag: '🇰🇿', code: '+7', digits: 10, example: '701 123 4567' },
+		{ id: 'ru', flag: '🇷🇺', code: '+7', digits: 10, example: '912 345 6789' },
+		{ id: 'uz', flag: '🇺🇿', code: '+998', digits: 9, example: '90 123 4567' },
+		{ id: 'tj', flag: '🇹🇯', code: '+992', digits: 9, example: '93 123 4567' },
+		{ id: 'other', flag: '🌍', code: '+', digits: 0, example: '+44 7700 900123' }
+	];
+	let countryId = $state('kg');
+	const country = $derived(countries.find((c) => c.id === countryId) ?? countries[0]);
+
 	const phoneDigits = $derived(phone.replace(/\D/g, ''));
-	const phoneValid = $derived(phoneDigits.length >= 9);
+	const phoneValid = $derived(
+		country.id === 'other'
+			? phoneDigits.length >= 8 && phoneDigits.length <= 15
+			: phoneDigits.length >= country.digits
+	);
+	/** Номер в международном формате: +996700123456 */
+	const fullPhone = $derived(
+		country.id === 'other'
+			? `+${phoneDigits}`
+			: `${country.code}${phoneDigits.slice(-country.digits)}`
+	);
 	const emailValid = $derived(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
 	const orgOk = $derived(
 		!!orgChoice && (orgChoice !== 'new' || (newOrg.name.trim().length > 1 && !!newOrg.city.trim()))
@@ -57,8 +79,6 @@
 		});
 		goto(app.isOrg ? '/cabinet' : '/', { replace: true });
 	}
-
-	const fullPhone = $derived(`+996${phoneDigits.slice(-9)}`);
 
 	async function sendCode(e?: SubmitEvent) {
 		e?.preventDefault();
@@ -90,7 +110,7 @@
 		sending = true;
 		try {
 			await confirmSms(code);
-			await finish({ method: 'phone', contact: `+996 ${phoneDigits.slice(-9)}` });
+			await finish({ method: 'phone', contact: fullPhone });
 		} catch (error) {
 			problem = smsError(error);
 			code = '';
@@ -237,13 +257,22 @@
 						<label class="block">
 							<span class="label">{tr('Номер телефона')}</span>
 							<div class="flex gap-2">
-								<span class="input w-auto shrink-0 font-semibold">🇰🇬 +996</span>
+								<select
+									class="input w-auto shrink-0 pr-8 font-semibold"
+									bind:value={countryId}
+									aria-label={tr('Страна')}
+								>
+									{#each countries as c (c.id)}
+										<option value={c.id}>{c.flag} {c.id === 'other' ? tr('Другая') : c.code}</option
+										>
+									{/each}
+								</select>
 								<input
 									class="input"
 									type="tel"
 									inputmode="tel"
-									autocomplete="tel-national"
-									placeholder="700 123 456"
+									autocomplete={country.id === 'other' ? 'tel' : 'tel-national'}
+									placeholder={country.example}
 									bind:value={phone}
 								/>
 							</div>
@@ -266,7 +295,8 @@
 							class="flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink"
 							onclick={() => (codeSent = false)}
 						>
-							<ChevronLeft class="size-4" /> +996 {phoneDigits.slice(-9)}
+							<ChevronLeft class="size-4" />
+							{fullPhone}
 						</button>
 						<div>
 							<span class="label">{tr('Код из SMS')}</span>
@@ -284,7 +314,7 @@
 							</p>
 						{:else}
 							<p class="text-sm text-muted">
-								{tr('Мы отправили SMS с кодом на +996 {0}', phoneDigits.slice(-9))}
+								{tr('Мы отправили SMS с кодом на {0}', fullPhone)}
 							</p>
 						{/if}
 						<button

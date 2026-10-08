@@ -227,6 +227,7 @@ export const en: Record<string, string> = {
 	'Добавьте фото или видео своих работ.': 'Add photos or videos of your work.',
 	'Дополнительная информация': 'Additional information',
 	Достижения: 'Achievements',
+	Другая: 'Other',
 	'Другое / регулярная помощь': 'Other / regular help',
 	'Её заполнят волонтёры, когда нажмут «Податься». Имя и возраст подставятся из профиля.':
 		'Volunteers fill it in when they tap “Apply”. Name and age are filled in from their profile.',
@@ -373,7 +374,7 @@ export const en: Record<string, string> = {
 	'Мои публикации': 'My posts',
 	'Мой профиль': 'My profile',
 	Музыка: 'Music',
-	'Мы отправили SMS с кодом на +996 {0}': 'We sent an SMS code to +996 {0}',
+	'Мы отправили SMS с кодом на {0}': 'We sent an SMS with a code to {0}',
 	'Мягкий жёлтый': 'Soft yellow',
 	Мята: 'Mint',
 	'На проверке': 'Under review',
@@ -777,6 +778,7 @@ export const en: Record<string, string> = {
 	'Стиль приложения': 'App style',
 	'Сторисы по темам на главной — листайте постеры и сразу подавайтесь.':
 		'Topic stories on Home — swipe through posters and apply right away.',
+	Страна: 'Country',
 	'Счётчик часов и проекты видны в профиле':
 		'Your hours counter and projects are visible on your profile',
 	'Так карточку увидят волонтёры': 'This is how volunteers will see the card',
