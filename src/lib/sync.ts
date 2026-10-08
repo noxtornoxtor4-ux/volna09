@@ -9,7 +9,7 @@
  * с сервера (и из офлайн-кэша) и отдаёт свежий список документов.
  */
 import type { FieldPath, Firestore, QueryConstraint } from 'firebase/firestore';
-import { firestore } from './firebase.ts';
+import { demoMode, firestore } from './firebase.ts';
 
 export interface Doc {
 	id: string;
@@ -142,6 +142,17 @@ export async function listen<T extends Doc>(
 
 /** Один документ по id (например, проверить, есть ли уже профиль) */
 export async function getOne<T extends Doc>(name: string, id: string) {
+	if (demoMode) {
+		// Демо-версия: ищем среди выдуманных данных этого браузера
+		let saved: Record<string, Doc[]>;
+		try {
+			saved = JSON.parse(localStorage.getItem('volna:demo:v1') ?? '{}');
+		} catch {
+			saved = {};
+		}
+		const seed = (await import('./demo/index.ts')).demoState() as unknown as Record<string, Doc[]>;
+		return (saved[name] ?? seed[name])?.find((d) => d.id === id) as T | undefined;
+	}
 	const [db, s] = await Promise.all([firestore(), sdk()]);
 	const snap = await s.getDoc(s.doc(db, name, id));
 	return snap.exists() ? ({ ...(snap.data() as object), id } as T) : undefined;

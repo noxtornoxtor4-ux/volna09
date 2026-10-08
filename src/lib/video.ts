@@ -7,9 +7,10 @@
  * В обоих случаях функция ждёт конца загрузки: пост не появится без видео.
  */
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '$app/env/public';
+import { demoMode } from './firebase.ts';
 import { SHARED_LIMIT, saveBlob } from './media-db.ts';
 
-export const cloudinaryEnabled = !!(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET);
+export const cloudinaryEnabled = !demoMode && !!(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET);
 
 /** Самое большое видео, которое увидят другие */
 export const MAX_VIDEO_BYTES = cloudinaryEnabled ? 100 * 1024 * 1024 : SHARED_LIMIT;

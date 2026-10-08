@@ -19,11 +19,23 @@
 	import type { Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { app } from '#lib/app.svelte.ts';
+	import { DEMO_FLAG, demoMode } from '#lib/firebase.ts';
 	import ApplySheet from './ApplySheet.svelte';
 	import Avatar from './Avatar.svelte';
 	import Logo from './Logo.svelte';
 
 	let { children }: { children: Snippet } = $props();
+
+	/** Выйти из демо-версии на настоящий сайт */
+	function leaveDemo() {
+		try {
+			localStorage.removeItem(DEMO_FLAG);
+		} catch {
+			// хранилище недоступно — флаг и так не сохранится
+		}
+		app.logout();
+		location.href = '/login';
+	}
 
 	const main = $derived([
 		app.isOrg
@@ -153,6 +165,17 @@
 		</header>
 
 		<main class="mx-auto w-full max-w-5xl px-4 pt-5 pb-28 sm:px-6 lg:px-10 lg:pt-10 lg:pb-12">
+			{#if demoMode}
+				<div
+					class="mb-4 flex flex-wrap items-center gap-2 rounded-2xl bg-pastel-yellow px-4 py-2.5 text-sm font-semibold text-pastel-yellow-ink"
+					role="status"
+				>
+					<span class="grow">{tr('Демо-версия: все люди и данные выдуманные')}</span>
+					<button class="underline" onclick={() => app.resetDemo()}>{tr('Сбросить')}</button>
+					<button class="underline" onclick={() => app.logout()}>{tr('Сменить роль')}</button>
+					<button class="underline" onclick={leaveDemo}>{tr('Выйти из демо')}</button>
+				</div>
+			{/if}
 			{#if app.offline}
 				<p
 					class="mb-4 flex items-center gap-2 rounded-2xl bg-pastel-yellow px-4 py-2.5 text-sm font-semibold text-pastel-yellow-ink"

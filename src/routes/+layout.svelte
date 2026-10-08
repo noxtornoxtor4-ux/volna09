@@ -16,7 +16,8 @@
 	const isAuthPage = $derived(page.url.pathname === '/login');
 	/** Страницы без входа: условия, конфиденциальность и проверка сертификатов */
 	const isPublicPage = $derived(
-		['/terms', '/privacy'].includes(page.url.pathname) || page.url.pathname.startsWith('/verify')
+		['/terms', '/privacy', '/demo'].includes(page.url.pathname) ||
+			page.url.pathname.startsWith('/verify')
 	);
 
 	// Вышла новая версия — следующий переход загружает страницу заново, а не старый код из памяти

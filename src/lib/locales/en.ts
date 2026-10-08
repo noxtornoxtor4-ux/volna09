@@ -73,6 +73,7 @@ export const en: Record<string, string> = {
 	'Акцентные элементы': 'Accent elements',
 	'Акцентные элементы на карточках': 'Accent elements on cards',
 	'Акцентный цвет': 'Accent color',
+	'Алина — мероприятия, часы, сертификаты': 'Alina — events, hours, certificates',
 	Анкета: 'Application form',
 	'Анкета отправлена': 'Application form sent',
 	'Анкета отправлена организатору': 'Application form sent to the organizer',
@@ -153,6 +154,9 @@ export const en: Record<string, string> = {
 	Возраст: 'Age',
 	'Возраст от 14 лет': 'Ages 14 and up',
 	Войти: 'Sign in',
+	'Войти как волонтёр': 'Sign in as a volunteer',
+	'Войти как модератор': 'Sign in as a moderator',
+	'Войти как организация': 'Sign in as an organization',
 	'Войти по почте и паролю': 'Sign in with email and password',
 	'Войти через Google': 'Continue with Google',
 	Волна: 'WAVE',
@@ -217,6 +221,7 @@ export const en: Record<string, string> = {
 	Выйти: 'Sign out',
 	'Выйти из аккаунта': 'Sign out of account',
 	'Выйти из группы': 'Leave group',
+	'Выйти из демо': 'Leave demo',
 	'Выключить звук': 'Mute',
 	Выше: 'Higher',
 	Главная: 'Home',
@@ -240,6 +245,8 @@ export const en: Record<string, string> = {
 	'Действия с публикацией': 'Post actions',
 	'Делай добро и собирай портфолио, которое видно всем':
 		'Do good and build a portfolio everyone can see',
+	'Демо-версия: все люди и данные выдуманные': 'Demo: all people and data are made up',
+	'Демо-данные восстановлены': 'Demo data restored',
 	'Демо-режим: настройки сохраняются, но в прототипе нет других реальных пользователей.':
 		'Demo mode: settings are saved, but there are no other real users in the prototype.',
 	'Демо-режим: оплата не списывается, охват примерный.':
@@ -827,6 +834,7 @@ export const en: Record<string, string> = {
 	Проверить: 'Verify',
 	Проверка: 'Verify',
 	'Проверка организации': 'Organization verification',
+	'Проверка организаций, жалобы, апелляции': 'Organization checks, reports, appeals',
 	'Проверка сертификата': 'Certificate verification',
 	'Проверка сертификата — Волна': 'Certificate verification — WAVE',
 	'Проверка сертификатов': 'Certificate verification',
@@ -912,6 +920,7 @@ export const en: Record<string, string> = {
 	'Сайт открыт внутри другого приложения. Откройте его в Chrome, чтобы установить.':
 		'The site is open inside another app. Open it in Chrome to install.',
 	Сб: 'Sat',
+	Сбросить: 'Reset',
 	'Сбросить к стандартным': 'Reset to defaults',
 	Светлая: 'Light',
 	Светлота: 'Lightness',
@@ -955,6 +964,7 @@ export const en: Record<string, string> = {
 	'Слишком много попыток. Попробуйте позже': 'Too many attempts. Try again later',
 	'Сменить обложку видео': 'Change video cover',
 	'Сменить пароль': 'Change password',
+	'Сменить роль': 'Switch role',
 	'Смотреть видео': 'Watch video',
 	'Смотрите «Для вас»': 'Check out “For you”',
 	'Сначала пройдите проверку организации — это делает модератор':
@@ -1143,9 +1153,12 @@ export const en: Record<string, string> = {
 	Шаблон: 'Template',
 	'Шаблон «{0}»': '“{0}” template',
 	'Шрифт надписи': 'Wordmark font',
+	'Эко-клуб «Зелёный город» — заявки и QR-часы': 'Green City eco club — applications and QR hours',
 	Экология: 'Ecology',
 	Эксперт: 'Expert',
 	'Экспорт JSON': 'Export JSON',
+	'Это демо-версия: все люди и данные выдуманные. Выберите, за кого войти.':
+		'This is a demo: all people and data are made up. Choose who to sign in as.',
 	'Это мой первый раз': "It's my first time",
 	'Это не QR-код волонтёра «Волны»': "This isn't a WAVE volunteer QR code",
 	'Это нужно один раз, чтобы безопасно участвовать в проектах.':

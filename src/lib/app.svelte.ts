@@ -1,7 +1,7 @@
 import { tr } from './i18n.ts';
 import { ONLINE, builtinTopics, day } from './data.ts';
 import { PENDING_ROLE_KEY } from './auth.ts';
-import { firebaseAuth, firebaseEnabled } from './firebase.ts';
+import { demoMode, firebaseAuth, firebaseEnabled } from './firebase.ts';
 import { formatDate, plural } from './format.ts';
 import { deleteBlob } from './media-db.ts';
 import { getOne, listen, push, type Doc, type Filter, type Remote } from './sync.ts';
@@ -257,7 +257,7 @@ class AppState {
 	/** id пользователя Firebase */
 	uid = $state<string | null>(null);
 	/** Firebase сообщил, вошёл ли пользователь — до этого не перенаправляем на вход */
-	ready = $state(!firebaseEnabled);
+	ready = $state(!firebaseEnabled && !demoMode);
 	/** Сервер недоступен: данные сохраняются на устройстве и уйдут при подключении */
 	offline = $state(false);
 
@@ -283,7 +283,61 @@ class AppState {
 		this.logoFont = prefs.logoFont;
 		this.viewCity = prefs.viewCity;
 		this.reminders = prefs.reminders;
-		if (firebaseEnabled && typeof window !== 'undefined') this.#watchAuth();
+		if (demoMode && typeof window !== 'undefined') this.#loadDemo();
+		else if (firebaseEnabled && typeof window !== 'undefined') this.#watchAuth();
+	}
+
+	// ───────── Демо-версия ─────────
+
+	/** Выдуманные данные демо-версии живут только в этом браузере */
+	static readonly DEMO_KEY = 'volna:demo:v1';
+
+	async #loadDemo() {
+		let saved: Partial<Record<Field, Doc[]>> & { modRole?: ModeratorRole | null };
+		try {
+			saved = JSON.parse(localStorage.getItem(AppState.DEMO_KEY) ?? '{}');
+		} catch {
+			saved = {};
+		}
+		const { demoState } = await import('./demo/index.ts');
+		const seed = demoState() as unknown as Partial<Record<Field, Doc[]>>;
+		for (const field of FIELDS) {
+			(this as unknown as Record<Field, Doc[]>)[field] = saved[field] ?? seed[field] ?? [];
+		}
+		this.modRole = saved.modRole ?? null;
+		if (this.session) this.uid = 'me';
+		this.ready = true;
+	}
+
+	#saveDemo() {
+		const data = Object.fromEntries(
+			FIELDS.map((f) => [f, $state.snapshot((this as unknown as Record<Field, Doc[]>)[f])])
+		);
+		try {
+			localStorage.setItem(AppState.DEMO_KEY, JSON.stringify({ ...data, modRole: this.modRole }));
+		} catch {
+			// хранилище переполнено — изменения продержатся до перезагрузки
+		}
+	}
+
+	/** Вход в демо-версию без регистрации: волонтёр, организация или модератор */
+	demoLogin(as: 'volunteer' | 'org' | 'moderator') {
+		this.uid = 'me';
+		this.modRole = as === 'moderator' ? 'admin' : null;
+		this.session = {
+			method: 'email',
+			contact: 'demo@volna.kg',
+			role: as === 'org' ? 'org' : 'volunteer'
+		};
+		this.#savePrefs();
+		this.#saveDemo();
+	}
+
+	/** Вернуть демо-данные к исходным */
+	async resetDemo() {
+		localStorage.removeItem(AppState.DEMO_KEY);
+		await this.#loadDemo();
+		this.notify(tr('Демо-данные восстановлены'));
 	}
 
 	// ───────── Подключение к серверу ─────────
@@ -428,6 +482,10 @@ class AppState {
 	/** Сохраняет настройки и отправляет изменения указанных коллекций на сервер */
 	#save(...fields: Field[]) {
 		this.#savePrefs();
+		if (demoMode) {
+			this.#saveDemo();
+			return;
+		}
 		if (!this.uid) return;
 		for (const field of fields) {
 			push(
@@ -595,6 +653,11 @@ class AppState {
 
 	async logout() {
 		this.session = null;
+		if (demoMode) {
+			this.uid = null;
+			this.modRole = null;
+			this.#saveDemo();
+		}
 		this.#savePrefs();
 		if (!firebaseEnabled) return;
 		try {

@@ -8,13 +8,21 @@ import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
+/** Ключ демо-версии: включается страницей /demo, данные выдуманные и живут только в браузере */
+export const DEMO_FLAG = 'volna:demo';
+
+export const demoMode = (() => {
+	try {
+		return typeof localStorage !== 'undefined' && localStorage.getItem(DEMO_FLAG) === '1';
+	} catch {
+		return false;
+	}
+})();
+
 /** Сервер подключён, когда в окружении есть конфигурация веб-приложения Firebase */
-export const firebaseEnabled = !!(
-	FIREBASE_API_KEY &&
-	FIREBASE_AUTH_DOMAIN &&
-	FIREBASE_PROJECT_ID &&
-	FIREBASE_APP_ID
-);
+export const firebaseEnabled =
+	!demoMode &&
+	!!(FIREBASE_API_KEY && FIREBASE_AUTH_DOMAIN && FIREBASE_PROJECT_ID && FIREBASE_APP_ID);
 
 let appPromise: Promise<FirebaseApp> | undefined;
 let authPromise: Promise<Auth> | undefined;
