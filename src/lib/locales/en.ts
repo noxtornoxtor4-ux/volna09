@@ -237,6 +237,7 @@ export const en: Record<string, string> = {
 	'Действий пока нет.': 'No actions yet.',
 	Действителен: 'Valid',
 	'Действителен · проверка по QR-коду': 'Valid · verify by QR code',
+	'Действия с публикацией': 'Post actions',
 	'Делай добро и собирай портфолио, которое видно всем':
 		'Do good and build a portfolio everyone can see',
 	'Демо-режим: настройки сохраняются, но в прототипе нет других реальных пользователей.':
@@ -871,6 +872,9 @@ export const en: Record<string, string> = {
 	Публикация: 'Post',
 	'Публикация мероприятий, начисление часов и выдача сертификатов откроются после проверки документов.':
 		'Publishing events, crediting volunteer hours and issuing certificates will unlock after document verification.',
+	'Публикация скрыта — её можно вернуть в профиле, в разделе «Скрытые»':
+		'Post hidden — you can bring it back from Hidden in your profile',
+	'Публикация снова видна': 'The post is visible again',
 	'Публиковать мероприятия, начислять часы и выдавать сертификаты могут только организации, прошедшие проверку документов модератором.':
 		'Only organizations whose documents have passed moderator verification can publish events, credit volunteer hours and issue certificates.',
 	'Публикуйте мероприятия': 'Publish events',
@@ -941,6 +945,7 @@ export const en: Record<string, string> = {
 	скоро: 'soon',
 	'Скоро здесь появятся мероприятия.': 'Events will appear here soon.',
 	'Скрытые видео · {0}': 'Hidden videos · {0}',
+	'Скрытые публикации · {0}': 'Hidden posts · {0}',
 	Скрыть: 'Hide',
 	'Скрыть видео': 'Hide video',
 	'Следите за календарём': 'Keep an eye on the calendar',
@@ -1049,6 +1054,8 @@ export const en: Record<string, string> = {
 	'Удалить контент и закрыть жалобу': 'Remove content and close report',
 	'Удалить навсегда': 'Delete forever',
 	'Удалить навык «{0}» вместе с материалами?': 'Delete the skill “{0}” with its materials?',
+	'Удалить публикацию навсегда? Вернуть её будет нельзя.':
+		"Delete the post forever? It can't be restored.",
 	'Удалить тему «{0}» из «Моих тем»?': 'Delete the theme “{0}” from My themes?',
 	'Удалить фото': 'Delete photo',
 	Удовлетворено: 'Granted',
