@@ -25,8 +25,8 @@
 
 	const posts = $derived(
 		section === 'experience'
-			? app.posts.filter((p) => p.kind === 'review')
-			: app.posts.filter((p) =>
+			? app.visiblePosts.filter((p) => p.kind === 'review')
+			: app.visiblePosts.filter((p) =>
 					format === 'all' ? true : format === 'text' ? !p.media : p.media?.type === format
 				)
 	);

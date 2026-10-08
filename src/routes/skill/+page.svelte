@@ -6,6 +6,7 @@
 		BadgeCheck,
 		Camera,
 		ChevronLeft,
+		EyeOff,
 		Film,
 		Pencil,
 		Play,
@@ -18,6 +19,7 @@
 	import CertificateCard from '#lib/components/CertificateCard.svelte';
 	import CertificateForm from '#lib/components/CertificateForm.svelte';
 	import CertificateViewer from '#lib/components/CertificateViewer.svelte';
+	import HiddenVideos from '#lib/components/HiddenVideos.svelte';
 	import MediaViewer from '#lib/components/MediaViewer.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import SkillForm from '#lib/components/SkillForm.svelte';
@@ -30,7 +32,8 @@
 	const skill = $derived(app.skill(page.url.searchParams.get('id') ?? ''));
 	const mine = $derived(!!skill && skill.personId === app.me && !app.isOrg);
 	const materials = $derived(skill ? app.materialsOf(skill.id) : []);
-	const works = $derived(materials.filter((m) => m.kind !== 'text'));
+	const works = $derived(materials.filter((m) => m.kind !== 'text' && !m.hidden));
+	const hiddenVideos = $derived(materials.filter((m) => m.hidden));
 	const texts = $derived(materials.filter((m) => m.kind === 'text'));
 	const certificates = $derived(skill ? app.certificatesForSkill(skill.id) : []);
 
@@ -40,6 +43,8 @@
 	let writing = $state(false);
 	let text = $state('');
 	let busy = $state(false);
+	/** Выбранное видео ждёт подтверждения: сначала его можно посмотреть */
+	let pendingVideo = $state<{ file: File; url: string } | null>(null);
 	let viewing = $state<{ material: SkillMaterial; src?: string } | null>(null);
 	let viewingCertificate = $state<Award | null>(null);
 
@@ -60,7 +65,7 @@
 		busy = false;
 	}
 
-	async function addVideo(e: Event) {
+	function addVideo(e: Event) {
 		const file = takeFile(e);
 		if (!skill || !file) return;
 		if (file.size > 200 * 1024 * 1024) {
@@ -68,14 +73,25 @@
 			return;
 		}
 		menu = false;
+		pendingVideo = { file, url: URL.createObjectURL(file) };
+	}
+
+	function cancelVideo() {
+		if (pendingVideo) URL.revokeObjectURL(pendingVideo.url);
+		pendingVideo = null;
+	}
+
+	/** Видео просмотрено и подтверждено — сохраняем файл и добавляем в работы */
+	async function confirmVideo() {
+		if (!skill || !pendingVideo) return;
+		const { file, url } = pendingVideo;
 		busy = true;
 		try {
 			const videoId = `video-${crypto.randomUUID()}`;
 			await saveBlob(videoId, file);
-			const url = URL.createObjectURL(file);
 			const poster = await videoPoster(url);
-			URL.revokeObjectURL(url);
 			app.addMaterial({ skillId: skill.id, kind: 'video', videoId, poster });
+			cancelVideo();
 		} catch {
 			app.notify(tr('Не хватило места на устройстве для видео'));
 		} finally {
@@ -233,11 +249,23 @@
 								{/if}
 							</button>
 							{#if mine}
-								<button
-									class="absolute top-1.5 right-1.5 grid size-8 place-items-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
-									onclick={() => app.removeMaterial(m.id)}
-									aria-label={tr('Удалить')}><Trash class="size-4" /></button
+								<div
+									class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100"
 								>
+									{#if m.kind === 'video'}
+										<button
+											class="grid size-8 place-items-center rounded-full bg-black/50 text-white"
+											onclick={() => app.setMaterialHidden(m.id, true)}
+											title={tr('Скрыть видео')}
+											aria-label={tr('Скрыть видео')}><EyeOff class="size-4" /></button
+										>
+									{/if}
+									<button
+										class="grid size-8 place-items-center rounded-full bg-black/50 text-white"
+										onclick={() => app.removeMaterial(m.id)}
+										aria-label={tr('Удалить')}><Trash class="size-4" /></button
+									>
+								</div>
 							{/if}
 						</div>
 					{/each}
@@ -246,6 +274,18 @@
 				<p class="card p-6 text-center text-sm text-muted">
 					{mine ? tr('Добавьте фото или видео своих работ.') : tr('Работ пока нет.')}
 				</p>
+			{/if}
+			{#if mine}
+				<HiddenVideos
+					items={hiddenVideos.map((m) => ({
+						id: m.id,
+						title: skill.title,
+						poster: m.poster,
+						videoId: m.videoId
+					}))}
+					onrestore={(id) => app.setMaterialHidden(id, false)}
+					ondelete={(id) => app.removeMaterial(id)}
+				/>
 			{/if}
 		</section>
 
@@ -300,6 +340,32 @@
 				bind:value={text}></textarea>
 			<button class="btn w-full btn-primary" disabled={!text.trim()}>{tr('Добавить')}</button>
 		</form>
+	</Modal>
+
+	<!-- Предпросмотр: видео можно посмотреть до того, как оно попадёт в работы -->
+	<Modal
+		bind:open={() => !!pendingVideo, (v) => !v && cancelVideo()}
+		title={tr('Предпросмотр видео')}
+	>
+		{#if pendingVideo}
+			<!-- svelte-ignore a11y_media_has_caption -->
+			<video
+				src={pendingVideo.url}
+				controls
+				playsinline
+				class="max-h-[55dvh] w-full rounded-2xl bg-black"
+			></video>
+			<p class="mt-2 truncate text-xs text-muted">
+				{pendingVideo.file.name} · {(pendingVideo.file.size / 1024 / 1024).toFixed(1)}
+				{tr('МБ')}
+			</p>
+			<div class="mt-4 grid grid-cols-2 gap-2">
+				<button class="btn btn-ghost" onclick={cancelVideo} disabled={busy}>{tr('Отмена')}</button>
+				<button class="btn btn-primary" onclick={confirmVideo} disabled={busy}
+					>{busy ? tr('Загрузка…') : tr('Добавить')}</button
+				>
+			</div>
+		{/if}
 	</Modal>
 {/if}
 

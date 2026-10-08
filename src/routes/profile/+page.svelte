@@ -4,11 +4,13 @@
 	import { app } from '#lib/app.svelte.ts';
 	import PostComposer from '#lib/components/PostComposer.svelte';
 	import OrgShowcase from '#lib/components/OrgShowcase.svelte';
+	import HiddenVideos from '#lib/components/HiddenVideos.svelte';
 	import PostGrid from '#lib/components/PostGrid.svelte';
 	import ProfileHeader from '#lib/components/ProfileHeader.svelte';
 	import CertificatesBlock from '#lib/components/CertificatesBlock.svelte';
 	import SkillsBlock from '#lib/components/SkillsBlock.svelte';
 	import { personMeta } from '#lib/format.ts';
+	import type { Post } from '#lib/types.ts';
 
 	const certificates = $derived(app.myAwards.filter((a) => a.type === 'certificate').length);
 	const issuedHours = $derived(
@@ -16,6 +18,20 @@
 	);
 
 	let composing = $state(false);
+
+	/** Скрытые автором видео — в свёрнутом списке под публикациями */
+	const hiddenItems = (authorId: string) =>
+		app.hiddenPostsBy(authorId).map((p) => ({
+			id: p.id,
+			title: p.text.slice(0, 60) || tr('Видео'),
+			poster: p.media?.poster,
+			videoId: p.media?.videoId
+		}));
+
+	function withPost(id: string, action: (post: Post) => void) {
+		const post = app.posts.find((p) => p.id === id);
+		if (post) action(post);
+	}
 </script>
 
 <svelte:head><title>{tr('Профиль — Волна')}</title></svelte:head>
@@ -82,6 +98,11 @@
 		>
 	</div>
 	<PostGrid posts={app.postsBy(app.myOrgId)} />
+	<HiddenVideos
+		items={hiddenItems(app.myOrgId)}
+		onrestore={(id) => withPost(id, (p) => app.setPostHidden(p, false))}
+		ondelete={(id) => withPost(id, (p) => app.deletePost(p))}
+	/>
 {:else}
 	<ProfileHeader
 		id={app.me}
@@ -142,6 +163,11 @@
 		>
 	</div>
 	<PostGrid posts={app.postsBy(app.me)} />
+	<HiddenVideos
+		items={hiddenItems(app.me)}
+		onrestore={(id) => withPost(id, (p) => app.setPostHidden(p, false))}
+		ondelete={(id) => withPost(id, (p) => app.deletePost(p))}
+	/>
 {/if}
 
 <PostComposer bind:open={composing} />

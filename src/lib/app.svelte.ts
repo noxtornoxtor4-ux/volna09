@@ -1087,8 +1087,37 @@ class AppState {
 		this.notify(post.kind === 'review' ? tr('Отзыв опубликован') : tr('Пост опубликован'));
 	}
 
+	/** Публикации для ленты: без скрытых автором видео */
+	get visiblePosts() {
+		return this.posts.filter((p) => !p.hidden);
+	}
+
 	postsBy(authorId: string) {
-		return this.posts.filter((p) => p.authorId === authorId);
+		return this.visiblePosts.filter((p) => p.authorId === authorId);
+	}
+
+	/** Скрытые видео автора — их можно вернуть или удалить окончательно */
+	hiddenPostsBy(authorId: string) {
+		return this.posts.filter((p) => p.hidden && p.authorId === authorId);
+	}
+
+	/** Скрыть видео из ленты и профиля, не удаляя его */
+	setPostHidden(post: Post, hidden: boolean) {
+		const p = this.#fresh(this.posts, post);
+		if (!p) return;
+		p.hidden = hidden || undefined;
+		this.#save('posts');
+		this.notify(
+			hidden ? tr('Видео скрыто — его можно вернуть в разделе «Скрытые»') : tr('Видео снова видно')
+		);
+	}
+
+	/** Окончательное удаление публикации вместе с видеофайлом */
+	deletePost(post: Post) {
+		if (post.media?.videoId) deleteBlob(post.media.videoId).catch(() => {});
+		this.posts = this.posts.filter((p) => p.id !== post.id);
+		this.#save('posts');
+		this.notify(tr('Удалено'));
 	}
 
 	isLiked(post: Post) {
@@ -1368,6 +1397,17 @@ class AppState {
 		this.skillMaterials.push({ ...material, id: uid(), personId: this.me, createdAt: now() });
 		this.#save('skillMaterials');
 		this.notify(tr('Материал добавлен'));
+	}
+
+	/** Скрыть видео из работ навыка, не удаляя его */
+	setMaterialHidden(id: string, hidden: boolean) {
+		const m = this.skillMaterials.find((x) => x.id === id);
+		if (!m) return;
+		m.hidden = hidden || undefined;
+		this.#save('skillMaterials');
+		this.notify(
+			hidden ? tr('Видео скрыто — его можно вернуть в разделе «Скрытые»') : tr('Видео снова видно')
+		);
 	}
 
 	removeMaterial(id: string) {

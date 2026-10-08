@@ -155,6 +155,8 @@ export interface Post {
 	orgId?: string;
 	/** Кто поставил «нравится» */
 	likedBy: string[];
+	/** Видео скрыто автором: не показывается в ленте и профиле, но не удалено */
+	hidden?: boolean;
 	shares: number;
 	comments: Comment[];
 	createdAt: string;
@@ -372,6 +374,8 @@ export interface SkillMaterial {
 	/** Видео в хранилище медиа и его обложка */
 	videoId?: string;
 	poster?: string;
+	/** Скрыто автором из списка работ, но не удалено */
+	hidden?: boolean;
 	createdAt: string;
 }
 

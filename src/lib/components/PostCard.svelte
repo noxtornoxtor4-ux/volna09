@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.ts';
-	import { BadgeCheck, Heart, MessageCircle, Send, Share2, Star } from '@lucide/svelte';
+	import { BadgeCheck, EyeOff, Heart, MessageCircle, Send, Share2, Star } from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import { toneClass } from '#lib/data.ts';
 	import { timeAgo } from '#lib/format.ts';
@@ -126,6 +126,18 @@
 			<Share2 class="size-5" />
 			{post.shares}
 		</button>
+		{#if post.authorId === app.actorId && post.media?.type !== 'photo' && post.media}
+			<!-- Автор может убрать своё видео из ленты, не удаляя его -->
+			<button
+				class="ml-auto flex items-center gap-1.5 rounded-xl px-3 py-2 transition hover:bg-surface-2"
+				onclick={() => app.setPostHidden(post, true)}
+				title={tr('Скрыть видео')}
+				aria-label={tr('Скрыть видео')}
+			>
+				<EyeOff class="size-5" />
+				<span class="hidden sm:inline">{tr('Скрыть')}</span>
+			</button>
+		{/if}
 	</footer>
 
 	{#if showComments}
