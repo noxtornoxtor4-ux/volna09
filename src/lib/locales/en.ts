@@ -64,6 +64,7 @@ export const en: Record<string, string> = {
 	Аквамарин: 'Aquamarine',
 	'Аккаунт волонтёра': 'Volunteer account',
 	'Аккаунт организации': 'Organization account',
+	'Аккаунт создан — добро пожаловать!': 'Account created — welcome!',
 	Аккаунты: 'Accounts',
 	Активен: 'Active',
 	'Активная кнопка': 'Active button',
@@ -474,10 +475,14 @@ export const en: Record<string, string> = {
 	'Не хватило места на устройстве для файла': 'Not enough space on the device for the file',
 	Небо: 'Sky',
 	'Неверный код. Проверьте SMS и попробуйте ещё раз': 'Wrong code. Check the SMS and try again',
+	'Неверный пароль. Нажмите «Забыли пароль?» — пришлём ссылку для сброса':
+		"Wrong password. Tap “Forgot password?” — we'll send a reset link",
 	'Неверный email или пароль': 'Wrong email or password',
 	Неделя: 'Week',
 	'Нежно-розовый': 'Soft pink',
 	'Несколько вариантов': 'Multiple choice',
+	'Нет аккаунта? Он создастся автоматически с этой почтой и паролем.':
+		'No account? It will be created automatically with this email and password.',
 	'Нет заявок на подтверждение.': 'No requests to confirm.',
 	'Нет предстоящих мероприятий.': 'No upcoming events.',
 	'Нет связи с сервером — изменения сохранятся и отправятся позже':

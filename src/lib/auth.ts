@@ -31,11 +31,9 @@ export function authError(error: unknown) {
 	const code = (error as { code?: string })?.code ?? String(error);
 	if (code.includes('email-already-in-use'))
 		return tr('Этот email уже зарегистрирован — войдите в аккаунт');
-	if (
-		code.includes('invalid-credential') ||
-		code.includes('wrong-password') ||
-		code.includes('user-not-found')
-	)
+	if (code.includes('wrong-password'))
+		return tr('Неверный пароль. Нажмите «Забыли пароль?» — пришлём ссылку для сброса');
+	if (code.includes('invalid-credential') || code.includes('user-not-found'))
 		return tr('Неверный email или пароль');
 	if (code.includes('invalid-email')) return tr('Проверьте адрес почты');
 	if (code.includes('weak-password')) return tr('Пароль слишком простой — минимум 6 символов');

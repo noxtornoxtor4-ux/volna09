@@ -66,10 +66,10 @@
 	const nameOk = $derived(mode === 'login' || (role === 'org' ? orgOk : name.trim().length > 1));
 
 	/** Firebase подтвердил пользователя — создаём профиль при первом входе и открываем приложение */
-	async function finish(session: Omit<Session, 'role'>) {
+	async function finish(session: Omit<Session, 'role'>, fallbackName?: string) {
 		await app.completeSignIn(session, {
 			role,
-			name: mode === 'signup' && role === 'volunteer' ? name.trim() : undefined,
+			name: mode === 'signup' && role === 'volunteer' ? name.trim() : fallbackName,
 			city: mode === 'signup' && role === 'volunteer' ? city : undefined,
 			orgId: mode === 'signup' && role === 'org' && orgChoice !== 'new' ? orgChoice : undefined,
 			newOrg:
@@ -125,13 +125,57 @@
 		problem = notice = '';
 		sending = true;
 		try {
-			if (mode === 'signup') await emailSignUp(email, password);
-			else await emailSignIn(email, password);
-			await finish({ method: 'email', contact: email.trim() });
+			const created = await signInOrCreate();
+			// Аккаунт создан со страницы входа — имя берём из почты, его можно поменять в профиле
+			await finish(
+				{ method: 'email', contact: email.trim() },
+				created && mode === 'login' ? email.trim().split('@')[0] : undefined
+			);
+			if (created && mode === 'login') app.notify(tr('Аккаунт создан — добро пожаловать!'));
 		} catch (error) {
 			problem = authError(error);
 		} finally {
 			sending = false;
+		}
+	}
+
+	const errorCode = (error: unknown) => (error as { code?: string })?.code ?? '';
+
+	/**
+	 * Вход и регистрация одной кнопкой. Firebase не говорит, есть ли такая почта,
+	 * поэтому при неудачном входе пробуем создать аккаунт: если почта уже занята,
+	 * значит, неверен пароль. Возвращает true, если аккаунт только что создан.
+	 */
+	async function signInOrCreate() {
+		if (mode === 'signup') {
+			try {
+				await emailSignUp(email, password);
+				return true;
+			} catch (error) {
+				if (!errorCode(error).includes('email-already-in-use')) throw error;
+			}
+			// Уже зарегистрирован — просто входим
+			try {
+				await emailSignIn(email, password);
+				return false;
+			} catch (error) {
+				if (errorCode(error).includes('invalid-credential')) throw { code: 'auth/wrong-password' };
+				throw error;
+			}
+		}
+		try {
+			await emailSignIn(email, password);
+			return false;
+		} catch (error) {
+			const code = errorCode(error);
+			if (!code.includes('invalid-credential') && !code.includes('user-not-found')) throw error;
+		}
+		try {
+			await emailSignUp(email, password);
+			return true;
+		} catch (error) {
+			if (errorCode(error).includes('email-already-in-use')) throw { code: 'auth/wrong-password' };
+			throw error;
 		}
 	}
 
@@ -370,13 +414,16 @@
 						{sending ? tr('Проверяем…') : mode === 'login' ? tr('Войти') : tr('Зарегистрироваться')}
 					</button>
 					{#if mode === 'login'}
-						<button
-							type="button"
-							class="w-full text-sm font-semibold text-muted hover:text-ink disabled:opacity-50"
-							disabled={!emailValid}
-							onclick={forgot}>{tr('Забыли пароль?')}</button
-						>
+						<p class="text-center text-xs text-muted">
+							{tr('Нет аккаунта? Он создастся автоматически с этой почтой и паролем.')}
+						</p>
 					{/if}
+					<button
+						type="button"
+						class="w-full text-sm font-semibold text-muted hover:text-ink disabled:opacity-50"
+						disabled={!emailValid}
+						onclick={forgot}>{tr('Забыли пароль?')}</button
+					>
 				</form>
 			{/if}
 
