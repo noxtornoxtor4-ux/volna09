@@ -1,7 +1,20 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.ts';
+	import { app } from '#lib/app.svelte.ts';
+	import { loadLogoFont, logoFontWeight } from '#lib/logo-fonts.ts';
 
-	let { size = 32, name = true }: { size?: number; name?: boolean } = $props();
+	/** font — показать название этим шрифтом (предпросмотр в настройках) */
+	let {
+		size = 32,
+		name = true,
+		font
+	}: { size?: number; name?: boolean; font?: string | null } = $props();
+
+	/** Свой шрифт названия из настроек; без него — шрифт приложения */
+	const family = $derived(font === undefined ? app.logoFont : font);
+	$effect(() => {
+		if (family) loadLogoFont(family);
+	});
 </script>
 
 <a
@@ -35,5 +48,10 @@
 			stroke-linejoin="round"
 		/>
 	</svg>
-	{#if name}<span class="text-brand-navy">{tr('Волна')}</span>{/if}
+	{#if name}<span
+			class="text-brand-navy"
+			style={family
+				? `font-family: '${family}', var(--font-display); font-weight: ${logoFontWeight(family)}; letter-spacing: 0`
+				: undefined}>{tr('Волна')}</span
+		>{/if}
 </a>

@@ -4,6 +4,7 @@
 	import { app } from '#lib/app.svelte.ts';
 	import { contrast } from '#lib/color.ts';
 	import { brandPalette } from '#lib/data.ts';
+	import { loadLogoFont, logoFontWeight, logoFonts } from '#lib/logo-fonts.ts';
 	import type { LogoColors } from '#lib/types.ts';
 	import ColorPicker from './ColorPicker.svelte';
 	import Logo from './Logo.svelte';
@@ -27,6 +28,11 @@
 	/** Логотип должен оставаться заметным на фоне приложения */
 	const weak = $derived(rows.filter((r) => contrast(colors[r.key], background) < 2));
 
+	// Для предпросмотра на кнопках подгружаем все шрифты (только буквы названия)
+	$effect(() => {
+		for (const f of logoFonts) loadLogoFont(f.family);
+	});
+
 	function set(key: keyof LogoColors, value: string) {
 		if (colors[key] === value) return;
 		app.setLogoColors({ ...colors, [key]: value });
@@ -35,13 +41,15 @@
 
 <section class="card p-5">
 	<div class="flex items-center justify-between gap-3">
-		<h2 class="font-extrabold">{tr('Цвета логотипа')}</h2>
-		{#if app.logoColors}
+		<h2 class="font-extrabold">{tr('Логотип')}</h2>
+		{#if app.logoColors || app.logoFont}
 			<button
 				type="button"
 				class="btn btn-ghost px-3 py-1.5 text-sm"
-				onclick={() => app.setLogoColors(null)}
-				><RotateCcw class="size-4" /> {tr('Фирменные')}</button
+				onclick={() => {
+					app.setLogoColors(null);
+					app.setLogoFont(null);
+				}}><RotateCcw class="size-4" /> {tr('Фирменные')}</button
 			>
 		{/if}
 	</div>
@@ -99,4 +107,27 @@
 			</li>
 		{/each}
 	</ul>
+
+	<span class="mt-5 label">{tr('Шрифт надписи')}</span>
+	<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+		{#each [null, ...logoFonts.map((f) => f.family)] as family (family ?? 'app')}
+			{@const on = app.logoFont === family}
+			<button
+				type="button"
+				class="flex flex-col items-center gap-1 rounded-2xl border-2 px-2 py-3 transition {on
+					? 'border-accent bg-accent-soft'
+					: 'border-line hover:border-accent/50'}"
+				aria-pressed={on}
+				onclick={() => app.setLogoFont(family)}
+			>
+				<span
+					class="truncate text-xl leading-tight text-brand-navy"
+					style={family
+						? `font-family: '${family}', var(--font-display); font-weight: ${logoFontWeight(family)}`
+						: 'font-family: var(--font-display); font-weight: 900'}>{tr('Волна')}</span
+				>
+				<span class="truncate text-[11px] text-muted">{family ?? tr('Как в приложении')}</span>
+			</button>
+		{/each}
+	</div>
 </section>

@@ -48,6 +48,8 @@ interface Prefs {
 	customTheme: CustomTheme | null;
 	/** Свои цвета логотипа; null — фирменные */
 	logoColors: LogoColors | null;
+	/** Шрифт названия у логотипа; null — шрифт приложения */
+	logoFont: string | null;
 	/** Город, по которому фильтруется лента возможностей; all — все города */
 	viewCity: string;
 	/** Мероприятия из «Напомнить позже» */
@@ -60,6 +62,7 @@ const defaultPrefs = (): Prefs => ({
 	mode: 'light',
 	customTheme: null,
 	logoColors: null,
+	logoFont: null,
 	viewCity: 'all',
 	reminders: []
 });
@@ -184,6 +187,7 @@ class AppState {
 	mode = $state<ThemeMode>('light');
 	customTheme = $state<CustomTheme | null>(null);
 	logoColors = $state<LogoColors | null>(null);
+	logoFont = $state<string | null>(null);
 	/** Тёмная ли тема в системе — для режима «Системная» */
 	systemDark = $state(false);
 	viewCity = $state('all');
@@ -229,6 +233,7 @@ class AppState {
 		this.mode = prefs.mode;
 		this.customTheme = prefs.customTheme;
 		this.logoColors = prefs.logoColors;
+		this.logoFont = prefs.logoFont;
 		this.viewCity = prefs.viewCity;
 		this.reminders = prefs.reminders;
 		if (firebaseEnabled && typeof window !== 'undefined') this.#watchAuth();
@@ -322,6 +327,7 @@ class AppState {
 			mode: this.mode,
 			customTheme: this.customTheme,
 			logoColors: this.logoColors,
+			logoFont: this.logoFont,
 			viewCity: this.viewCity,
 			reminders: this.reminders
 		});
@@ -538,6 +544,11 @@ class AppState {
 	/** Цвета значка и надписи логотипа меняются сразу на всех экранах */
 	setLogoColors(colors: LogoColors | null) {
 		this.logoColors = colors;
+		this.#savePrefs();
+	}
+
+	setLogoFont(font: string | null) {
+		this.logoFont = font;
 		this.#savePrefs();
 	}
 
