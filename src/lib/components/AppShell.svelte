@@ -10,7 +10,7 @@
 		Compass,
 		FolderOpen,
 		Gavel,
-		Menu,
+		PanelLeft,
 		MessageCircle,
 		MessagesSquare,
 		Search,
@@ -85,6 +85,13 @@
 <svelte:window onkeydown={(e) => e.key === 'Escape' && (open = false)} />
 
 <div class="min-h-dvh">
+	<!-- Десктоп: кнопка меню в левом верхнем углу -->
+	<button
+		class="fixed top-3 left-3 z-40 hidden size-10 place-items-center rounded-xl text-muted transition hover:bg-surface-2 hover:text-ink lg:grid"
+		onclick={() => (open = true)}
+		aria-label={tr('Открыть меню')}
+		aria-expanded={open}><PanelLeft class="size-5" /></button
+	>
 	{#if open}
 		<button
 			class="fixed inset-0 z-[49] bg-black/30"
@@ -180,7 +187,7 @@
 				class="-ml-2 btn size-10 rounded-full btn-ghost p-0"
 				onclick={() => (open = true)}
 				aria-label={tr('Открыть меню')}
-				aria-expanded={open}><Menu class="size-5" /></button
+				aria-expanded={open}><PanelLeft class="size-5" /></button
 			>
 			<Logo />
 			<a
@@ -205,7 +212,9 @@
 			>
 		</header>
 
-		<main class="mx-auto w-full max-w-5xl px-4 pt-5 pb-28 sm:px-6 lg:px-10 lg:pt-10 lg:pb-12">
+		<main
+			class="mx-auto w-full max-w-5xl px-4 pt-5 pb-28 sm:px-6 lg:px-10 lg:pt-10 lg:pb-12 lg:pl-16 xl:pl-10"
+		>
 			{#if demoMode}
 				<div
 					class="mb-4 flex flex-wrap items-center gap-2 rounded-2xl bg-pastel-yellow px-4 py-2.5 text-sm font-semibold text-pastel-yellow-ink"
