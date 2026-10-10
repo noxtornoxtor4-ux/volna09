@@ -10,6 +10,7 @@
 		Compass,
 		FolderOpen,
 		Gavel,
+		Menu,
 		MessageCircle,
 		MessagesSquare,
 		Search,
@@ -18,7 +19,7 @@
 		Video
 	} from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { app } from '#lib/app.svelte.ts';
 	import { DEMO_FLAG, demoMode } from '#lib/firebase.ts';
 	import ApplySheet from './ApplySheet.svelte';
@@ -64,24 +65,56 @@
 		{ href: '/settings', label: tr('Настройки'), icon: Settings }
 	]);
 
+	/** Меню открыто нажатием: на сенсорных экранах наведения нет */
+	let open = $state(false);
+	let drawer: HTMLElement | undefined = $state();
+
+	// Переход на другую страницу закрывает меню, даже если фокус остался на ссылке в нём
+	$effect(() => {
+		void page.url.pathname;
+		open = false;
+		if (drawer?.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
+	});
+
 	const isActive = (href: string) =>
 		href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href);
 	const badge = $derived(app.unread);
 	const messagesBadge = $derived(app.unreadMessages);
 </script>
 
+<svelte:window onkeydown={(e) => e.key === 'Escape' && (open = false)} />
+
 <div class="min-h-dvh">
+	{#if open}
+		<button
+			class="fixed inset-0 z-[49] bg-black/30"
+			onclick={() => (open = false)}
+			aria-label={tr('Закрыть меню')}
+			transition:fade={{ duration: 200 }}
+		></button>
+	{/if}
 	<!--
-		Десктоп: боковое меню спрятано за левым краем и выезжает при наведении курсора
-		на узкую полосу у края экрана. Пока курсор над меню, оно остаётся открытым.
+		Боковое меню спрятано за левым краем. На компьютере оно выезжает при наведении курсора
+		на узкую полосу у края экрана, а по нажатию на неё (или на кнопку меню в шапке телефона)
+		открывается и остаётся открытым, пока его не закроют.
 	-->
-	<div class="group fixed inset-y-0 left-0 z-50 hidden w-4 lg:block">
-		<span
-			class="absolute top-1/2 left-1 h-16 w-1.5 -translate-y-1/2 rounded-full bg-brand-blue/40 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-focus-within:opacity-0 group-hover:opacity-0"
-			aria-hidden="true"
-		></span>
+	<div class="group pointer-events-none fixed inset-y-0 left-0 z-50 w-4">
+		<button
+			class="pointer-events-auto absolute inset-y-0 left-0 hidden w-full cursor-pointer lg:block"
+			onclick={() => (open = !open)}
+			aria-label={open ? tr('Закрыть меню') : tr('Открыть меню')}
+			aria-expanded={open}
+		>
+			<span
+				class="absolute top-1/2 left-1 h-16 w-1.5 -translate-y-1/2 rounded-full bg-brand-blue/40 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-focus-within:opacity-0 group-hover:opacity-0"
+				aria-hidden="true"
+			></span>
+		</button>
 		<aside
-			class="absolute inset-y-0 left-0 flex w-[264px] -translate-x-full flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-4 py-6 shadow-2xl shadow-black/0 transition-[translate,box-shadow] delay-150 duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[translate] group-focus-within:translate-x-0 group-focus-within:shadow-black/15 group-focus-within:delay-0 group-hover:translate-x-0 group-hover:shadow-black/15 group-hover:delay-0"
+			bind:this={drawer}
+			class="pointer-events-auto absolute inset-y-0 left-0 flex w-[264px] flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-4 py-6 shadow-2xl transition-[translate,box-shadow] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[translate] group-focus-within:translate-x-0 group-focus-within:shadow-black/15 group-focus-within:delay-0 group-hover:translate-x-0 group-hover:shadow-black/15 group-hover:delay-0 {open
+				? 'translate-x-0 shadow-black/15'
+				: '-translate-x-full shadow-black/0 delay-150'}"
 		>
 			<div class="flex h-10 items-center px-1"><Logo /></div>
 			<nav class="flex flex-col gap-1">
@@ -143,6 +176,12 @@
 		<header
 			class="sticky top-0 z-30 flex items-center gap-2 border-b border-line bg-bg/85 px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 backdrop-blur-lg lg:hidden"
 		>
+			<button
+				class="-ml-2 btn size-10 rounded-full btn-ghost p-0"
+				onclick={() => (open = true)}
+				aria-label={tr('Открыть меню')}
+				aria-expanded={open}><Menu class="size-5" /></button
+			>
 			<Logo />
 			<a
 				href="/search"

@@ -325,6 +325,7 @@ export const en: Record<string, string> = {
 	'Задайте вопрос — организатор ответит здесь.': 'Ask a question — the organizer will answer here.',
 	'Задать вопрос организатору': 'Ask the organizer a question',
 	Закрыть: 'Close',
+	'Закрыть меню': 'Close menu',
 	'заморожен до {0}': 'suspended until {0}',
 	'Заполните название и место на шаге «Описание».':
 		'Fill in the title and place in the “Description” step.',
@@ -693,6 +694,7 @@ export const en: Record<string, string> = {
 	Открыть: 'Open',
 	'Открыть в Safari': 'Open in Safari',
 	'Открыть кабинет': 'Open dashboard',
+	'Открыть меню': 'Open menu',
 	'Открыть оригинал': 'Open original',
 	'Открыть системную палитру': 'Open system color picker',
 	'Открыть страницу проверки': 'Open verification page',
