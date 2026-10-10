@@ -67,6 +67,19 @@
 
 	/** Меню открыто нажатием: на сенсорных экранах наведения нет */
 	let open = $state(false);
+	/** Меню закрыли кнопкой — не открываем его снова, пока курсор не уйдёт с него */
+	let suppressed = $state(false);
+
+	function openMenu() {
+		open = true;
+		suppressed = false;
+	}
+
+	function closeMenu() {
+		open = false;
+		suppressed = true;
+		if (drawer?.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
+	}
 	let drawer: HTMLElement | undefined = $state();
 
 	// Переход на другую страницу закрывает меню, даже если фокус остался на ссылке в нём
@@ -82,20 +95,20 @@
 	const messagesBadge = $derived(app.unreadMessages);
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && (open = false)} />
+<svelte:window onkeydown={(e) => e.key === 'Escape' && open && closeMenu()} />
 
 <div class="min-h-dvh">
 	<!-- Десктоп: кнопка меню в левом верхнем углу -->
 	<button
 		class="fixed top-3 left-3 z-40 hidden size-10 place-items-center rounded-xl text-muted transition hover:bg-surface-2 hover:text-ink lg:grid"
-		onclick={() => (open = true)}
+		onclick={openMenu}
 		aria-label={tr('Открыть меню')}
 		aria-expanded={open}><PanelLeft class="size-5" /></button
 	>
 	{#if open}
 		<button
 			class="fixed inset-0 z-[49] bg-black/30"
-			onclick={() => (open = false)}
+			onclick={closeMenu}
 			aria-label={tr('Закрыть меню')}
 			transition:fade={{ duration: 200 }}
 		></button>
@@ -105,10 +118,14 @@
 		на узкую полосу у края экрана, а по нажатию на неё (или на кнопку меню в шапке телефона)
 		открывается и остаётся открытым, пока его не закроют.
 	-->
-	<div class="group pointer-events-none fixed inset-y-0 left-0 z-50 w-4">
+	<div
+		class="pointer-events-none fixed inset-y-0 left-0 z-50 w-4 {suppressed ? '' : 'group'}"
+		onmouseleave={() => (suppressed = false)}
+		role="presentation"
+	>
 		<button
 			class="pointer-events-auto absolute inset-y-0 left-0 hidden w-full cursor-pointer lg:block"
-			onclick={() => (open = !open)}
+			onclick={() => (open ? closeMenu() : openMenu())}
 			aria-label={open ? tr('Закрыть меню') : tr('Открыть меню')}
 			aria-expanded={open}
 		>
@@ -123,7 +140,14 @@
 				? 'translate-x-0 shadow-black/15'
 				: '-translate-x-full shadow-black/0 delay-150'}"
 		>
-			<div class="flex h-10 items-center px-1"><Logo /></div>
+			<div class="flex h-10 items-center gap-1">
+				<button
+					class="btn size-10 shrink-0 rounded-xl btn-ghost p-0 text-muted hover:text-ink"
+					onclick={closeMenu}
+					aria-label={tr('Закрыть меню')}><PanelLeft class="size-5" /></button
+				>
+				<Logo />
+			</div>
 			<nav class="flex flex-col gap-1">
 				{#each sidebar as link (link.href)}
 					<a
@@ -185,7 +209,7 @@
 		>
 			<button
 				class="-ml-2 btn size-10 rounded-full btn-ghost p-0"
-				onclick={() => (open = true)}
+				onclick={openMenu}
 				aria-label={tr('Открыть меню')}
 				aria-expanded={open}><PanelLeft class="size-5" /></button
 			>
