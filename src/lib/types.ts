@@ -252,6 +252,8 @@ export interface Message {
 	from: string;
 	text: string;
 	at: string;
+	/** Приглашение в видеозвонок: код комнаты для /call */
+	call?: string;
 }
 
 /** Переписка волонтёра с организатором по конкретному мероприятию */

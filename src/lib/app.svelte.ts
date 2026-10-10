@@ -24,6 +24,7 @@ import type {
 	HoursEntry,
 	LogoColors,
 	Membership,
+	Message,
 	Opportunity,
 	OrgProfile,
 	OrgVerification,
@@ -997,7 +998,7 @@ class AppState {
 		return thread.messages.at(-1)?.from === thread.personId;
 	}
 
-	sendMessage(opportunityId: string, personId: string, text: string) {
+	sendMessage(opportunityId: string, personId: string, text: string, call?: string) {
 		const o = this.opportunity(opportunityId);
 		if (!o) return;
 		const id = this.threadId(opportunityId, personId);
@@ -1012,7 +1013,7 @@ class AppState {
 			});
 			thread = this.thread(id)!;
 		}
-		thread.messages.push({ id: uid(), from: this.actorId, text, at: now() });
+		thread.messages.push({ id: uid(), from: this.actorId, text, at: now(), call });
 		if (this.isOrg) {
 			this.#alert(
 				personId,
@@ -1198,13 +1199,37 @@ class AppState {
 		this.notify(tr('Вы вышли из чата'));
 	}
 
-	sendToConversation(conversation: Conversation, text: string) {
+	sendToConversation(conversation: Conversation, text: string, call?: string) {
 		const c = this.#fresh(this.conversations, conversation);
 		if (!c) return;
 		const me = this.actorId;
-		c.messages.push({ id: uid(), from: me, text, at: now() });
+		c.messages.push({ id: uid(), from: me, text, at: now(), call });
 		c.lastRead[me] = now();
 		this.#save('conversations');
+	}
+
+	/**
+	 * Видеозвонок в чате: у каждого чата своя комната, в чат уходит приглашение со ссылкой.
+	 * Если приглашение отправляли последним сообщением меньше получаса назад, второе не шлём.
+	 */
+	#callRoom(room: string, messages: Message[], invite: (text: string, call: string) => void) {
+		const last = messages.at(-1);
+		if (last?.call !== room || Date.now() - Date.parse(last.at) > 30 * 60_000)
+			invite(tr('📹 Видеозвонок'), room);
+		return room;
+	}
+
+	callConversation(conversation: Conversation) {
+		return this.#callRoom(`c-${conversation.id}`, conversation.messages, (text, call) =>
+			this.sendToConversation(conversation, text, call)
+		);
+	}
+
+	callThread(opportunityId: string, personId: string) {
+		const id = this.threadId(opportunityId, personId);
+		return this.#callRoom(`t-${id}`, this.thread(id)?.messages ?? [], (text, call) =>
+			this.sendMessage(opportunityId, personId, text, call)
+		);
 	}
 
 	/** Вопросы по мероприятиям, где участвует текущий аккаунт */

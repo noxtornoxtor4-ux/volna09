@@ -55,6 +55,7 @@ export const en: Record<string, string> = {
 	'📷 Загрузить фотографию': '📷 Upload a photo',
 	'📷 Фото документа': '📷 Document photo',
 	'📷 Фотография': '📷 Photo',
+	'📹 Видеозвонок': '📹 Video call',
 	'1 день': '1 day',
 	'1. Описание': '1. Description',
 	'2. Анкета': '2. Application form',
@@ -115,6 +116,10 @@ export const en: Record<string, string> = {
 	'В «Кабинете наград» создайте медаль, кубок или сертификат и вручите участникам.':
 		'Create a medal, trophy or certificate in the “Awards cabinet” and give it to participants.',
 	'В городе {0} пока нет таких мероприятий.': 'There are no such events in {0} yet.',
+	'В демо-версии можно проверить камеру, а сами звонки работают на настоящем сайте.':
+		'In the demo you can test your camera; real calls work on the main site.',
+	'В звонке уже {0} человек — это максимум.':
+		"There are already {0} people in the call — that's the maximum.",
 	'В кабинете три папки: заявки, волонтёры и подтверждение часов.':
 		'The dashboard has three folders: applications, volunteers and hour confirmations.',
 	'в команде': 'on the team',
@@ -147,8 +152,13 @@ export const en: Record<string, string> = {
 	'Видео скрыто — его можно вернуть в разделе «Скрытые»':
 		'Video hidden — you can bring it back from Hidden',
 	'Видео снова видно': 'The video is visible again',
+	Видеозвонки: 'Video calls',
+	Видеозвонок: 'Video call',
+	'Видеозвонок — Волна': 'Video call — WAVE',
 	Видеомонтаж: 'Video editing',
 	'Включить звук': 'Unmute',
+	'Включить камеру': 'Turn camera on',
+	'Включить микрофон': 'Unmute microphone',
 	'Во сколько сбор?': 'What time do we meet?',
 	'Возможности — Волна': 'Opportunities — WAVE',
 	Возраст: 'Age',
@@ -196,6 +206,8 @@ export const en: Record<string, string> = {
 	'Все уведомления': 'All notifications',
 	Встреча: 'Meeting',
 	Встречи: 'Meetings',
+	'Встречи с камерой, микрофоном и демонстрацией экрана прямо на сайте — до {0} человек. Позвонить можно и из любого чата.':
+		'Meetings with camera, microphone and screen sharing right on the site — up to {0} people. You can also call from any chat.',
 	Вт: 'Tue',
 	'Второстепенный текст': 'Secondary text',
 	'Вход — Волна': 'Sign in — WAVE',
@@ -205,6 +217,7 @@ export const en: Record<string, string> = {
 		"Google sign-in doesn't work inside Telegram and WhatsApp. Open the site in a browser or sign in with email.",
 	'Входим…': 'Signing in…',
 	вчера: 'yesterday',
+	Вы: 'You',
 	'Вы вошли как {0}': 'You’re signed in as {0}',
 	'Вы вышли из чата': 'You left the chat',
 	'Вы не участник этого чата': 'You’re not a member of this chat',
@@ -222,7 +235,10 @@ export const en: Record<string, string> = {
 	'Выйти из аккаунта': 'Sign out of account',
 	'Выйти из группы': 'Leave group',
 	'Выйти из демо': 'Leave demo',
+	'Выйти из звонка': 'Leave call',
 	'Выключить звук': 'Mute',
+	'Выключить камеру': 'Turn camera off',
+	'Выключить микрофон': 'Mute microphone',
 	Выше: 'Higher',
 	Главная: 'Home',
 	Город: 'City',
@@ -273,6 +289,8 @@ export const en: Record<string, string> = {
 	Документы: 'Documents',
 	'Дополнительная информация': 'Additional information',
 	Достижения: 'Achievements',
+	'Доступ к камере и микрофону запрещён — разрешите его в настройках браузера.':
+		'Camera and microphone access is blocked — allow it in your browser settings.',
 	'Доступ откроется {0}.': 'Access will be restored on {0}.',
 	'Её заполнят волонтёры, когда нажмут «Податься». Имя и возраст подставятся из профиля.':
 		'Volunteers fill it in when they tap “Apply”. Name and age are filled in from their profile.',
@@ -373,6 +391,8 @@ export const en: Record<string, string> = {
 	'Какие данные нужны?': 'What details are needed?',
 	Календарь: 'Calendar',
 	'Календарь — Волна': 'Calendar — WAVE',
+	'Камера и микрофон не найдены — можно смотреть и слушать других.':
+		'No camera or microphone found — you can still watch and listen.',
 	'Кара-Балта': 'Kara-Balta',
 	Каракол: 'Karakol',
 	'Карточки и блоки': 'Cards and blocks',
@@ -384,6 +404,7 @@ export const en: Record<string, string> = {
 	'Кнопка при нажатии': 'Pressed button',
 	Кнопки: 'Buttons',
 	'Кого наградить · {0}': 'Who to award · {0}',
+	'Код или ссылка встречи': 'Meeting code or link',
 	'Код не похож на тему: нужны все 8 цветов в формате #rrggbb':
 		'This code is not a theme: all 8 colors are needed in #rrggbb format',
 	'Код обновляется каждые 30 секунд, поэтому скриншот не подойдёт.':
@@ -540,6 +561,7 @@ export const en: Record<string, string> = {
 	'Находи волонтёрские проекты, делись опытом, считай часы и собирай подтверждённое диджитал-портфолио.':
 		'Find volunteer projects, share your experience, track your hours and build a verified digital portfolio.',
 	'Находить меня в поиске': 'Show me in search',
+	'Начать встречу': 'Start a meeting',
 	Начинающий: 'Beginner',
 	'Начислено {0} ч': '{0} h credited',
 	'Начислено {0} ч за «{1}»': '{0} h credited for “{1}”',
@@ -550,6 +572,7 @@ export const en: Record<string, string> = {
 		"Couldn't find “{0}” — add the organization below.",
 	'Не открылось? Нажмите ••• вверху справа → «Открыть в Safari»':
 		"Didn't open? Tap ••• at the top right → “Open in Safari”",
+	'Не получилось подключиться к звонку': "Couldn't connect to the call",
 	'Не удалось войти. Попробуйте ещё раз': "Couldn't sign in. Please try again",
 	'Не удалось загрузить видео. Проверьте интернет и попробуйте ещё раз':
 		"Couldn't upload the video. Check your internet and try again",
@@ -643,6 +666,7 @@ export const en: Record<string, string> = {
 	'Основной текст и заголовки': 'Main text and headings',
 	'Основной фон экранов': 'Main screen background',
 	'Основные навыки показываются в профиле': 'Main skills are shown in your profile',
+	'Остановить показ экрана': 'Stop sharing screen',
 	'от {0}': 'from {0}',
 	'Ответ волонтёру…': 'Reply to the volunteer…',
 	'Ответ модератора: {0}': 'Moderator response: {0}',
@@ -733,6 +757,8 @@ export const en: Record<string, string> = {
 	Податься: 'Apply',
 	'Поделитесь историей, фото или видео': 'Share a story, photo or video',
 	Поделиться: 'Share',
+	'Подключаемся…': 'Connecting…',
+	'Подключение…': 'Connecting…',
 	Подписаться: 'Follow',
 	'Подписки · {0}': 'Following · {0}',
 	'Подписчики — Волна': 'Followers — WAVE',
@@ -766,6 +792,8 @@ export const en: Record<string, string> = {
 	'Поиск — Волна': 'Search — WAVE',
 	'Поиск по чатам': 'Search chats',
 	'Пока без материалов': 'No materials yet',
+	'Пока здесь только вы — отправьте ссылку, чтобы пригласить остальных.':
+		"It's just you for now — send the link to invite others.",
 	'Пока нет волонтёров.': 'No volunteers yet.',
 	'Пока нет предстоящих мероприятий.': 'No upcoming events yet.',
 	'Пока нет публикаций': 'No posts yet',
@@ -778,6 +806,7 @@ export const en: Record<string, string> = {
 	'Показ волонтёрам, у которых совпадают интересы с темами мероприятия.':
 		"Shown to volunteers whose interests match the event's topics.",
 	'Показать все города': 'Show all cities',
+	'Показать экран': 'Share screen',
 	'Показывать часы': 'Show hours',
 	'Политика конфиденциальности': 'Privacy Policy',
 	'Политика конфиденциальности — Волна': 'Privacy Policy — WAVE',
@@ -811,6 +840,7 @@ export const en: Record<string, string> = {
 	'Привет, {0} 👋': 'Hi, {0} 👋',
 	'Привяжите сертификаты и дипломы, которые подтверждают этот навык.':
 		'Link certificates and diplomas that confirm this skill.',
+	Пригласить: 'Invite',
 	'Приём заявок до': 'Applications open until',
 	'Приложение «Волна»': '“WAVE” app',
 	'Приложение перезапустится на выбранном языке.': 'The app will restart in the selected language.',
@@ -821,6 +851,7 @@ export const en: Record<string, string> = {
 	'Применена · сохраняется автоматически': 'Applied · saved automatically',
 	Применить: 'Apply',
 	Принять: 'Approve',
+	Присоединиться: 'Join',
 	'Причина — её увидит пользователь': 'Reason — the user will see it',
 	'Причина отзыва сертификата': 'Reason for revoking the certificate',
 	'Причина отказа': 'Rejection reason',
@@ -997,6 +1028,8 @@ export const en: Record<string, string> = {
 	Спорт: 'Sport',
 	Ср: 'Wed',
 	'Срок блокировки в днях (0 — навсегда)': 'Ban duration in days (0 for permanent)',
+	'Ссылка на звонок': 'Call link',
+	'Ссылка на звонок скопирована': 'Call link copied',
 	'Ссылка скопирована': 'Link copied',
 	'Станьте первым участником': 'Be the first to join',
 	'Стиль приложения': 'App style',
@@ -1155,6 +1188,7 @@ export const en: Record<string, string> = {
 	'Шрифт надписи': 'Wordmark font',
 	'Эко-клуб «Зелёный город» — заявки и QR-часы': 'Green City eco club — applications and QR hours',
 	Экология: 'Ecology',
+	экран: 'screen',
 	Эксперт: 'Expert',
 	'Экспорт JSON': 'Export JSON',
 	'Это демо-версия: все люди и данные выдуманные. Выберите, за кого войти.':

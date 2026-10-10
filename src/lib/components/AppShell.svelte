@@ -14,7 +14,8 @@
 		MessagesSquare,
 		Search,
 		Settings,
-		UserRound
+		UserRound,
+		Video
 	} from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -56,6 +57,7 @@
 
 	const extra = $derived([
 		{ href: '/search', label: tr('Поиск'), icon: Search },
+		{ href: '/call', label: tr('Видеозвонки'), icon: Video },
 		{ href: '/awards', label: tr('Кабинет наград'), icon: Award },
 		...(app.isOrg ? [] : [{ href: '/portfolio', label: tr('Портфолио'), icon: FolderOpen }]),
 		...(app.isModerator ? [{ href: '/moderation', label: tr('Модерация'), icon: Gavel }] : []),

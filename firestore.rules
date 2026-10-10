@@ -176,6 +176,18 @@ service cloud.firestore {
       }
     }
 
+    // Видеозвонки: кто в комнате и служебные сообщения для соединения браузеров.
+    // Видео и звук идут напрямую между участниками и в базе не хранятся.
+    match /calls/{room}/peers/{peer} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.resource.data.uid == me();
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+    match /calls/{room}/signals/{id} {
+      allow create: if signedIn() && request.resource.data.uid == me();
+      allow read, delete: if signedIn();
+    }
+
     // Темы, навыки, чаты, уведомления и календарь — для вошедших пользователей
     match /{collection}/{id} {
       allow read, write: if signedIn() && collection in [

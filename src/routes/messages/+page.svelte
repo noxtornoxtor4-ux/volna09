@@ -11,7 +11,8 @@
 		Search,
 		Send,
 		UserPlus,
-		Users
+		Users,
+		Video
 	} from '@lucide/svelte';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
@@ -103,6 +104,11 @@
 		app.leaveConversation(current);
 		info = false;
 		goto('/messages');
+	}
+
+	function startCall() {
+		if (!current) return;
+		goto(`/call?room=${app.callConversation(current)}`);
 	}
 
 	const profileHref = (id: string) => (id === app.actorId ? '/profile' : `/u?id=${id}`);
@@ -260,6 +266,13 @@
 					</div>
 				</div>
 			</a>
+			{#if isMember}
+				<button
+					class="btn size-10 rounded-full btn-ghost p-0"
+					onclick={startCall}
+					aria-label={tr('Видеозвонок')}><Video class="size-5" /></button
+				>
+			{/if}
 			{#if current.kind === 'group'}
 				<button
 					class="btn size-10 rounded-full btn-ghost p-0"
@@ -290,7 +303,11 @@
 						{#if showName}<div class="mb-0.5 text-xs font-bold text-accent-text">
 								{app.author(m.from).name}
 							</div>{/if}
-						{m.text}
+						{#if m.call}<a
+								href="/call?room={m.call}"
+								class="flex items-center gap-2 font-bold underline-offset-2 hover:underline"
+								><Video class="size-4" /> {tr('Видеозвонок')} · {tr('Присоединиться')}</a
+							>{:else}{m.text}{/if}
 						<div class="mt-0.5 text-right text-[10px] opacity-60">{formatTime(m.at)}</div>
 					</div>
 				</div>

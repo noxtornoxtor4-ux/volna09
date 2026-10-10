@@ -2,7 +2,8 @@
 	import { tr } from '#lib/i18n.ts';
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
-	import { ChevronLeft, Megaphone, Send } from '@lucide/svelte';
+	import { ChevronLeft, Megaphone, Send, Video } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
 	import { app } from '#lib/app.svelte.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
 	import { toneClass } from '#lib/data.ts';
@@ -17,7 +18,7 @@
 	const partnerId = $derived(app.isOrg ? personId : (o?.orgId ?? ''));
 
 	type Item =
-		| { kind: 'message'; id: string; from: string; text: string; at: string }
+		| { kind: 'message'; id: string; from: string; text: string; at: string; call?: string }
 		| { kind: 'announcement'; id: string; title: string; text: string; at: string };
 
 	const items = $derived<Item[]>(
@@ -40,6 +41,10 @@
 		if (!o || !draft.trim()) return;
 		app.sendMessage(o.id, personId, draft.trim());
 		draft = '';
+	}
+
+	function startCall() {
+		if (o) goto(`/call?room=${app.callThread(o.id, personId)}`);
 	}
 
 	const quick = [tr('Что взять с собой?'), tr('Можно прийти с другом?'), tr('Во сколько сбор?')];
@@ -71,6 +76,11 @@
 					>{o.emoji} {o.title}</a
 				>
 			</div>
+			<button
+				class="btn size-10 rounded-full btn-ghost p-0"
+				onclick={startCall}
+				aria-label={tr('Видеозвонок')}><Video class="size-5" /></button
+			>
 		</header>
 
 		<div bind:this={feed} class="flex-1 space-y-3 overflow-y-auto bg-surface-2/50 p-4">
@@ -103,7 +113,11 @@
 								? 'rounded-br-md bg-accent text-accent-ink'
 								: 'rounded-bl-md bg-surface shadow-sm'}"
 						>
-							{item.text}
+							{#if item.call}<a
+									href="/call?room={item.call}"
+									class="flex items-center gap-2 font-bold underline-offset-2 hover:underline"
+									><Video class="size-4" /> {tr('Видеозвонок')} · {tr('Присоединиться')}</a
+								>{:else}{item.text}{/if}
 							<div class="mt-0.5 text-right text-[10px] opacity-60">{formatTime(item.at)}</div>
 						</div>
 					</div>
